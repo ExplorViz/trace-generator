@@ -1,0 +1,22 @@
+{
+  "name": "trace-gen",
+  "version": "1.0.0",
+  "description": "Generates OpenTelemetry traces for a random Java class structure and sends them to an OTel collector. This package is notably used by the software visualization tool \"ExplorViz\".",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.52.0",
+    "@opentelemetry/sdk-node": "^0.52.0",
+    "@opentelemetry/sdk-trace-node": "^1.25.0"
+  }
+}
