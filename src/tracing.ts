@@ -17,16 +17,16 @@ export interface FakeSpan {
 
 export interface SpanParameters {
   name: string,
-  startTime: number, // [number, number],
-  endTime: number, // [number, number],
+  startTime: number, 
+  endTime: number,
   attributes?: Attributes
 }
 
 export class TraceGenerator {
   private readonly collector_hostname: string;
   private readonly collector_port: number;
-  private readonly tracer_name: string;
-  private readonly tracer_version: string;
+  private readonly tracer_name: string = 'trace-gen';
+  private readonly tracer_version: string = '0.0.1';
   private readonly tracer_provider: NodeTracerProvider;
   private readonly tracer: Tracer;
   private readonly exporter: any;
@@ -47,7 +47,7 @@ export class TraceGenerator {
       this.tracer_provider.addSpanProcessor(new SimpleSpanProcessor(this.exporter));
       this.tracer_provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()))
       this.tracer_provider.register();
-      this.tracer = trace.getTracer("trace-gen", "0.0.1");
+      this.tracer = trace.getTracer(this.tracer_name, this.tracer_version);
 
       const sdk = new NodeSDK();
       sdk.start();
