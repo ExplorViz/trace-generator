@@ -64,7 +64,7 @@ export interface AppGenerationParameters {
  * and classes (leaf nodes). 
  * @param params 
  */
-export function generateFakeApp(params: AppGenerationParameters): FakeApp {
+export function generateFakeApp(params: AppGenerationParameters, seed?: number): FakeApp {
 
   /**
    * This function creates an application tree from the bottom up (at the leaf nodes).
@@ -99,6 +99,12 @@ export function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
   if (params.balance < 0 || params.balance > 1) {
     throw new RangeError('Balance value must be between 0 and 1')
+  }
+
+  // Set seed, if one was provided (for reproducable results)
+
+  if (seed !== undefined) {
+    faker.seed(seed);
   }
 
   // Convenience arrays
