@@ -1,50 +1,120 @@
-import {TraceGenerator, FakeSpan} from './tracing'
-import {faker} from '@faker-js/faker'
-import {capitalizeString, sanitizeJavaIdentifier} from './utils'
-import {
-  SEMATTRS_CODE_NAMESPACE,
-  SEMATTRS_CODE_FUNCTION
-} from '@opentelemetry/semantic-conventions'
+import express, { Request, Response } from 'express'
+import bodyParser from 'body-parser'
+import { body, ValidationChain, validationResult } from 'express-validator'
+import { TraceGenerator, FakeTrace } from './tracing'
+import { generateFakeApps, generateFakeTrace, FakeApp, AppGenerationParameters, TraceGenerationParameters, InternalCommunicationStyle } from './structure'
+import { appTreeToString } from './utils'
 
 // Allow exiting via Ctrl+C
 ['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => process.on(signal, () => {
   process.exit();
 }));
 
-const TARGET_HOSTNAME = "localhost";
-const TARGET_PORT = 55678;
+console.log(String.raw
+` _______                  _____
+|__   __|                / ____|
+   | |_ __ __ _  ___ ___| |  __  ___ _ __
+   | |  __/ _  |/ __/ _ \ | |_ |/ _ \  _ \
+   | | | | (_| | (_|  __/ |__| |  __/ | | |
+   |_|_|  \__,_|\___\___|\_____|\___|_| |_|
+`);
 
-const traceGenerator: TraceGenerator = new TraceGenerator(TARGET_HOSTNAME, TARGET_PORT);
+const DEFAULT_TARGET_HOSTNAME = "localhost";
+const DEFAULT_TARGET_PORT = 55678;
+const FRONTEND_PORT = 9001;
 
-console.log("Initializing TraceGenerator");
+const traceGenerator: TraceGenerator = new TraceGenerator(DEFAULT_TARGET_HOSTNAME, DEFAULT_TARGET_PORT);
 
-function getRandomSpan(children: Array<FakeSpan> = []): FakeSpan {
-  const randClassName = sanitizeJavaIdentifier(capitalizeString(faker.hacker.noun()))
-  const randMethodName = sanitizeJavaIdentifier(faker.hacker.verb() + capitalizeString(faker.hacker.noun()));
-  const randPackageName = faker.helpers.arrayElement(["package1", "package2", "package3", "package4"]);
-  const span: FakeSpan = {
-    children: children,
-    params: {
-      name: `${randClassName}.${randMethodName}`,
-      startTime: performance.now(),
-      endTime: performance.now(),
-      attributes: {
-        "landscape_token": "mytokenvalue",
-        "token_secret": "mytokensecret",
-        "application_name": "trace-gen",
-        "application_instance_id": "0",
-        "application_language": "java",
-        "java.fqn": `org.tracegen.${randPackageName}.${randClassName}.${randMethodName}`,
-        SEMATTRS_CODE_NAMESPACE: `${randPackageName}.${randClassName}`,
-        SEMATTRS_CODE_FUNCTION: `${randMethodName}`
-      }
-    }
-  };
-  return span;
+interface OtelCollectorConfig {
+  targetHostname: string,
+  targetPort: number
 }
 
-setInterval(() => {
-  console.log("Sending span");
-  const span: FakeSpan = getRandomSpan();
-  traceGenerator.writeSpan(span);
-}, 10000);
+const app = express();
+app.use(express.static('src/res', { index:'index.html' }));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+function parseRequestBody(reqBody: any): [OtelCollectorConfig, AppGenerationParameters, TraceGenerationParameters] {
+  const commStyleLookup = new Map();
+  commStyleLookup.set('true_random', InternalCommunicationStyle.TRUE_RANDOM);
+  commStyleLookup.set('cohesive', InternalCommunicationStyle.COHESIVE);
+  commStyleLookup.set('random_exit', InternalCommunicationStyle.RANDOM_EXIT);
+
+  return [
+    {
+      targetHostname: reqBody.targetHostname,
+      targetPort: reqBody.targetPort
+    },
+
+    {
+      appCount: parseInt(reqBody.appCount),
+      packageDepth: parseInt(reqBody.packageDepth),
+      minClassCount: parseInt(reqBody.minClassCount),
+      maxClassCount: parseInt(reqBody.maxClassCount),
+      minMethodCount: parseInt(reqBody.minMethodCount),
+      maxMethodCount: parseInt(reqBody.maxMethodCount),
+      balance: parseFloat(reqBody.balance)
+    },
+  
+    {
+      duration: parseInt(reqBody.duration),
+      callCount: parseInt(reqBody.callCount),
+      maxConnectionDepth: parseInt(reqBody.maxCallDepth),
+      internalCommunicationStyle: commStyleLookup.get(reqBody.internalCommunicationStyle),
+      allowCyclicCalls: 'allowCyclicCalls' in reqBody,
+      includeUtilityClasses: false
+    }
+  ];
+}
+
+// Specify request fields and their type for validation
+
+const requestFields = {
+  ints: [
+  'targetPort', 'appCount', 'packageDepth', 'minClassCount', 'maxClassCount', 'minMethodCount',
+  'maxMethodCount', 'duration', 'callCount', 'maxCallDepth'
+  ],
+  floats: ['balance'],
+  urls: ['targetHostname'],
+  choices: [
+    {
+      name: 'communicationStyle',
+      allowedValues: ['true_random', 'cohesive', 'random_exit']
+    }
+  ]
+}
+
+let validationChain: Array<ValidationChain> = [
+  body(requestFields.ints).exists().isInt(),
+  body(requestFields.floats).exists().isFloat(),
+  body(requestFields.urls).exists().isURL({ require_tld: false, require_port: false, require_protocol: false })
+].concat(Array.from(requestFields.choices, choice => body(choice.name).exists().isIn(choice.allowedValues)));
+
+app.post('/', validationChain, (req: Request, res: Response) => {
+  console.log(req.body);
+  const result = validationResult(req);
+  if (!result.isEmpty()) {
+    console.log(result.array());
+    return res.redirect('/');
+  }
+
+  const [otelParams, appParams, traceParams] = parseRequestBody(req.body);
+  traceGenerator.setUrl(otelParams.targetHostname, otelParams.targetPort);
+  const apps: Array<FakeApp> = generateFakeApps(appParams);
+  const trace: FakeTrace = generateFakeTrace(apps, traceParams);
+
+  console.log('Trace generated successfully');
+  console.log('Generated apps:');
+  apps.forEach((app, idx) => {
+    console.log(`App #${idx+1}:`);
+    console.log(`${appTreeToString(app)}\n`);
+  });
+  
+  traceGenerator.writeTrace(trace);
+
+  return res.redirect('/');
+})
+
+app.listen(FRONTEND_PORT, () => {
+  console.log(`Serving webpage on port ${FRONTEND_PORT}`);
+});

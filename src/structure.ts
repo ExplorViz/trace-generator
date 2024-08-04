@@ -43,6 +43,10 @@ function isPackage(codeUnit: FakeClass | FakePackage): codeUnit is FakePackage {
 
 export interface AppGenerationParameters {
   /**
+   * How many apps should be generated. All generated apps will use the same generation parameters.
+   */
+  appCount: number,
+  /**
    * How deep the package structure should reach, not including the root package.
    * A depth of 0 means that there are no sub-packages inside the root package, only classes
    */
@@ -75,11 +79,28 @@ export interface AppGenerationParameters {
 }
 
 /**
+ * Generate some fake applications, with all the apps using the same generation parameters.
+ * @param params Specifies the generation behaviour, especially the size of the applications. See {@link AppGenerationParameters}
+ * @param seed Can optionally be used to yield reproducable results. The seed is set once before generating the apps
+ * @returns A list of {@link FakeApp}s conforming to the specified parameters
+ */
+export function generateFakeApps(params: AppGenerationParameters, seed?: number): Array<FakeApp> {
+  // Set seed, if one was provided (for reproducable results)
+
+  if (seed !== undefined) {
+    faker.seed(seed);
+  }
+
+  return Array.from(Array(params.appCount), _ => generateFakeApp(params));
+}
+
+/**
  * Generate a fake application tree structure consisting of packages (internal nodes)
  * and classes (leaf nodes). 
- * @param params 
+ * @param params Specifies the generation behaviour, especially the size of the application. See {{@link AppGenerationParameters}
+ * @returns A {@link FakeApp} which conforms to the specifed parameters
  */
-export function generateFakeApp(params: AppGenerationParameters, seed?: number): FakeApp {
+function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
   /**
    * This function creates an application tree from the bottom up (at the leaf nodes).
@@ -114,12 +135,6 @@ export function generateFakeApp(params: AppGenerationParameters, seed?: number):
 
   if (params.balance < 0 || params.balance > 1) {
     throw new RangeError('Balance value must be between 0 and 1')
-  }
-
-  // Set seed, if one was provided (for reproducable results)
-
-  if (seed !== undefined) {
-    faker.seed(seed);
   }
 
   // Convenience arrays

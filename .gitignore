@@ -42,3 +42,4 @@ node_modules/
 
 # Compiled Javascript files
 src/*.js
+!src/res/*.js
