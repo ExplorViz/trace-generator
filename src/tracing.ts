@@ -85,4 +85,8 @@ export class TraceGenerator {
       this.writeSpan(span);
     });
   }
+
+  shutdown(): Array<Promise<void>> {
+    return [this.tracer_provider.shutdown(), this.sdk.shutdown()];
+  }
 }

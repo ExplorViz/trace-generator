@@ -5,11 +5,6 @@ import { TraceGenerator, FakeTrace } from './tracing'
 import { generateFakeApps, generateFakeTrace, FakeApp, AppGenerationParameters, TraceGenerationParameters, InternalCommunicationStyle } from './structure'
 import { appTreeToString } from './utils'
 
-// Allow exiting via Ctrl+C
-['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => process.on(signal, () => {
-  process.exit();
-}));
-
 console.log(String.raw
 ` _______                  _____
 |__   __|                / ____|
@@ -109,7 +104,7 @@ app.post('/', validationChain, (req: Request, res: Response) => {
     console.log(`App #${idx+1}:`);
     console.log(`${appTreeToString(app)}\n`);
   });
-  
+
   traceGenerator.writeTrace(trace);
 
   return res.redirect('/');
@@ -118,3 +113,11 @@ app.post('/', validationChain, (req: Request, res: Response) => {
 app.listen(FRONTEND_PORT, () => {
   console.log(`Serving webpage on port ${FRONTEND_PORT}`);
 });
+
+// Allow exiting via Ctrl+C
+['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => process.on(signal, () => {
+  console.log("Shutting down...");
+  Promise.all(traceGenerator.shutdown()).finally(() => {
+    process.exit();
+  });
+}));
