@@ -1,13 +1,15 @@
 import { faker } from '@faker-js/faker'
-import {capitalizeString} from './utils'
+import { FakeTrace, FakeSpan } from './tracing'
+import { Attributes } from '@opentelemetry/api';
+import { capitalizeString } from './utils'
+import { strict as assert } from 'assert'
 import {
-  SEMRESATTRS_SERVICE_VERSION,
-  SEMRESATTRS_TELEMETRY_SDK_LANGUAGE
+  SEMATTRS_CODE_FUNCTION,
+  SEMATTRS_CODE_NAMESPACE
 } from '@opentelemetry/semantic-conventions';
 
 interface FakeMethod {
   identifier: string
-  parent?: FakeClass
 }
 
 interface FakeClass {
@@ -16,16 +18,28 @@ interface FakeClass {
   parent?: FakePackage
 }
 
-interface FakePackage {
+export interface FakePackage {
   name: string,
-  children: Array<FakePackage | FakeClass>,
-  parent?: FakePackage
+  subpackages: Array<FakePackage>,
+  classes: Array<FakeClass>
 }
 
-interface FakeApp {
+export interface FakeApp {
   rootPackage: FakePackage,
-  entryPoint: FakeMethod
+  entryPoint: FakeClass,
+  classes: Array<FakeClass>,
+  packages: Array<FakePackage>
+  methods: Array<FakeMethod>,
 }
+
+function isClass(codeUnit: FakeClass | FakePackage): codeUnit is FakeClass {
+  return (codeUnit as FakeClass).methods !== undefined;
+}
+
+function isPackage(codeUnit: FakeClass | FakePackage): codeUnit is FakePackage {
+  return (codeUnit as FakePackage).subpackages !== undefined;
+}
+
 
 export interface AppGenerationParameters {
   /**
@@ -35,7 +49,7 @@ export interface AppGenerationParameters {
   packageDepth: number,
   /**
    * How many classes the app should contain at the least.
-   * This should be at least 1
+   * Must be greater than 0
    */
   minClassCount: number,
   /**
@@ -52,6 +66,7 @@ export interface AppGenerationParameters {
   maxMethodCount: number,
   /**
    * Influences the balance of generated trees, where 1 is perfectly balanced and 0 is extremely unbalanced.
+   * Low balance values mean that code units are more likely to be placed near the root package.
    * Note that this only influences the random generation, the resulting application tree can be very unbalanced
    * even for a balance value of 1.
    * May only be between 0 and 1
@@ -110,6 +125,7 @@ export function generateFakeApp(params: AppGenerationParameters, seed?: number):
   // Convenience arrays
 
   let classes: Array<FakeClass> = [];
+  let packages: Array<FakePackage> = [];
   let methods: Array<FakeMethod> = [];
 
   const classCount: number = faker.number.int({min: params.minClassCount, max: params.maxClassCount});
@@ -118,12 +134,12 @@ export function generateFakeApp(params: AppGenerationParameters, seed?: number):
 
   // Create application tree
 
-  for (let layer = params.packageDepth - 1; layer > 0; layer--) {
+  for (let layer = params.packageDepth; layer > 0; layer--) {
 
     // Generate random classes for this layer
 
     const minClassesInLayer = layer == params.packageDepth ? 1 : 0; // Deepest layer requires at least 1 class
-    const maxClassesInLayer = Math.floor(remainingClassCount * params.balance);
+    const maxClassesInLayer = Math.max(Math.floor(remainingClassCount * params.balance), minClassesInLayer);
     const classesInLayer = faker.number.int({min: minClassesInLayer, max: maxClassesInLayer});
 
     let newClasses: Array<FakeClass> = Array.from(Array(classesInLayer), _ => {
@@ -132,12 +148,12 @@ export function generateFakeApp(params: AppGenerationParameters, seed?: number):
         const newMethod = {identifier: faker.hacker.verb() + capitalizeString(faker.hacker.noun())};
         methods.push(newMethod);
         return newMethod;
-      })
+      });
       const newClass = {identifier: faker.hacker.noun(), methods: newMethods};
       classes.push(newClass);
       return newClass;
     });
-    
+
     // Shuffle generated classes inbetween (potential) existing packages from previous iterations.
     // This is to prevent the packages and classes from being grouped separately (more heterogeneous structure)
 
@@ -146,21 +162,38 @@ export function generateFakeApp(params: AppGenerationParameters, seed?: number):
     });
 
     // Put the code units on this layer into packages
-    
+
     let newPackages = [];
     let remainingComponents = currentLayer.length;
 
     while (remainingComponents > 0) {
-      const componentsToPackage = faker.number.int({min: 1, max: remainingComponents});
-      newPackages.push({name: faker.hacker.noun(), children: currentLayer.slice(componentsToPackage)});
-      currentLayer.splice(0, componentsToPackage);
-      remainingComponents -= componentsToPackage;
+      const numComponentsToPackage = faker.number.int({min: 1, max: remainingComponents});
+      const componentsToPackage = currentLayer.slice(0, numComponentsToPackage);
+      let classesToPackage: Array<FakeClass> = [];
+      let packagesToPackage: Array<FakePackage> = [];
+      let newPackage = {name: faker.hacker.noun(), classes: classesToPackage, subpackages: packagesToPackage};
+
+      componentsToPackage.forEach((component: FakePackage | FakeClass) => {
+        if (isClass(component)) {
+          component.parent = newPackage;
+          classesToPackage.push(component);
+        } else {
+          packagesToPackage.push(component);
+        }
+      });
+      newPackages.push(newPackage);
+      console.log(newPackage)
+      packages.push(newPackage);
+      currentLayer.splice(0, numComponentsToPackage);
+      remainingComponents -= numComponentsToPackage;
     }
 
     currentLayer = newPackages;
   }
 
-  // Fill top layer with remaining classes, if any
+  assert(currentLayer.filter(isClass).length === 0);
+
+  // Fill root layer with remaining classes, if any
 
   let remainingClasses: Array<FakeClass> = Array.from(Array(remainingClassCount), _ => {
     const numMethods = faker.number.int({min: params.minMethodCount, max: params.maxMethodCount});
@@ -174,41 +207,66 @@ export function generateFakeApp(params: AppGenerationParameters, seed?: number):
     return newClass;
   });
 
-  currentLayer.concat(remainingClasses);
-
   const rootPackage: FakePackage = {
     name: 'org',
-    children: [{
+    classes: [],
+    subpackages: [{
       name: 'tracegen',
-      children: [{
+      classes: [],
+      subpackages: [{
         name: 'randomapp',
-        children: currentLayer
+        classes: remainingClasses,
+        subpackages: currentLayer as Array<FakePackage>, // Will only contain packages at this point
       }]
     }]
   };
 
-  const entryPoint = methods[faker.number.int(methods.length-1)];
-  const fakeApp = {
+  const entryPoint = faker.helpers.arrayElement(classes);
+  const fakeApp: FakeApp = {
     rootPackage: rootPackage,
-    entryPoint: entryPoint
+    entryPoint: entryPoint,
+    classes: classes,
+    packages: packages,
+    methods: methods
   };
   return fakeApp;
 }
 
+export const enum InternalCommunicationStyle {
+  TRUE_RANDOM,
+  /**
+   * With this style, communication should mostly happen within packages.
+   * Only select interfaces communicate with other packages
+   */
+  COHESIVE,
+  RANDOM_EXIT
+}
+
 export interface TraceGenerationParameters {
   /**
-   * How many different applications should be involved in the trace
-   */
-  appCount: number,
-  /**
-   * Duration of the trace in seconds. The method calls will be distributed equally within this timeframe
+   * Duration of the trace in milliseconds. The method calls will be distributed equally within this timeframe
    */
   duration: number,
-  connectionDepth: number,
   /**
-   * Whether there should exist self-referential methods in the trace
+   * How many method calls (between different classes) should occur within the duration of the trace
    */
-  includeRecursion: boolean,
+  callCount: number,
+  /**
+   * This sets a limit to how high the method call stack can grow.
+   * Must be greater than 0
+   */
+  maxConnectionDepth: number,
+  /**
+   * This specifies the way in which application-internal classes communicate with each other.
+   * Styles differ in the way that classes for communication are selected.
+   * For more information, see {@link InternalCommunicationStyle}
+   */
+  internalCommunicationStyle: InternalCommunicationStyle,
+  /**
+   * Whether there may exist cyclic method calls in the trace.
+   * Setting this to true won't guarantee cyclic calls to be in the generated trace
+   */
+  allowCyclicCalls: boolean,
   /**
    * Whether classes from the standard library should be involved in the trace (i.e. java.lang)
    */
@@ -219,4 +277,85 @@ export interface TraceGenerationParameters {
 Todo java.lang, java.net, java.io, java.security, java.util, java.sql, java.time
 */
 
-// export function generateFakeTrace(apps: Array<FakeApp>): FakeTrace {} 
+export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationParameters, seed?: number): FakeTrace {
+  // TODO check parameter validity
+
+  if (apps.length < 1 ) {
+    throw new RangeError("Must provide at least 1 app to generate a trace for");
+  }
+
+  if (seed !== undefined) {
+    faker.seed(seed);
+  }
+
+  const startingApp = apps[0];
+  const callInterval = params.duration / params.callCount;
+  let timePassed = 0;
+  const entryPoint = startingApp.entryPoint;
+  const entryMethod = faker.helpers.arrayElement(entryPoint.methods);
+  let currentCallDepth = 0;
+
+  let entrySpan: FakeSpan = {
+    name: `${entryPoint.identifier}.${entryMethod.identifier}`,
+    startTime: 0,
+    endTime: params.duration,
+    attributes: {
+      "explorviz.token.id": "0b87ef39-1c41-415e-98cf-38ce5986f278",
+      "explorviz.token.secret": "GipJh2r0XboeAYMf",
+      "host": "host123",
+      "host_address": "192.168.178.1",
+      "service.name": "trace-gen",
+      "service.instance.id": "0",
+      "telemetry.sdk.language": "java",
+      [SEMATTRS_CODE_NAMESPACE]: `${entryPoint.parent?.name}`,
+      [SEMATTRS_CODE_FUNCTION]: `${entryMethod.identifier}`
+    },
+    children: []
+  };
+
+  let resultTrace: FakeTrace = [entrySpan];
+  let classStack: Array<[FakeClass, FakeSpan]> = [[entryPoint, entrySpan]];
+
+  let trace: FakeTrace = [];
+  const classes: FakeClass[][] = apps.map((app) => app.classes);
+  while (timePassed < params.duration) {
+    // Select next class for method call
+    if (params.internalCommunicationStyle === InternalCommunicationStyle.TRUE_RANDOM) {
+      //const nextApp = faker.number.int(classes.length - 1);
+      const nextApp = 0;
+      const nextClass = faker.helpers.arrayElement(classes[nextApp]);
+      const nextMethod = faker.helpers.arrayElement(nextClass.methods);
+      let nextSpan: FakeSpan = {
+        name: `${entryPoint.identifier}.${entryMethod.identifier}`,
+        startTime: 0,
+        endTime: params.duration,
+        attributes: {
+          "explorviz.token.id": "0b87ef39-1c41-415e-98cf-38ce5986f278",
+          "explorviz.token.secret": "GipJh2r0XboeAYMf",
+          "host": "host123",
+          "host_address": "192.168.178.1",
+          "service.name": "trace-gen",
+          "service.instance.id": "0",
+          "telemetry.sdk.language": "java",
+          [SEMATTRS_CODE_NAMESPACE]: `${nextClass.parent?.name}.${nextClass.identifier}`,
+          [SEMATTRS_CODE_FUNCTION]: `${nextMethod.identifier}`
+        },
+        children: []
+      }
+      while (classStack.length >= params.maxConnectionDepth || faker.number.int(1) === 1) {
+        const head = classStack.pop() as [FakeClass, FakeSpan];
+        if (classStack.length === 0) {
+          resultTrace.push(nextSpan);
+          break;
+        } else {
+          classStack[classStack.length - 1][1].children.push(head[1]);
+        }
+      }
+      classStack.push([nextClass, nextSpan]);
+    }
+
+    timePassed += callInterval;
+  }
+
+  return resultTrace;
+}
