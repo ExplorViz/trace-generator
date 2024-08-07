@@ -156,6 +156,7 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
     const minClassesInLayer = layer == params.packageDepth ? 1 : 0; // Deepest layer requires at least 1 class
     const maxClassesInLayer = Math.max(Math.floor(remainingClassCount * params.balance), minClassesInLayer);
     const classesInLayer = faker.number.int({min: minClassesInLayer, max: maxClassesInLayer});
+    remainingClassCount -= classesInLayer;
 
     let newClasses: Array<FakeClass> = Array.from(Array(classesInLayer), _ => {
       const numMethods = faker.number.int({min: params.minMethodCount, max: params.maxMethodCount});
@@ -197,7 +198,6 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
         }
       });
       newPackages.push(newPackage);
-      console.log(newPackage)
       packages.push(newPackage);
       currentLayer.splice(0, numComponentsToPackage);
       remainingComponents -= numComponentsToPackage;
