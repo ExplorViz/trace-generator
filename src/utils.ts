@@ -1,4 +1,4 @@
-import { FakeApp, FakePackage } from "./structure";
+import { FakeApp, FakePackage } from "./generation";
 
 /**
  * Takes any string and converts the first character to uppercase

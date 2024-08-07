@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express'
 import bodyParser from 'body-parser'
 import { body, ValidationChain, validationResult } from 'express-validator'
 import { TraceGenerator, FakeTrace } from './tracing'
-import { generateFakeApps, generateFakeTrace, FakeApp, AppGenerationParameters, TraceGenerationParameters, InternalCommunicationStyle } from './structure'
+import { generateFakeApps, generateFakeTrace, FakeApp, AppGenerationParameters, TraceGenerationParameters, InternalCommunicationStyle } from './generation'
 import { appTreeToString } from './utils'
 
 console.log(String.raw
@@ -26,7 +26,7 @@ interface OtelCollectorConfig {
 }
 
 const app = express();
-app.use(express.static('src/res', { index:'index.html' }));
+app.use(express.static('src/res', { index: 'index.html' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 function parseRequestBody(reqBody: any): [OtelCollectorConfig, AppGenerationParameters, TraceGenerationParameters] {
