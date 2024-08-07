@@ -16,7 +16,7 @@ console.log(String.raw
 
 const DEFAULT_TARGET_HOSTNAME = "localhost";
 const DEFAULT_TARGET_PORT = 55678;
-const FRONTEND_PORT = 9001;
+const FRONTEND_PORT = 8079;
 
 const traceGenerator: TraceGenerator = new TraceGenerator(DEFAULT_TARGET_HOSTNAME, DEFAULT_TARGET_PORT);
 
