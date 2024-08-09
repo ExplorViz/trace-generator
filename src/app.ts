@@ -80,8 +80,8 @@ const requestFields = {
 }
 
 let validationChain: Array<ValidationChain> = [
-  body(requestFields.ints).exists().isInt(),
-  body(requestFields.floats).exists().isFloat(),
+  body(requestFields.ints).exists().isInt({min: 0}),
+  body(requestFields.floats).exists().isFloat({min: 0}),
   body(requestFields.urls).exists().isURL({ require_tld: false, require_port: false, require_protocol: false })
 ].concat(Array.from(requestFields.choices, choice => body(choice.name).exists().isIn(choice.allowedValues)));
 
