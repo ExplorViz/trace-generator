@@ -10,6 +10,24 @@ export function capitalizeString(text: string) {
 }
 
 /**
+ * Check whether the passed string represents a number (and does not merely contain one)
+ * @param numStr String for which to check whether it is of a number
+ * @returns true if the string in its entirety represents a number, false otherwise
+ */
+export function isValidNumber(numStr: string): boolean {
+  return !isNaN(Number(numStr)) && !isNaN(parseFloat(numStr));
+}
+
+/**
+ * Check whether the passed string represents an integer (and does not merely contain one)
+ * @param numStr String for which to check whether it is of an integer
+ * @returns true if the string in its entirety represents an integer, false otherwise
+ */
+export function isValidInteger(numStr: string): boolean {
+  return isValidNumber(numStr) && Number.isInteger(parseFloat(numStr));
+}
+
+/**
  * Turn any given string into a valid Java identifier.
  * Removes invalid characters and trims numbers from start of string.
  * Any allowed non-ASCII characters are not accounted for and get removed.

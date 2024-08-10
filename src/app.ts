@@ -3,7 +3,7 @@ import bodyParser from 'body-parser'
 import { body, ValidationChain, validationResult } from 'express-validator'
 import { TraceGenerator, FakeTrace } from './tracing'
 import { generateFakeApps, generateFakeTrace, FakeApp, AppGenerationParameters, TraceGenerationParameters, InternalCommunicationStyle } from './generation'
-import { appTreeToString } from './utils'
+import { appTreeToString, isValidInteger } from './utils'
 
 console.log(String.raw
 ` _______                  _____
@@ -48,7 +48,8 @@ function parseRequestBody(reqBody: any): [OtelCollectorConfig, AppGenerationPara
       maxClassCount: parseInt(reqBody.maxClassCount),
       minMethodCount: parseInt(reqBody.minMethodCount),
       maxMethodCount: parseInt(reqBody.maxMethodCount),
-      balance: parseFloat(reqBody.balance)
+      balance: parseFloat(reqBody.balance),
+      seed: ('appSeed' in reqBody && isValidInteger(reqBody.appSeed)) ? parseInt(reqBody.appSeed) : undefined
     },
   
     {
@@ -57,7 +58,8 @@ function parseRequestBody(reqBody: any): [OtelCollectorConfig, AppGenerationPara
       maxConnectionDepth: parseInt(reqBody.maxCallDepth),
       internalCommunicationStyle: commStyleLookup.get(reqBody.internalCommunicationStyle),
       allowCyclicCalls: 'allowCyclicCalls' in reqBody,
-      includeUtilityClasses: false
+      includeUtilityClasses: false,
+      seed: ('traceSeed' in reqBody && isValidInteger(reqBody.traceSeed)) ? parseInt(reqBody.traceSeed) : undefined
     }
   ];
 }

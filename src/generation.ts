@@ -75,20 +75,23 @@ export interface AppGenerationParameters {
    * even for a balance value of 1.
    * May only be between 0 and 1
    */
-  balance: number
+  balance: number,
+  /**
+   * Can optionally be used to yield reproducable results. The seed is set once before generating all the apps.
+   */
+  seed?: number
 }
 
 /**
  * Generate some fake applications, with all the apps using the same generation parameters.
  * @param params Specifies the generation behaviour, especially the size of the applications. See {@link AppGenerationParameters}
- * @param seed Can optionally be used to yield reproducable results. The seed is set once before generating the apps
  * @returns A list of {@link FakeApp}s conforming to the specified parameters
  */
-export function generateFakeApps(params: AppGenerationParameters, seed?: number): Array<FakeApp> {
+export function generateFakeApps(params: AppGenerationParameters): Array<FakeApp> {
   // Set seed, if one was provided (for reproducable results)
 
-  if (seed !== undefined) {
-    faker.seed(seed);
+  if (params.seed !== undefined) {
+    faker.seed(params.seed);
   }
 
   return Array.from(Array(params.appCount), _ => generateFakeApp(params));
@@ -285,22 +288,26 @@ export interface TraceGenerationParameters {
   /**
    * Whether classes from the standard library should be involved in the trace (i.e. java.lang)
    */
-  includeUtilityClasses: boolean
+  includeUtilityClasses: boolean,
+  /**
+   * 
+   */
+  seed?: number
 }
 
 /*
 Todo java.lang, java.net, java.io, java.security, java.util, java.sql, java.time
 */
 
-export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationParameters, seed?: number): FakeTrace {
+export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationParameters): FakeTrace {
   // TODO check parameter validity
 
   if (apps.length < 1 ) {
     throw new RangeError("Must provide at least 1 app to generate a trace for");
   }
 
-  if (seed !== undefined) {
-    faker.seed(seed);
+  if (params.seed !== undefined) {
+    faker.seed(params.seed);
   }
 
   const startingApp = apps[0];
