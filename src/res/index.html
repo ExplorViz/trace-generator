@@ -11,12 +11,13 @@
             
             <div>
                 <p>Target hostname:</p>
-                <input type="text" value="localhost" name="targetHostname">
+                <input type="text" value="localhost" name="targetHostname" pattern="[a-zA-Z0-9\.\-]+" required
+                oninvalid="this.setCustomValidity('Hostname may only include A-Z, a-z, 0-9, . and -')" oninput="this.setCustomValidity('')">
             </div>
 
             <div>
                 <p>Target port:</p>
-                <input type="number" min="0" step="1" value="55678" name="targetPort">
+                <input type="number" min="0" step="1" value="55678" name="targetPort" required>
             </div>
 
 
@@ -94,7 +95,7 @@
 
             <div>
                 <p>Communication Style:</p>
-                <select name="communicationStyle" id="select_communicationStyle">
+                <select name="communicationStyle" id="select_communicationStyle" required>
                     <option value="true_random">True Random</option>
                     <option value="cohesive">Cohesive</option>
                     <option value="random_exit">Random Exit</option>
