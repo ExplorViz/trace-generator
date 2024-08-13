@@ -1,0 +1,69 @@
+# TraceGen
+
+TraceGen is a development utility for testing and debugging OpenTelemetry-based applications. It was developed to be used with the [ExplorViz](https://explorviz.dev/) software visualization tool.
+
+## Installation
+
+Clone this repository:
+
+```
+git clone [REPOSITORY_URL]
+```
+
+Navigate into the repository folder:
+
+```
+cd trace-gen
+```
+
+Install npm packages:
+
+```
+npm install
+```
+
+## Usage
+
+### Using the frontend
+
+Start the frontend:
+
+```
+npm start
+```
+
+Open URL in browser, by default `http://localhost:8079`. Modify parameters as desired, then click `Send Trace`.
+
+### Using the library
+
+Usage example (with sensible parameters):
+
+```typescript
+const traceGenerator: TraceGenerator = new TraceGenerator(
+  TARGET_HOSTNAME,
+  TARGET_PORT,
+);
+
+appParams: AppGenerationParameters = {
+  appCount: 1,
+  packageDepth: 4,
+  minClassCount: 5,
+  maxClassCount: 20,
+  minMethodCount: 1,
+  maxMethodCount: 5,
+  balance: 1,
+};
+
+traceParams: TraceGenerationParameters = {
+  duration: 1000,
+  callCount: 100,
+  maxConnectionDepth: 10,
+  internalCommunicationStyle: InternalCommunicationStyle.COHESIVE,
+  allowCyclicCalls: false,
+};
+
+const apps: Array<FakeApp> = generateFakeApps(appParams);
+const trace: FakeTrace = generateFakeTrace(apps, traceParams);
+
+traceGenerator.writeTrace(trace);
+```
