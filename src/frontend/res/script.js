@@ -46,7 +46,7 @@ const formRangeIds = [
 
   "duration",
   "callCount",
-  "maxCallDepth"
+  "maxCallDepth",
 ];
 
 formRangeIds.forEach((id) => {

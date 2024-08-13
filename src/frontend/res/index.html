@@ -1,126 +1,218 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-    <head>
-        <title>Trace Generator</title>
-        <link rel="stylesheet" href="style.css">
-    </head>
+  <head>
+    <title>Trace Generator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-    <body style="font-family: Verdana, Tahoma, Geneva, sans-serif">
-        <form method="post">
-            <h1>OpenTelemetry Collector Settings</h1>
-            
-            <div>
-                <p>Target hostname:</p>
-                <input type="text" value="localhost" name="targetHostname" pattern="[a-zA-Z0-9\.\-]+" required
-                oninvalid="this.setCustomValidity('Hostname may only include A-Z, a-z, 0-9, . and -')" oninput="this.setCustomValidity('')">
-            </div>
+  <body style="font-family: Verdana, Tahoma, Geneva, sans-serif">
+    <form method="post">
+      <h1>OpenTelemetry Collector Settings</h1>
 
-            <div>
-                <p>Target port:</p>
-                <input type="number" min="0" step="1" value="55678" name="targetPort" required>
-            </div>
+      <div>
+        <p>Target hostname:</p>
+        <input
+          type="text"
+          value="localhost"
+          name="targetHostname"
+          pattern="[a-zA-Z0-9\.\-]+"
+          required
+          oninvalid="this.setCustomValidity('Hostname may only include A-Z, a-z, 0-9, . and -')"
+          oninput="this.setCustomValidity('')"
+        />
+      </div>
 
+      <div>
+        <p>Target port:</p>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value="55678"
+          name="targetPort"
+          required
+        />
+      </div>
 
+      <h1>App generation settings</h1>
 
-            <h1>App generation settings</h1>
+      <div>
+        <p>Number of apps:</p>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value="1"
+          name="appCount"
+          id="range_appCount"
+        />
+        <label for="range_appCount" id="label_appCount"></label>
+      </div>
 
-            <div>
-                <p>Number of apps:</p>
-                <input type="range" min="1" max="10" value="1" name="appCount" id="range_appCount">
-                <label for="range_appCount" id="label_appCount"></label>
-            </div>
+      <div>
+        <p>Package depth:</p>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value="4"
+          name="packageDepth"
+          id="range_packageDepth"
+        />
+        <label for="range_packageDepth" id="label_packageDepth"></label>
+      </div>
 
-            <div>
-                <p>Package depth:</p>
-                <input type="range" min="1" max="10" value="4" name="packageDepth" id="range_packageDepth">
-                <label for="range_packageDepth" id="label_packageDepth"></label>
-            </div>
+      <div>
+        <p>Minimum class count:</p>
+        <input
+          type="range"
+          min="1"
+          max="100"
+          value="5"
+          name="minClassCount"
+          id="range_minClassCount"
+        />
+        <label for="range_minClassCount" id="label_minClassCount"></label>
+      </div>
 
-            <div>
-                <p>Minimum class count:</p>
-                <input type="range" min="1" max="100" value="5" name="minClassCount" id="range_minClassCount">
-                <label for="range_minClassCount" id="label_minClassCount"></label>
-            </div>
+      <div>
+        <p>Maximum class count:</p>
+        <input
+          type="range"
+          min="1"
+          max="100"
+          value="20"
+          name="maxClassCount"
+          id="range_maxClassCount"
+        />
+        <label for="range_maxClassCount" id="label_maxClassCount"></label>
+      </div>
 
-            <div>
-                <p>Maximum class count:</p>
-                <input type="range" min="1" max="100" value="20" name="maxClassCount" id="range_maxClassCount">
-                <label for="range_maxClassCount" id="label_maxClassCount"></label>
-            </div>
+      <div>
+        <p>Minimum method count:</p>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value="1"
+          name="minMethodCount"
+          id="range_minMethodCount"
+        />
+        <label for="range_minMethodCount" id="label_minMethodCount"></label>
+      </div>
 
-            <div>
-                <p>Minimum method count:</p>
-                <input type="range" min="1" max="10" value="1" name="minMethodCount" id="range_minMethodCount">
-                <label for="range_minMethodCount" id="label_minMethodCount"></label>
-            </div>
+      <div>
+        <p>Maximum method count:</p>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value="5"
+          name="maxMethodCount"
+          id="range_maxMethodCount"
+        />
+        <label for="range_maxMethodCount" id="label_maxMethodCount"></label>
+      </div>
 
-            <div>
-                <p>Maximum method count:</p>
-                <input type="range" min="1" max="10" value="5" name="maxMethodCount" id="range_maxMethodCount">
-                <label for="range_maxMethodCount" id="label_maxMethodCount"></label>
-            </div>
+      <div>
+        <p>Balance:</p>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.2"
+          value="1"
+          name="balance"
+          id="range_balance"
+        />
+        <label for="range_balance" id="label_balance"></label>
+      </div>
 
-            <div>
-                <p>Balance:</p>
-                <input type="range" min="0" max="1" step="0.2" value="1" name="balance" id="range_balance">
-                <label for="range_balance" id="label_balance"></label>
-            </div>
+      <div>
+        <p>Application Seed (leave empty for random seed):</p>
+        <input type="number" min="0" step="1" value="" name="appSeed" />
+      </div>
 
-            <div>
-                <p>Application Seed (leave empty for random seed):</p>
-                <input type="number" min="0" step="1" value="" name="appSeed">
-            </div>
+      <h1>Trace generation settings</h1>
 
+      <div>
+        <p>Duration (ms):</p>
+        <input
+          type="range"
+          min="100"
+          max="10000"
+          value="1000"
+          name="duration"
+          id="range_duration"
+        />
+        <label for="range_duration" id="label_duration"></label>
+      </div>
 
+      <div>
+        <p>Call Count:</p>
+        <input
+          type="range"
+          min="1"
+          max="10000"
+          value="100"
+          name="callCount"
+          id="range_callCount"
+        />
+        <label for="range_callCount" id="label_callCount"></label>
+      </div>
 
-            <h1>Trace generation settings</h1>
+      <div>
+        <p>Max Call Depth:</p>
+        <input
+          type="range"
+          min="1"
+          max="100"
+          value="10"
+          name="maxCallDepth"
+          id="range_maxCallDepth"
+        />
+        <label for="range_maxCallDepth" id="label_maxCallDepth"></label>
+      </div>
 
-            <div>
-                <p>Duration (ms):</p>
-                <input type="range" min="100" max="10000" value="1000" name="duration" id="range_duration">
-                <label for="range_duration" id="label_duration"></label>
-            </div>
+      <div>
+        <p>Communication Style:</p>
+        <select
+          name="communicationStyle"
+          id="select_communicationStyle"
+          required
+        >
+          <option value="true_random">True Random</option>
+          <option value="cohesive">Cohesive</option>
+          <option value="random_exit">Random Exit</option>
+        </select>
+      </div>
 
-            <div>
-                <p>Call Count:</p>
-                <input type="range" min="1" max="10000" value="100" name="callCount" id="range_callCount">
-                <label for="range_callCount" id="label_callCount"></label>
-            </div>
+      <br />
 
-            <div>
-                <p>Max Call Depth:</p>
-                <input type="range" min="1" max="100" value="10" name="maxCallDepth" id="range_maxCallDepth">
-                <label for="range_maxCallDepth" id="label_maxCallDepth"></label>
-            </div>
+      <div>
+        <input
+          type="checkbox"
+          name="cyclicCalls"
+          value="on"
+          id="checkbox_cyclicCalls"
+        />
+        <label for="checkbox_cyclicCalls">Allow cyclic calls</label>
+      </div>
 
-            <div>
-                <p>Communication Style:</p>
-                <select name="communicationStyle" id="select_communicationStyle" required>
-                    <option value="true_random">True Random</option>
-                    <option value="cohesive">Cohesive</option>
-                    <option value="random_exit">Random Exit</option>
-                </select>
-            </div>
+      <div>
+        <p>Trace Seed (leave empty for random seed):</p>
+        <input type="number" min="0" step="1" value="" name="traceSeed" />
+      </div>
 
-            <br>
+      <br />
 
-            <div>
-                <input type="checkbox" name="cyclicCalls" value="on" id="checkbox_cyclicCalls">
-                <label for="checkbox_cyclicCalls">Allow cyclic calls</label>
-            </div>
+      <button type="submit" value="Submit" class="button_submit">
+        Send trace
+      </button>
+    </form>
 
-            <div>
-                <p>Trace Seed (leave empty for random seed):</p>
-                <input type="number" min="0" step="1" value="" name="traceSeed">
-            </div>
+    <br />
 
-            <br>
-
-            <button type="submit" value="Submit" class="button_submit">Send trace</button>
-        </form>
-
-        <br>
-
-        <script src="script.js"></script>
-    </body>
+    <script src="script.js"></script>
+  </body>
 </html>
