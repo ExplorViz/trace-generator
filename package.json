@@ -5,12 +5,16 @@
   "main": "./src/app.js",
   "scripts": {
     "start": "ts-node ./src/frontend/app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.14.12",
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.9",
+    "prettier": "3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
@@ -22,5 +26,8 @@
     "@types/express": "^4.17.21",
     "express": "^4.19.2",
     "express-validator": "^7.1.0"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }
