@@ -1,9 +1,10 @@
 import express, { Request, Response } from 'express'
 import bodyParser from 'body-parser'
-import { body, ValidationChain, validationResult } from 'express-validator'
-import { TraceGenerator, FakeTrace } from './tracing'
-import { generateFakeApps, generateFakeTrace, FakeApp, AppGenerationParameters, TraceGenerationParameters, InternalCommunicationStyle } from './generation'
-import { appTreeToString, isValidInteger } from './utils'
+import { validationResult } from 'express-validator'
+import { TraceGenerator, FakeTrace } from '../tracing'
+import { generateFakeApps, generateFakeTrace, FakeApp, AppGenerationParameters, TraceGenerationParameters, InternalCommunicationStyle } from '../generation'
+import { appTreeToString, isValidInteger } from '../utils'
+import { getValidationChains } from './form-validation'
 
 console.log(String.raw
 ` _______                  _____
@@ -26,7 +27,7 @@ interface OtelCollectorConfig {
 }
 
 const app = express();
-app.use(express.static('src/res', { index: 'index.html' }));
+app.use(express.static('src/frontend/res', { index: 'index.html' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 function parseRequestBody(reqBody: any): [OtelCollectorConfig, AppGenerationParameters, TraceGenerationParameters] {
@@ -64,38 +65,17 @@ function parseRequestBody(reqBody: any): [OtelCollectorConfig, AppGenerationPara
   ];
 }
 
-// Specify request fields and their type for validation
-
-const requestFields = {
-  ints: [
-  'targetPort', 'appCount', 'packageDepth', 'minClassCount', 'maxClassCount', 'minMethodCount',
-  'maxMethodCount', 'duration', 'callCount', 'maxCallDepth'
-  ],
-  floats: ['balance'],
-  urls: ['targetHostname'],
-  choices: [
-    {
-      name: 'communicationStyle',
-      allowedValues: ['true_random', 'cohesive', 'random_exit']
-    }
-  ]
-}
-
-let validationChain: Array<ValidationChain> = [
-  body(requestFields.ints).exists().isInt({min: 0}),
-  body(requestFields.floats).exists().isFloat({min: 0}),
-  body(requestFields.urls).exists().isURL({ require_tld: false, require_port: false, require_protocol: false })
-].concat(Array.from(requestFields.choices, choice => body(choice.name).exists().isIn(choice.allowedValues)));
-
-app.post('/', validationChain, (req: Request, res: Response) => {
+app.post('/', getValidationChains(), (req: Request, res: Response) => {
   console.log(req.body);
   const result = validationResult(req);
   if (!result.isEmpty()) {
     console.log(result.array());
-    return res.redirect('/');
+    return res.status(400).json(result.array()); // "Bad Request" response
   }
 
   const [otelParams, appParams, traceParams] = parseRequestBody(req.body);
+  console.log(appParams);
+  console.log(traceParams);
   traceGenerator.setUrl(otelParams.targetHostname, otelParams.targetPort);
   const apps: Array<FakeApp> = generateFakeApps(appParams);
   const trace: FakeTrace = generateFakeTrace(apps, traceParams);
@@ -109,7 +89,7 @@ app.post('/', validationChain, (req: Request, res: Response) => {
 
   traceGenerator.writeTrace(trace);
 
-  return res.redirect('/');
+  return res.status(204).send(); // "No Content" response
 })
 
 app.listen(FRONTEND_PORT, () => {

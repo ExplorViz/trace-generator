@@ -4,7 +4,7 @@
   "description": "Generates OpenTelemetry traces for a random Java class structure and sends them to an OTel collector. This package is notably used by the software visualization tool \"ExplorViz\".",
   "main": "./src/app.js",
   "scripts": {
-    "start": "ts-node ./src/app.ts",
+    "start": "ts-node ./src/frontend/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
