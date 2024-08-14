@@ -290,7 +290,7 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
   return fakeApp;
 }
 
-export const enum InternalCommunicationStyle {
+export const enum CommunicationStyle {
   TRUE_RANDOM,
   /**
    * With this style, communication should mostly happen within packages.
@@ -317,9 +317,9 @@ export interface TraceGenerationParameters {
   /**
    * This specifies the way in which application-internal classes communicate with each other.
    * Styles differ in the way that classes for communication are selected.
-   * For more information, see {@link InternalCommunicationStyle}
+   * For more information, see {@link CommunicationStyle}
    */
-  internalCommunicationStyle: InternalCommunicationStyle;
+  communicationStyle: CommunicationStyle;
   /**
    * Whether there may exist cyclic method calls in the trace.
    * Setting this to true won't guarantee cyclic calls to be in the generated trace
@@ -377,10 +377,7 @@ export function generateFakeTrace(
   const classes: FakeClass[][] = apps.map((app) => app.classes);
   while (timePassed < params.duration) {
     // Select next class for method call
-    if (
-      params.internalCommunicationStyle ===
-      InternalCommunicationStyle.TRUE_RANDOM
-    ) {
+    if (params.communicationStyle === CommunicationStyle.TRUE_RANDOM) {
       //const nextApp = faker.number.int(classes.length - 1);
       const nextApp = 0;
       const nextClass = faker.helpers.arrayElement(classes[nextApp]);

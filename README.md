@@ -60,7 +60,7 @@ traceParams: TraceGenerationParameters = {
   duration: 1000,
   callCount: 100,
   maxConnectionDepth: 10,
-  internalCommunicationStyle: InternalCommunicationStyle.COHESIVE,
+  communicationStyle: CommunicationStyle.COHESIVE,
   allowCyclicCalls: false,
 };
 

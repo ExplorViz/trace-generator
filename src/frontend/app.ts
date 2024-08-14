@@ -8,12 +8,12 @@ import {
   FakeApp,
   AppGenerationParameters,
   TraceGenerationParameters,
-  InternalCommunicationStyle,
+  CommunicationStyle,
 } from "../generation";
 import { appTreeToString, isValidInteger } from "../utils";
 import { getValidationChains } from "./form-validation";
 
-console.log(String.raw`\n
+console.log(String.raw`
  _______                  _____
 |__   __|                / ____|
    | |_ __ __ _  ___ ___| |  __  ___ _ __
@@ -44,9 +44,9 @@ function parseRequestBody(
   reqBody: any,
 ): [OtelCollectorConfig, AppGenerationParameters, TraceGenerationParameters] {
   const commStyleLookup = new Map();
-  commStyleLookup.set("true_random", InternalCommunicationStyle.TRUE_RANDOM);
-  commStyleLookup.set("cohesive", InternalCommunicationStyle.COHESIVE);
-  commStyleLookup.set("random_exit", InternalCommunicationStyle.RANDOM_EXIT);
+  commStyleLookup.set("true_random", CommunicationStyle.TRUE_RANDOM);
+  commStyleLookup.set("cohesive", CommunicationStyle.COHESIVE);
+  commStyleLookup.set("random_exit", CommunicationStyle.RANDOM_EXIT);
 
   return [
     {
@@ -72,9 +72,7 @@ function parseRequestBody(
       duration: parseInt(reqBody.duration),
       callCount: parseInt(reqBody.callCount),
       maxConnectionDepth: parseInt(reqBody.maxCallDepth),
-      internalCommunicationStyle: commStyleLookup.get(
-        reqBody.internalCommunicationStyle,
-      ),
+      communicationStyle: commStyleLookup.get(reqBody.communicationStyle),
       allowCyclicCalls: "allowCyclicCalls" in reqBody,
       seed:
         "traceSeed" in reqBody && isValidInteger(reqBody.traceSeed)
