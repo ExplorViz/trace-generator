@@ -76,7 +76,6 @@ function parseRequestBody(
         reqBody.internalCommunicationStyle,
       ),
       allowCyclicCalls: "allowCyclicCalls" in reqBody,
-      includeUtilityClasses: false,
       seed:
         "traceSeed" in reqBody && isValidInteger(reqBody.traceSeed)
           ? parseInt(reqBody.traceSeed)

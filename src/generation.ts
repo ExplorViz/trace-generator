@@ -326,18 +326,10 @@ export interface TraceGenerationParameters {
    */
   allowCyclicCalls: boolean;
   /**
-   * Whether classes from the standard library should be involved in the trace (i.e. java.lang)
-   */
-  includeUtilityClasses: boolean;
-  /**
    *
    */
   seed?: number;
 }
-
-/*
-Todo java.lang, java.net, java.io, java.security, java.util, java.sql, java.time
-*/
 
 export function generateFakeTrace(
   apps: Array<FakeApp>,
