@@ -64,9 +64,9 @@ export class TraceGenerator {
     });
     this.spanProcessor = new SimpleSpanProcessor(this.exporter);
     this.tracer_provider.addSpanProcessor(this.spanProcessor);
-    this.tracer_provider.addSpanProcessor(
-      new SimpleSpanProcessor(new ConsoleSpanExporter()),
-    );
+    // this.tracer_provider.addSpanProcessor(
+    //   new SimpleSpanProcessor(new ConsoleSpanExporter()),
+    // );
     this.tracer_provider.register();
     this.tracer = trace.getTracer(this.tracer_name, this.tracer_version);
 

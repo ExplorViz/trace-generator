@@ -267,8 +267,6 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
   assert(currentLayer.filter(isClass).length === 0);
 
-  let remainingClasses: Array<FakeClass> = [];
-
   // Create root package ("org.tracegen.[APP_NAME]")
 
   let rootPackage1: FakePackage;
@@ -289,8 +287,8 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
   };
 
   rootPackage3 = {
-    name: "randomapp",
-    classes: remainingClasses,
+    name: appName.replace(/-/g, ""),
+    classes: [],
     subpackages: currentLayer as Array<FakePackage>, // Will only contain packages at this point
     parent: rootPackage2,
   };
@@ -302,30 +300,29 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
   // Fill root layer with remaining classes, if any
 
-  remainingClasses.concat(
-    Array.from(Array(remainingClassCount), (_) => {
-      const numMethods = faker.number.int({
-        min: params.minMethodCount,
-        max: params.maxMethodCount,
-      });
-      const newMethods = Array.from(Array(numMethods), (_) => {
-        const newMethod = {
-          identifier:
-            faker.hacker.verb() + capitalizeString(faker.hacker.noun()),
-        };
-        methods.push(newMethod);
-        return newMethod;
-      });
-      const newClass = {
-        identifier: faker.hacker.noun(),
-        methods: newMethods,
-        parent: rootPackage3,
-        parentAppName: appName,
+  let remainingClasses = Array.from(Array(remainingClassCount), (_) => {
+    const numMethods = faker.number.int({
+      min: params.minMethodCount,
+      max: params.maxMethodCount,
+    });
+    const newMethods = Array.from(Array(numMethods), (_) => {
+      const newMethod = {
+        identifier: nameGenerator.getRandomMethodName(),
       };
-      classes.push(newClass);
-      return newClass;
-    }),
-  );
+      methods.push(newMethod);
+      return newMethod;
+    });
+    const newClass = {
+      identifier: nameGenerator.getRandomClassName(),
+      methods: newMethods,
+      parent: rootPackage3,
+      parentAppName: appName,
+    };
+    classes.push(newClass);
+    return newClass;
+  });
+
+  rootPackage3.classes = remainingClasses;
 
   const entryPoint = faker.helpers.arrayElement(classes);
 
@@ -489,7 +486,7 @@ export function generateFakeTrace(
   spanAttrs[SEMATTRS_CODE_FUNCTION] = entryMethod.identifier;
 
   let entrySpan: FakeSpan = {
-    name: `${entryPointFqn}`,
+    name: `${entryPointFqn}.${entryMethod.identifier}`,
     startTime: 0,
     endTime: params.duration,
     attributes: { ...spanAttrs },
