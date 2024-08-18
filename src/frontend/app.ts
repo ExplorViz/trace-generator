@@ -44,7 +44,7 @@ interface OtelCollectorParameters {
 }
 
 const app = express();
-app.use(express.static("src/frontend/res", { index: "index.html" }));
+app.use(express.static("src/frontend/public", { index: "index.html" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 function parseRequestBody(

@@ -7,6 +7,7 @@ import {
   SEMATTRS_CODE_FUNCTION,
   SEMATTRS_CODE_NAMESPACE,
 } from "@opentelemetry/semantic-conventions";
+import { NameGenerator } from "./naming";
 
 interface FakeMethod {
   identifier: string;
@@ -165,7 +166,8 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
     throw new RangeError("Balance value must be between 0 and 1");
   }
 
-  const appName = faker.hacker.noun() + capitalizeString(faker.hacker.noun());
+  const nameGenerator: NameGenerator = new NameGenerator();
+  const appName = nameGenerator.getRandomAppName();
 
   // Convenience arrays
 
@@ -205,14 +207,13 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
         });
         const newMethods = Array.from(Array(numMethods), (_) => {
           const newMethod = {
-            identifier:
-              faker.hacker.verb() + capitalizeString(faker.hacker.noun()),
+            identifier: nameGenerator.getRandomMethodName(),
           };
           methods.push(newMethod);
           return newMethod;
         });
         const newClass = {
-          identifier: faker.hacker.noun(),
+          identifier: nameGenerator.getRandomClassName(),
           methods: newMethods,
           parentAppName: appName,
         };
@@ -242,7 +243,7 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
       let classesToPackage: Array<FakeClass> = [];
       let packagesToPackage: Array<FakePackage> = [];
       let newPackage = {
-        name: faker.hacker.noun(),
+        name: nameGenerator.getRandomPackageName(),
         classes: classesToPackage,
         subpackages: packagesToPackage,
       };
