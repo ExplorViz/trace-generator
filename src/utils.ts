@@ -1,5 +1,6 @@
 import { FakeApp, FakePackage } from "./generation";
 import { FakeSpan, FakeTrace } from "./tracing";
+import { hostname, networkInterfaces } from "os";
 
 /**
  * Takes any string and converts the first character to uppercase
@@ -97,6 +98,34 @@ export function sanitizeJavaIdentifier(identifier: string) {
   const isValidIdentifier: boolean =
     !JAVA_RESERVED_TOKENS.includes(identifier) && identifier != "";
   return isValidIdentifier ? identifier : IDENTIFIER_FALLBACK;
+}
+
+/**
+ * Return the hostname of the executing machine
+ * @returns
+ */
+export function getHostname(): string {
+  return hostname();
+}
+
+/**
+ * Find the first non-internal IPv4 address of the host
+ * @returns String representation of the found IP address
+ */
+export function getHostIP(): string {
+  const fallbackIP = "0.0.0.0";
+  const nets = networkInterfaces();
+  for (const key of Object.keys(nets)) {
+    const netInfo = nets[key];
+    if (netInfo) {
+      for (const net of netInfo) {
+        if (net.family === "IPv4" && !net.internal) {
+          return net.address.toString();
+        }
+      }
+    }
+  }
+  return fallbackIP;
 }
 
 /**

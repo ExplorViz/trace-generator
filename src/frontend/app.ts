@@ -10,7 +10,13 @@ import {
   TraceGenerationParameters,
   CommunicationStyle,
 } from "../generation";
-import { appTreeToString, isValidInteger, traceToString } from "../utils";
+import {
+  appTreeToString,
+  getHostIP,
+  getHostname,
+  isValidInteger,
+  traceToString,
+} from "../utils";
 import { getValidationChains } from "./form-validation";
 import { constants } from "../constants";
 
@@ -83,6 +89,14 @@ function parseRequestBody(
       maxConnectionDepth: parseInt(reqBody.maxCallDepth),
       communicationStyle: commStyle,
       allowCyclicCalls: "allowCyclicCalls" in reqBody,
+      fixedAttributes: {
+        "telemetry.sdk.language": "java",
+        "service.instance.id": "0",
+        host: getHostname(),
+        host_address: getHostIP(),
+        "explorviz.token.id": "mytokenvalue",
+        "explorviz.token.secret": "mytokensecret",
+      },
       seed:
         "traceSeed" in reqBody && isValidInteger(reqBody.traceSeed)
           ? parseInt(reqBody.traceSeed)

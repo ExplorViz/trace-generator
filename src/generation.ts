@@ -1,7 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { FakeTrace, FakeSpan } from "./tracing";
-import { capitalizeString } from "./utils";
+import { capitalizeString, getHostname, getHostIP } from "./utils";
 import { strict as assert } from "assert";
+import { Attributes } from "@opentelemetry/api";
 import {
   SEMATTRS_CODE_FUNCTION,
   SEMATTRS_CODE_NAMESPACE,
@@ -443,6 +444,10 @@ export interface TraceGenerationParameters {
    */
   allowCyclicCalls: boolean;
   /**
+   * Attributes of constant value to include in every span of the trace
+   */
+  fixedAttributes?: Attributes;
+  /**
    * Can optionally be used to yield reproducable results. The seed is set once before generating all the apps.
    * This is separate from the app generation seed to allow generation of different traces using the same apps.
    */
@@ -472,21 +477,21 @@ export function generateFakeTrace(
   const entryMethod = faker.helpers.arrayElement(entryPoint.methods);
   const entryPointFqn = getClassFqn(entryPoint);
 
+  let spanAttrs: Attributes = {};
+  if (params.fixedAttributes !== undefined) {
+    spanAttrs = {
+      ...params.fixedAttributes,
+    };
+  }
+  spanAttrs["service.name"] = startingApp.name;
+  spanAttrs[SEMATTRS_CODE_NAMESPACE] = entryPointFqn;
+  spanAttrs[SEMATTRS_CODE_FUNCTION] = entryMethod.identifier;
+
   let entrySpan: FakeSpan = {
     name: `${entryPointFqn}`,
     startTime: 0,
     endTime: params.duration,
-    attributes: {
-      "explorviz.token.id": "mytokenvalue",
-      "explorviz.token.secret": "mytokensecret",
-      "service.name": `${startingApp.name}`,
-      "service.instance.id": "0",
-      host: "local",
-      host_address: "192.168.178.20",
-      "telemetry.sdk.language": "java",
-      [SEMATTRS_CODE_NAMESPACE]: `${entryPointFqn}`,
-      [SEMATTRS_CODE_FUNCTION]: `${entryMethod.identifier}`,
-    },
+    attributes: { ...spanAttrs },
     children: [],
   };
 
@@ -527,21 +532,14 @@ export function generateFakeTrace(
     }
     const nextMethod = faker.helpers.arrayElement(nextClass.methods);
     const classFqn = getClassFqn(nextClass);
+    spanAttrs["service.name"] = nextClass.parentAppName;
+    spanAttrs[SEMATTRS_CODE_NAMESPACE] = classFqn;
+    spanAttrs[SEMATTRS_CODE_FUNCTION] = nextMethod.identifier;
     let nextSpan: FakeSpan = {
       name: `${classFqn}.${nextMethod.identifier}`,
       startTime: 0,
       endTime: params.duration,
-      attributes: {
-        "explorviz.token.id": "mytokenvalue",
-        "explorviz.token.secret": "mytokensecret",
-        "service.name": `${nextClass.parentAppName}`,
-        "service.instance.id": "0",
-        host: "local",
-        host_address: "192.168.178.20",
-        "telemetry.sdk.language": "java",
-        [SEMATTRS_CODE_NAMESPACE]: `${classFqn}`,
-        [SEMATTRS_CODE_FUNCTION]: `${nextMethod.identifier}`,
-      },
+      attributes: { ...spanAttrs },
       children: [],
     };
 
