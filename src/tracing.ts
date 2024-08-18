@@ -4,6 +4,8 @@ import {
   Span,
   SpanOptions,
   Attributes,
+  context,
+  Context,
 } from "@opentelemetry/api";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
@@ -41,6 +43,8 @@ export class TraceGenerator {
   private tracer_provider: NodeTracerProvider;
   private tracer: Tracer;
   private exporter: OTLPTraceExporter;
+  private context: Context;
+  private rootSpan: Span;
 
   constructor(hostname: string, port: number) {
     this.collector_hostname = hostname;
@@ -60,14 +64,18 @@ export class TraceGenerator {
     this.tracer_provider.addSpanProcessor(
       new SimpleSpanProcessor(this.exporter),
     );
-    this.tracer_provider.addSpanProcessor(
-      new SimpleSpanProcessor(new ConsoleSpanExporter()),
-    );
+    // this.tracer_provider.addSpanProcessor(
+    //   new SimpleSpanProcessor(new ConsoleSpanExporter()),
+    // );
     this.tracer_provider.register();
     this.tracer = trace.getTracer(this.tracer_name, this.tracer_version);
 
     this.sdk = new NodeSDK();
     this.sdk.start();
+
+    this.context = context.active();
+    this.rootSpan = this.tracer.startSpan("root");
+    this.context = trace.setSpan(this.context, this.rootSpan);
   }
 
   setUrl(hostname: string, port: number) {
@@ -89,33 +97,39 @@ export class TraceGenerator {
     this.tracer_provider.addSpanProcessor(
       new SimpleSpanProcessor(this.exporter),
     );
-    this.tracer_provider.addSpanProcessor(
-      new SimpleSpanProcessor(new ConsoleSpanExporter()),
-    );
+    // this.tracer_provider.addSpanProcessor(
+    //   new SimpleSpanProcessor(new ConsoleSpanExporter()),
+    // );
     this.tracer_provider.register();
     this.tracer = trace.getTracer(this.tracer_name, this.tracer_version);
   }
 
-  writeSpan(fakeSpan: FakeSpan) {
+  writeSpan(fakeSpan: FakeSpan, context: Context, parentSpan: Span) {
     const opts: SpanOptions = {
       startTime: fakeSpan.startTime,
       attributes: fakeSpan.attributes,
     };
-    this.tracer.startActiveSpan(fakeSpan.name, opts, (span: Span) => {
-      fakeSpan.children?.forEach((child) => {
-        this.writeSpan(child);
-      });
-      span.end(fakeSpan.endTime);
+
+    const newContext = trace.setSpan(context, parentSpan);
+    const span = this.tracer.startSpan(fakeSpan.name, opts, newContext);
+
+    fakeSpan.children?.forEach((child) => {
+      this.writeSpan(child, newContext, span);
     });
+
+    span.end(fakeSpan.endTime);
   }
 
   writeTrace(fakeTrace: FakeTrace) {
     fakeTrace.forEach((span) => {
-      this.writeSpan(span);
+      this.writeSpan(span, this.context, this.rootSpan);
     });
+
+    console.log("Trace written successfully");
   }
 
   shutdown(): Array<Promise<void>> {
+    this.rootSpan.end();
     return [this.tracer_provider.shutdown(), this.sdk.shutdown()];
   }
 }
