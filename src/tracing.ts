@@ -42,6 +42,7 @@ export class TraceGenerator {
   private collector_port: number;
   private tracer_provider: NodeTracerProvider;
   private tracer: Tracer;
+  private spanProcessor: SimpleSpanProcessor;
   private exporter: OTLPTraceExporter;
   private context: Context;
   private rootSpan: Span;
@@ -61,12 +62,11 @@ export class TraceGenerator {
         }),
       ),
     });
+    this.spanProcessor = new SimpleSpanProcessor(this.exporter);
+    this.tracer_provider.addSpanProcessor(this.spanProcessor);
     this.tracer_provider.addSpanProcessor(
-      new SimpleSpanProcessor(this.exporter),
+      new SimpleSpanProcessor(new ConsoleSpanExporter()),
     );
-    // this.tracer_provider.addSpanProcessor(
-    //   new SimpleSpanProcessor(new ConsoleSpanExporter()),
-    // );
     this.tracer_provider.register();
     this.tracer = trace.getTracer(this.tracer_name, this.tracer_version);
 
@@ -79,29 +79,19 @@ export class TraceGenerator {
   }
 
   setUrl(hostname: string, port: number) {
-    this.tracer_provider.shutdown();
+    if (this.collector_hostname === hostname && this.collector_port === port) {
+      return;
+    }
+
     this.collector_hostname = hostname;
     this.collector_port = port;
+    this.spanProcessor.shutdown();
+    this.exporter.shutdown();
     this.exporter = new OTLPTraceExporter({
       url: `http://${this.collector_hostname}:${this.collector_port}`,
     });
-    this.tracer_provider = new NodeTracerProvider({
-      resource: Resource.empty().merge(
-        new Resource({
-          [SEMRESATTRS_SERVICE_NAME]: "trace-gen",
-          [SEMRESATTRS_SERVICE_VERSION]: "1.0",
-          [SEMRESATTRS_TELEMETRY_SDK_LANGUAGE]: "java",
-        }),
-      ),
-    });
-    this.tracer_provider.addSpanProcessor(
-      new SimpleSpanProcessor(this.exporter),
-    );
-    // this.tracer_provider.addSpanProcessor(
-    //   new SimpleSpanProcessor(new ConsoleSpanExporter()),
-    // );
-    this.tracer_provider.register();
-    this.tracer = trace.getTracer(this.tracer_name, this.tracer_version);
+    this.spanProcessor = new SimpleSpanProcessor(this.exporter);
+    this.tracer_provider.addSpanProcessor(this.spanProcessor);
   }
 
   writeSpan(fakeSpan: FakeSpan, context: Context, parentSpan: Span) {
