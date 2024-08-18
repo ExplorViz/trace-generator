@@ -186,7 +186,12 @@ export function appTreeToString(app: FakeApp): string {
  */
 export function traceToString(trace: FakeTrace): string {
   function spanToString(span: FakeSpan): string {
-    let result: string = span.name.split(".").slice(-2).join(".") + "\n";
+    let result: string =
+      span.name
+        .split(".")
+        .slice(-2)
+        .reduce((acc, str) => (acc += str + "."), "")
+        .slice(0, -1) + "\n";
 
     // Recursively turn child spans to string
 
