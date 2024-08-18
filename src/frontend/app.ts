@@ -10,8 +10,9 @@ import {
   TraceGenerationParameters,
   CommunicationStyle,
 } from "../generation";
-import { appTreeToString, isValidInteger } from "../utils";
+import { appTreeToString, isValidInteger, traceToString } from "../utils";
 import { getValidationChains } from "./form-validation";
+import { constants } from "../constants";
 
 console.log(String.raw`
  _______                  _____
@@ -31,7 +32,7 @@ const traceGenerator: TraceGenerator = new TraceGenerator(
   DEFAULT_TARGET_PORT,
 );
 
-interface OtelCollectorConfig {
+interface OtelCollectorParameters {
   targetHostname: string;
   targetPort: number;
 }
@@ -42,11 +43,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 function parseRequestBody(
   reqBody: any,
-): [OtelCollectorConfig, AppGenerationParameters, TraceGenerationParameters] {
-  const commStyleLookup = new Map();
-  commStyleLookup.set("true_random", CommunicationStyle.TRUE_RANDOM);
-  commStyleLookup.set("cohesive", CommunicationStyle.COHESIVE);
-  commStyleLookup.set("random_exit", CommunicationStyle.RANDOM_EXIT);
+): [
+  OtelCollectorParameters,
+  AppGenerationParameters,
+  TraceGenerationParameters,
+] {
+  if (!(reqBody.communicationStyle in constants.COMMUNICATION_STYLE_NAMES)) {
+    throw new Error(
+      `Unknown communication style ${reqBody.communicationStyle}`,
+    );
+  }
+
+  const commStyle =
+    constants.COMMUNICATION_STYLE_NAMES[reqBody.communicationStyle];
 
   return [
     {
@@ -72,7 +81,7 @@ function parseRequestBody(
       duration: parseInt(reqBody.duration),
       callCount: parseInt(reqBody.callCount),
       maxConnectionDepth: parseInt(reqBody.maxCallDepth),
-      communicationStyle: commStyleLookup.get(reqBody.communicationStyle),
+      communicationStyle: commStyle,
       allowCyclicCalls: "allowCyclicCalls" in reqBody,
       seed:
         "traceSeed" in reqBody && isValidInteger(reqBody.traceSeed)
@@ -83,16 +92,23 @@ function parseRequestBody(
 }
 
 app.post("/", getValidationChains(), (req: Request, res: Response) => {
-  console.log(req.body);
   const result = validationResult(req);
   if (!result.isEmpty()) {
     console.log(result.array());
     return res.status(400).json(result.array()); // "Bad Request" response
   }
 
-  const [otelParams, appParams, traceParams] = parseRequestBody(req.body);
-  console.log(appParams);
-  console.log(traceParams);
+  let otelParams: OtelCollectorParameters;
+  let appParams: AppGenerationParameters;
+  let traceParams: TraceGenerationParameters;
+
+  try {
+    [otelParams, appParams, traceParams] = parseRequestBody(req.body);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).json(result.array()); // "Bad Request" response
+  }
+
   traceGenerator.setUrl(otelParams.targetHostname, otelParams.targetPort);
   const apps: Array<FakeApp> = generateFakeApps(appParams);
   const trace: FakeTrace = generateFakeTrace(apps, traceParams);
@@ -103,6 +119,9 @@ app.post("/", getValidationChains(), (req: Request, res: Response) => {
     console.log(`App #${idx + 1}:`);
     console.log(`${appTreeToString(app)}\n`);
   });
+
+  console.log("Generated Trace:");
+  console.log(traceToString(trace));
 
   traceGenerator.writeTrace(trace);
 

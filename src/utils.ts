@@ -1,4 +1,5 @@
 import { FakeApp, FakePackage } from "./generation";
+import { FakeSpan, FakeTrace } from "./tracing";
 
 /**
  * Takes any string and converts the first character to uppercase
@@ -165,4 +166,55 @@ export function appTreeToString(app: FakeApp): string {
   }
 
   return packageTreeToString(app.rootPackage);
+}
+
+/**
+ * Turn trace tree structure into a string representation.
+ * @param trace Trace structure to stringify
+ * @example
+ *     // Output example
+ *     interface.inputCapacitor
+ *     ├─matrix.hackCard
+ *     | └─capacitor.bypassFeed
+ *     |   ├─interface.indexFirewall
+ *     |   | └─feed.bypassCircuit
+ *     |   |   └─firewall.parseFeed
+ *     |   ├─card.hackProtocol
+ *     |   ├─pixel.copySensor
+ *     |   └─circuit.connectPanel
+ *     └─feed.navigateArray
+ */
+export function traceToString(trace: FakeTrace): string {
+  function spanToString(span: FakeSpan): string {
+    let result: string = span.name.split(".").slice(-2).join(".") + "\n";
+
+    // Recursively turn child spans to string
+
+    let childStrs: Array<string> = span.children.map(spanToString);
+    childStrs = childStrs.map((str, idx) => {
+      // Include '|' if there are more child spans to come after this one
+      const strWithPipe = "├─" + str.replace(/\n/g, "\n| ");
+      const strWithoutPipe = "├─" + str.replace(/\n/g, "\n  ");
+      return idx !== childStrs.length - 1 ? strWithPipe : strWithoutPipe;
+    });
+
+    // Replace '├─' with '└─' for last child span
+
+    if (childStrs.length > 0) {
+      const lastIdx = childStrs.length - 1;
+      const updatedSubpackageStr = childStrs[lastIdx].replace(/├─/, "└─");
+      childStrs[lastIdx] = updatedSubpackageStr;
+    }
+
+    // Reduce to final string
+
+    result += childStrs.reduce((acc, str) => (acc += str + "\n"), "");
+    return result.slice(0, -1); // Remove newline
+  }
+
+  const result: string = trace
+    .map(spanToString)
+    .reduce((acc, str) => (acc += str + "\n"), "");
+
+  return result;
 }

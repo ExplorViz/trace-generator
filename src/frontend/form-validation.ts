@@ -64,7 +64,7 @@ export function getValidationChains(): Array<ValidationChain> {
     body("balance").exists().isFloat({ min: 0, max: 1 }),
     body("communicationStyle")
       .exists()
-      .isIn(constants.COMMUNICATION_STYLE_NAMES),
+      .isIn(Object.keys(constants.COMMUNICATION_STYLE_NAMES)),
     body("targetHostname").exists().isURL({
       require_tld: false,
       require_port: false,
