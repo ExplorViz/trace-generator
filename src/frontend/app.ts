@@ -63,6 +63,26 @@ function parseRequestBody(
   const commStyle =
     constants.COMMUNICATION_STYLE_NAMES[reqBody.communicationStyle];
 
+  interface customAttributes {
+    [key: string]: string;
+  }
+
+  let customAttrs: customAttributes = {};
+  let customAttrCounter = 1;
+  while (
+    `key_customAttribute${customAttrCounter}` in reqBody &&
+    `value_customAttribute${customAttrCounter}` in reqBody
+  ) {
+    let key = reqBody[`key_customAttribute${customAttrCounter}`];
+    let val = reqBody[`value_customAttribute${customAttrCounter}`];
+    if (typeof key !== "string" || typeof val !== "string") {
+      console.error("Ignoring invalid custom attribute in request body");
+      break;
+    }
+    customAttrs[key] = val;
+    customAttrCounter++;
+  }
+
   return [
     {
       targetHostname: reqBody.targetHostname,
@@ -90,12 +110,11 @@ function parseRequestBody(
       communicationStyle: commStyle,
       allowCyclicCalls: "allowCyclicCalls" in reqBody,
       fixedAttributes: {
+        ...customAttrs,
         "telemetry.sdk.language": "java",
         "service.instance.id": "0",
         host: getHostname(),
         host_address: getHostIP(),
-        "explorviz.token.id": "mytokenvalue",
-        "explorviz.token.secret": "mytokensecret",
       },
       seed:
         "traceSeed" in reqBody && isValidInteger(reqBody.traceSeed)
@@ -142,7 +161,7 @@ app.post("/", getValidationChains(), (req: Request, res: Response) => {
   return res.status(204).send(); // "No Content" response
 });
 
-app.listen(FRONTEND_PORT, () => {
+const server = app.listen(FRONTEND_PORT, () => {
   console.log(`Serving webpage on port ${FRONTEND_PORT}`);
 });
 
@@ -150,8 +169,10 @@ app.listen(FRONTEND_PORT, () => {
 ["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) =>
   process.on(signal, () => {
     console.log("Shutting down...");
-    Promise.all(traceGenerator.shutdown()).finally(() => {
-      process.exit();
+    traceGenerator.shutdown().finally(() => {
+      server.close(() => {
+        process.exit();
+      });
     });
   }),
 );

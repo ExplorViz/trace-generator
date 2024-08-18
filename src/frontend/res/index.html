@@ -204,6 +204,50 @@
         <input type="number" min="0" step="1" value="" name="traceSeed" />
       </div>
 
+      <h1>Custom Span Attributes</h1>
+
+      <div>
+        <input
+          type="text"
+          value="explorviz.token.id"
+          name="key_customAttribute1"
+          style="opacity: 0.5"
+          readonly
+        />
+        <div style="display: inline">:</div>
+        <input
+          type="text"
+          value="mytokenvalue"
+          name="value_customAttribute1"
+          pattern="[a-zA-Z0-9\.\-]+"
+          required
+          oninvalid="this.setCustomValidity('Token ID may only include A-Z, a-z, 0-9, . and -')"
+          oninput="this.setCustomValidity('')"
+        />
+      </div>
+
+      <br />
+
+      <div>
+        <input
+          type="text"
+          value="explorviz.token.secret"
+          name="key_customAttribute2"
+          style="opacity: 0.5"
+          readonly
+        />
+        <div style="display: inline">:</div>
+        <input
+          type="text"
+          value="mytokensecret"
+          name="value_customAttribute2"
+          pattern="[a-zA-Z0-9\.\-]+"
+          required
+          oninvalid="this.setCustomValidity('Token secret may only include A-Z, a-z, 0-9, . and -')"
+          oninput="this.setCustomValidity('')"
+        />
+      </div>
+
       <br />
 
       <button type="submit" value="Submit" class="button_submit">

@@ -118,8 +118,9 @@ export class TraceGenerator {
     console.log("Trace written successfully");
   }
 
-  shutdown(): Array<Promise<void>> {
+  async shutdown(): Promise<void> {
     this.rootSpan.end();
-    return [this.tracer_provider.shutdown(), this.sdk.shutdown()];
+    await this.tracer_provider.forceFlush();
+    return this.sdk.shutdown();
   }
 }
