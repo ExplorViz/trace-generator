@@ -1,6 +1,5 @@
 import { faker } from "@faker-js/faker";
 import { FakeTrace, FakeSpan } from "./tracing";
-import { Attributes } from "@opentelemetry/api";
 import { capitalizeString } from "./utils";
 import { strict as assert } from "assert";
 import {
@@ -16,15 +15,19 @@ interface FakeClass {
   identifier: string;
   methods: Array<FakeMethod>;
   parent?: FakePackage;
+  parentAppName: string; // TODO very hacky solution
+  linkedClass?: FakeClass;
 }
 
 export interface FakePackage {
   name: string;
   subpackages: Array<FakePackage>;
   classes: Array<FakeClass>;
+  parent?: FakePackage;
 }
 
 export interface FakeApp {
+  name: string;
   rootPackage: FakePackage;
   entryPoint: FakeClass;
   classes: Array<FakeClass>;
@@ -38,6 +41,24 @@ function isClass(codeUnit: FakeClass | FakePackage): codeUnit is FakeClass {
 
 function isPackage(codeUnit: FakeClass | FakePackage): codeUnit is FakePackage {
   return (codeUnit as FakePackage).subpackages !== undefined;
+}
+
+function getClassFqn(fakeClass: FakeClass): string {
+  let fqn: string = fakeClass.identifier;
+  let obj: FakeClass | FakePackage = fakeClass;
+  while (obj.parent !== undefined) {
+    fqn = obj.parent.name + "." + fqn;
+    obj = obj.parent;
+  }
+  return fqn;
+}
+
+function getAllChildClasses(fakePackage: FakePackage): Array<FakeClass> {
+  let result = [...fakePackage.classes];
+  fakePackage.subpackages.forEach((subpackage) => {
+    result.concat(getAllChildClasses(subpackage));
+  });
+  return result;
 }
 
 export interface AppGenerationParameters {
@@ -93,6 +114,8 @@ export function generateFakeApps(
 
   if (params.seed !== undefined) {
     faker.seed(params.seed);
+  } else {
+    faker.seed(); // Use random seed
   }
 
   return Array.from(Array(params.appCount), (_) => generateFakeApp(params));
@@ -103,6 +126,7 @@ export function generateFakeApps(
  * and classes (leaf nodes).
  * @param params Specifies the generation behaviour, especially the size of the application. See {{@link AppGenerationParameters}
  * @returns A {@link FakeApp} which conforms to the specifed parameters
+ * @throws {RangeError}
  */
 function generateFakeApp(params: AppGenerationParameters): FakeApp {
   /**
@@ -139,6 +163,8 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
   if (params.balance < 0 || params.balance > 1) {
     throw new RangeError("Balance value must be between 0 and 1");
   }
+
+  const appName = faker.hacker.noun() + capitalizeString(faker.hacker.noun());
 
   // Convenience arrays
 
@@ -187,6 +213,7 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
         const newClass = {
           identifier: faker.hacker.noun(),
           methods: newMethods,
+          parentAppName: appName,
         };
         classes.push(newClass);
         return newClass;
@@ -220,8 +247,8 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
       };
 
       componentsToPackage.forEach((component: FakePackage | FakeClass) => {
+        component.parent = newPackage;
         if (isClass(component)) {
-          component.parent = newPackage;
           classesToPackage.push(component);
         } else {
           packagesToPackage.push(component);
@@ -238,11 +265,43 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
   assert(currentLayer.filter(isClass).length === 0);
 
+  let remainingClasses: Array<FakeClass> = [];
+
+  // Create root package ("org.tracegen.[APP_NAME]")
+
+  let rootPackage1: FakePackage;
+  let rootPackage2: FakePackage;
+  let rootPackage3: FakePackage;
+
+  rootPackage1 = {
+    name: "org",
+    classes: [],
+    subpackages: [],
+  };
+
+  rootPackage2 = {
+    name: "tracegen",
+    classes: [],
+    subpackages: [],
+    parent: rootPackage1,
+  };
+
+  rootPackage3 = {
+    name: "randomapp",
+    classes: remainingClasses,
+    subpackages: currentLayer as Array<FakePackage>, // Will only contain packages at this point
+    parent: rootPackage2,
+  };
+
+  rootPackage1.subpackages.push(rootPackage2);
+  rootPackage2.subpackages.push(rootPackage3);
+
+  currentLayer.forEach((pkg) => (pkg.parent = rootPackage3));
+
   // Fill root layer with remaining classes, if any
 
-  let remainingClasses: Array<FakeClass> = Array.from(
-    Array(remainingClassCount),
-    (_) => {
+  remainingClasses.concat(
+    Array.from(Array(remainingClassCount), (_) => {
       const numMethods = faker.number.int({
         min: params.minMethodCount,
         max: params.maxMethodCount,
@@ -255,38 +314,28 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
         methods.push(newMethod);
         return newMethod;
       });
-      const newClass = { identifier: faker.hacker.noun(), methods: newMethods };
+      const newClass = {
+        identifier: faker.hacker.noun(),
+        methods: newMethods,
+        parent: rootPackage3,
+        parentAppName: appName,
+      };
       classes.push(newClass);
       return newClass;
-    },
+    }),
   );
 
-  const rootPackage: FakePackage = {
-    name: "org",
-    classes: [],
-    subpackages: [
-      {
-        name: "tracegen",
-        classes: [],
-        subpackages: [
-          {
-            name: "randomapp",
-            classes: remainingClasses,
-            subpackages: currentLayer as Array<FakePackage>, // Will only contain packages at this point
-          },
-        ],
-      },
-    ],
-  };
-
   const entryPoint = faker.helpers.arrayElement(classes);
+
   const fakeApp: FakeApp = {
-    rootPackage: rootPackage,
+    name: appName,
+    rootPackage: rootPackage1,
     entryPoint: entryPoint,
     classes: classes,
     packages: packages,
     methods: methods,
   };
+
   return fakeApp;
 }
 
@@ -299,6 +348,74 @@ export const enum CommunicationStyle {
   COHESIVE,
   RANDOM_EXIT,
 }
+
+type NextClassStrategy = (
+  apps: Array<FakeApp>,
+  classes: Array<FakeClass>,
+  previousClass: FakeClass | undefined,
+  visitedClasses: Set<FakeClass>,
+  allowCyclicCalls: boolean,
+) => FakeClass;
+
+const strategyTrueRandom: NextClassStrategy = (
+  apps,
+  classes,
+  previousClass,
+  visitedClasses,
+  allowCyclicCalls,
+) => {
+  if (allowCyclicCalls) {
+    return faker.helpers.arrayElement(classes);
+  }
+
+  const remainingClasses = classes.filter((element) => {
+    return !visitedClasses.has(element);
+  });
+
+  return faker.helpers.arrayElement(
+    classes.filter((element) => {
+      return !visitedClasses.has(element);
+    }),
+  );
+};
+
+const strategyCohesive: NextClassStrategy = (
+  apps,
+  classes,
+  previousClass,
+  visitedClasses,
+  allowCyclicCalls,
+) => {
+  if (previousClass === undefined || previousClass.parent === undefined) {
+    return strategyTrueRandom(
+      apps,
+      classes,
+      previousClass,
+      visitedClasses,
+      allowCyclicCalls,
+    );
+  }
+
+  if (previousClass.linkedClass !== undefined) {
+    return previousClass.linkedClass;
+  }
+
+  const neighbourClasses = getAllChildClasses(previousClass.parent);
+  if (allowCyclicCalls) {
+    return faker.helpers.arrayElement(neighbourClasses);
+  }
+  return faker.helpers.arrayElement(
+    neighbourClasses.filter((element) => {
+      return !visitedClasses.has(element);
+    }),
+  );
+};
+
+const nextClassStrats: Record<CommunicationStyle, NextClassStrategy> = {
+  [CommunicationStyle.TRUE_RANDOM]: strategyTrueRandom,
+  [CommunicationStyle.COHESIVE]: strategyCohesive,
+  [CommunicationStyle.RANDOM_EXIT]: strategyTrueRandom,
+};
 
 export interface TraceGenerationParameters {
   /**
@@ -326,7 +443,8 @@ export interface TraceGenerationParameters {
    */
   allowCyclicCalls: boolean;
   /**
-   *
+   * Can optionally be used to yield reproducable results. The seed is set once before generating all the apps.
+   * This is separate from the app generation seed to allow generation of different traces using the same apps.
    */
   seed?: number;
 }
@@ -343,6 +461,8 @@ export function generateFakeTrace(
 
   if (params.seed !== undefined) {
     faker.seed(params.seed);
+  } else {
+    faker.seed(); // Use random seed
   }
 
   const startingApp = apps[0];
@@ -350,71 +470,113 @@ export function generateFakeTrace(
   let timePassed = 0;
   const entryPoint = startingApp.entryPoint;
   const entryMethod = faker.helpers.arrayElement(entryPoint.methods);
-  let currentCallDepth = 0;
+  const entryPointFqn = getClassFqn(entryPoint);
 
   let entrySpan: FakeSpan = {
-    name: `${entryPoint.identifier}.${entryMethod.identifier}`,
+    name: `${entryPointFqn}`,
     startTime: 0,
     endTime: params.duration,
     attributes: {
-      "explorviz.token.id": "0b87ef39-1c41-415e-98cf-38ce5986f278",
-      "explorviz.token.secret": "GipJh2r0XboeAYMf",
-      host: "host123",
-      host_address: "192.168.178.1",
-      "service.name": "trace-gen",
+      "explorviz.token.id": "mytokenvalue",
+      "explorviz.token.secret": "mytokensecret",
+      "service.name": `${startingApp.name}`,
       "service.instance.id": "0",
+      host: "local",
+      host_address: "192.168.178.20",
       "telemetry.sdk.language": "java",
-      [SEMATTRS_CODE_NAMESPACE]: `${entryPoint.parent?.name}`,
+      [SEMATTRS_CODE_NAMESPACE]: `${entryPointFqn}`,
       [SEMATTRS_CODE_FUNCTION]: `${entryMethod.identifier}`,
     },
     children: [],
   };
 
-  let resultTrace: FakeTrace = [entrySpan];
+  let resultTrace: FakeTrace = [];
   let classStack: Array<[FakeClass, FakeSpan]> = [[entryPoint, entrySpan]];
 
-  let trace: FakeTrace = [];
-  const classes: FakeClass[][] = apps.map((app) => app.classes);
+  const classes: Array<FakeClass> = apps
+    .map((app) => app.classes)
+    .reduce((allClasses, appClasses) => {
+      return allClasses.concat(appClasses);
+    });
+  const visitedClasses: Set<FakeClass> = new Set([entryPoint]);
+  let previousClass: FakeClass | undefined = undefined;
+
   while (timePassed < params.duration) {
     // Select next class for method call
-    if (params.communicationStyle === CommunicationStyle.TRUE_RANDOM) {
-      //const nextApp = faker.number.int(classes.length - 1);
-      const nextApp = 0;
-      const nextClass = faker.helpers.arrayElement(classes[nextApp]);
-      const nextMethod = faker.helpers.arrayElement(nextClass.methods);
-      let nextSpan: FakeSpan = {
-        name: `${entryPoint.identifier}.${entryMethod.identifier}`,
-        startTime: 0,
-        endTime: params.duration,
-        attributes: {
-          "explorviz.token.id": "0b87ef39-1c41-415e-98cf-38ce5986f278",
-          "explorviz.token.secret": "GipJh2r0XboeAYMf",
-          host: "host123",
-          host_address: "192.168.178.1",
-          "service.name": "trace-gen",
-          "service.instance.id": "0",
-          "telemetry.sdk.language": "java",
-          [SEMATTRS_CODE_NAMESPACE]: `${nextClass.parent?.name}.${nextClass.identifier}`,
-          [SEMATTRS_CODE_FUNCTION]: `${nextMethod.identifier}`,
-        },
-        children: [],
-      };
-      while (
-        classStack.length >= params.maxConnectionDepth ||
-        faker.number.int(1) === 1
-      ) {
-        const head = classStack.pop() as [FakeClass, FakeSpan];
-        if (classStack.length === 0) {
-          resultTrace.push(nextSpan);
-          break;
-        } else {
-          classStack[classStack.length - 1][1].children.push(head[1]);
-        }
+
+    let nextClass: FakeClass;
+    try {
+      nextClass = nextClassStrats[params.communicationStyle](
+        apps,
+        classes,
+        previousClass,
+        visitedClasses,
+        params.allowCyclicCalls,
+      );
+    } catch (err) {
+      const head = classStack.pop() as [FakeClass, FakeSpan];
+      if (classStack.length === 0) {
+        resultTrace.push(head[1]);
+        break;
+      } else {
+        classStack[classStack.length - 1][1].children.push(head[1]);
       }
-      classStack.push([nextClass, nextSpan]);
+      visitedClasses.delete(head[0]);
+      previousClass = classStack[classStack.length - 1][0];
+      continue;
     }
+    const nextMethod = faker.helpers.arrayElement(nextClass.methods);
+    const classFqn = getClassFqn(nextClass);
+    let nextSpan: FakeSpan = {
+      name: `${classFqn}.${nextMethod.identifier}`,
+      startTime: 0,
+      endTime: params.duration,
+      attributes: {
+        "explorviz.token.id": "mytokenvalue",
+        "explorviz.token.secret": "mytokensecret",
+        "service.name": `${nextClass.parentAppName}`,
+        "service.instance.id": "0",
+        host: "local",
+        host_address: "192.168.178.20",
+        "telemetry.sdk.language": "java",
+        [SEMATTRS_CODE_NAMESPACE]: `${classFqn}`,
+        [SEMATTRS_CODE_FUNCTION]: `${nextMethod.identifier}`,
+      },
+      children: [],
+    };
+
+    visitedClasses.add(nextClass);
+    previousClass = nextClass;
+
+    while (
+      classStack.length >= params.maxConnectionDepth ||
+      faker.number.int(1) === 1
+    ) {
+      const head = classStack.pop() as [FakeClass, FakeSpan];
+      if (classStack.length === 0) {
+        resultTrace.push(head[1]);
+        break;
+      } else {
+        classStack[classStack.length - 1][1].children.push(head[1]);
+      }
+      visitedClasses.delete(head[0]);
+      previousClass = classStack[classStack.length - 1][0];
+    }
+    classStack.push([nextClass, nextSpan]);
 
     timePassed += callInterval;
+  }
+
+  // Clear remaining stack
+
+  while (classStack.length > 0) {
+    const head = classStack.pop() as [FakeClass, FakeSpan];
+    if (classStack.length === 0) {
+      resultTrace.push(head[1]);
+      break;
+    } else {
+      classStack[classStack.length - 1][1].children.push(head[1]);
+    }
   }
 
   return resultTrace;
