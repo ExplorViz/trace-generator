@@ -575,7 +575,7 @@ export function generateFakeTrace(
     .map((app) => app.classes)
     .reduce((allClasses, appClasses) => {
       return allClasses.concat(appClasses);
-    });
+    }, []);
   const visitedClasses: Set<FakeClass> = new Set([entryPoint]);
   let previousClass: FakeClass = entryPoint;
 
@@ -593,14 +593,13 @@ export function generateFakeTrace(
       );
     } catch (err) {
       const head = classStack.pop() as [FakeClass, FakeSpan];
+      visitedClasses.delete(head[0]);
       if (classStack.length === 0) {
         resultTrace.push(head[1]);
-        break;
       } else {
         classStack[classStack.length - 1][1].children.push(head[1]);
+        previousClass = classStack[classStack.length - 1][0];
       }
-      visitedClasses.delete(head[0]);
-      previousClass = classStack[classStack.length - 1][0];
       continue;
     }
     const nextMethod = faker.helpers.arrayElement(nextClass.methods);
@@ -621,16 +620,16 @@ export function generateFakeTrace(
 
     while (
       classStack.length >= params.maxConnectionDepth ||
-      faker.number.int(1) === 1
+      (classStack.length > 0 && faker.number.int({ min: 0, max: 1 }) === 1)
     ) {
       const head = classStack.pop() as [FakeClass, FakeSpan];
+      visitedClasses.delete(head[0]);
       if (classStack.length === 0) {
         resultTrace.push(head[1]);
         break;
       } else {
         classStack[classStack.length - 1][1].children.push(head[1]);
       }
-      visitedClasses.delete(head[0]);
       previousClass = classStack[classStack.length - 1][0];
     }
     classStack.push([nextClass, nextSpan]);
