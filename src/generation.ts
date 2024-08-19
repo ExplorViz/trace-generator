@@ -351,7 +351,7 @@ export const enum CommunicationStyle {
 type NextClassStrategy = (
   apps: Array<FakeApp>,
   classes: Array<FakeClass>,
-  previousClass: FakeClass | undefined,
+  previousClass: FakeClass,
   visitedClasses: Set<FakeClass>,
   allowCyclicCalls: boolean,
 ) => FakeClass;
@@ -385,7 +385,7 @@ const strategyCohesive: NextClassStrategy = (
   visitedClasses,
   allowCyclicCalls,
 ) => {
-  if (previousClass === undefined || previousClass.parent === undefined) {
+  if (previousClass.parent === undefined) {
     return strategyTrueRandom(
       apps,
       classes,
@@ -410,10 +410,61 @@ const strategyCohesive: NextClassStrategy = (
   );
 };
 
+const strategyRandomExit: NextClassStrategy = (
+  apps,
+  classes,
+  previousClass,
+  visitedClasses,
+  allowCyclicCalls,
+) => {
+  const EXIT_CHANCE = 5; // Chance is one in EXIT_CHANCE
+
+  if (previousClass.parent === undefined) {
+    return strategyTrueRandom(
+      apps,
+      classes,
+      previousClass,
+      visitedClasses,
+      allowCyclicCalls,
+    );
+  }
+
+  let neighbourClasses = getAllChildClasses(previousClass.parent);
+
+  if (faker.number.int({ min: 1, max: EXIT_CHANCE }) !== 1) {
+    // Stay inside case
+
+    if (allowCyclicCalls) {
+      return faker.helpers.arrayElement(neighbourClasses);
+    }
+
+    const unvisitedNeighbourClasses = neighbourClasses.filter(
+      (clazz) => !visitedClasses.has(clazz),
+    );
+
+    if (unvisitedNeighbourClasses.length !== 0) {
+      return faker.helpers.arrayElement(unvisitedNeighbourClasses);
+    }
+    // Otherwise, proceed to exit case anyways
+  }
+
+  // Exit case
+  if (allowCyclicCalls) {
+    const outsiderClasses = classes.filter(
+      (clazz) => !neighbourClasses.includes(clazz),
+    );
+    return faker.helpers.arrayElement(outsiderClasses);
+  }
+  const outsiderClasses = classes.filter(
+    (clazz) => !neighbourClasses.includes(clazz) && !visitedClasses.has(clazz),
+  );
+  return faker.helpers.arrayElement(outsiderClasses);
+};
+
 const nextClassStrats: Record<CommunicationStyle, NextClassStrategy> = {
   [CommunicationStyle.TRUE_RANDOM]: strategyTrueRandom,
   [CommunicationStyle.COHESIVE]: strategyCohesive,
-  [CommunicationStyle.RANDOM_EXIT]: strategyTrueRandom,
+  [CommunicationStyle.RANDOM_EXIT]: strategyRandomExit,
 };
 
 export interface TraceGenerationParameters {
@@ -502,7 +553,7 @@ export function generateFakeTrace(
       return allClasses.concat(appClasses);
     });
   const visitedClasses: Set<FakeClass> = new Set([entryPoint]);
-  let previousClass: FakeClass | undefined = undefined;
+  let previousClass: FakeClass = entryPoint;
 
   while (timePassed < params.duration) {
     // Select next class for method call
