@@ -503,6 +503,26 @@ export interface TraceGenerationParameters {
   seed?: number;
 }
 
+function placeInterfaceClasses(apps: Array<FakeApp>) {
+  const packages = apps
+    .map((app) => app.packages)
+    .reduce((acc, val) => acc.concat(val), [])
+    .filter((pkg) => pkg.classes.length > 0);
+
+  if (packages.length === 0) {
+    console.debug("INFO: Apps contain no packages, cannot place interfaces");
+    return;
+  }
+
+  for (let i = 0; i < packages.length; i++) {
+    const selectedClass = faker.helpers.arrayElement(packages[i].classes);
+    const linkedClass = faker.helpers.arrayElement(
+      packages[(i + 1) % packages.length].classes,
+    );
+    selectedClass.linkedClass = linkedClass;
+  }
+}
+
 export function generateFakeTrace(
   apps: Array<FakeApp>,
   params: TraceGenerationParameters,
@@ -517,6 +537,10 @@ export function generateFakeTrace(
     faker.seed(params.seed);
   } else {
     faker.seed(); // Use random seed
+  }
+
+  if (params.communicationStyle === CommunicationStyle.COHESIVE) {
+    placeInterfaceClasses(apps);
   }
 
   const startingApp = apps[0];
