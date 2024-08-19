@@ -78,6 +78,11 @@ export class TraceGenerator {
     this.context = trace.setSpan(this.context, this.rootSpan);
   }
 
+  startNewTrace() {
+    this.rootSpan.end();
+    this.rootSpan = this.tracer.startSpan("root");
+  }
+
   setUrl(hostname: string, port: number) {
     if (this.collector_hostname === hostname && this.collector_port === port) {
       return;

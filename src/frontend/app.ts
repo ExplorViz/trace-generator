@@ -83,6 +83,10 @@ function parseRequestBody(
     customAttrCounter++;
   }
 
+  if (!("addToPreviousTrace" in reqBody)) {
+    traceGenerator.startNewTrace();
+  }
+
   return [
     {
       targetHostname: reqBody.targetHostname,

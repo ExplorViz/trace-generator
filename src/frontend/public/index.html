@@ -250,9 +250,20 @@
 
       <br />
 
-      <button type="submit" value="Submit" class="button_submit">
-        Send trace
-      </button>
+      <div>
+        <button type="submit" class="button_submit">Send trace</button>
+        <input
+          type="checkbox"
+          name="addToPreviousTrace"
+          value="on"
+          style="vertical-align: baseline"
+          id="checkbox_addToPreviousTrace"
+          checked
+        />
+        <label for="checkbox_addToPreviousTrace"
+          >Add to previous trace (if applicable)</label
+        >
+      </div>
     </form>
 
     <br />
