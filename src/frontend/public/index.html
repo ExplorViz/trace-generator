@@ -6,7 +6,7 @@
   </head>
 
   <body style="font-family: Verdana, Tahoma, Geneva, sans-serif">
-    <form method="post">
+    <form method="post" id="form_main">
       <h1>OpenTelemetry Collector Settings</h1>
 
       <div class="param">
@@ -431,22 +431,11 @@
       <br />
 
       <div>
-        <button type="submit" class="button_submit">Send trace</button>
-        <input
-          type="checkbox"
-          name="addToPreviousTrace"
-          value="on"
-          style="vertical-align: baseline"
-          id="checkbox_addToPreviousTrace"
-          checked
-        />
-        <label for="checkbox_addToPreviousTrace"
-          >Add to previous trace (if applicable)</label
-        >
+        <button type="submit" class="button_submit" id="button_submit">
+          Send trace
+        </button>
       </div>
     </form>
-
-    <br />
 
     <script src="script.js"></script>
   </body>

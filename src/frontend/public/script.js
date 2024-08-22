@@ -58,3 +58,8 @@ formRangeIds.forEach((id) => {
     label.textContent = event.target.value;
   });
 });
+
+const formMain = document.getElementById("form_main");
+formMain.addEventListener("submit", () => {
+  setTimeout(() => alert("Trace sent!"), 0); // Ensure default behaviour is executed first
+});
