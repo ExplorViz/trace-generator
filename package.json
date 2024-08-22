@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
+    "@opentelemetry/core": "^1.25.1",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.52.0",
     "@opentelemetry/sdk-node": "^0.52.0",
     "@opentelemetry/sdk-trace-node": "^1.25.0",

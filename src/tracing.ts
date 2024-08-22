@@ -21,18 +21,18 @@ import {
   SEMRESATTRS_SERVICE_INSTANCE_ID,
   SEMRESATTRS_TELEMETRY_SDK_LANGUAGE,
 } from "@opentelemetry/semantic-conventions";
+import { HrTime } from "@opentelemetry/api";
+import { addHrTimes, hrTime, millisToHrTime } from "@opentelemetry/core";
 
 export interface FakeSpan {
   name: string;
-  startTime: number;
-  endTime: number;
+  relativeStartTime: number;
+  relativeEndTime: number;
   attributes?: Attributes;
   children: Array<FakeSpan>;
 }
 
 export type FakeTrace = Array<FakeSpan>;
-
-export interface SpanParameters {}
 
 export class TraceGenerator {
   private readonly tracer_name: string = "trace-gen";
@@ -45,7 +45,6 @@ export class TraceGenerator {
   private spanProcessor: SimpleSpanProcessor;
   private exporter: OTLPTraceExporter;
   private context: Context;
-  //private rootSpan: Span;
 
   constructor(hostname: string, port: number) {
     this.collector_hostname = hostname;
@@ -74,13 +73,6 @@ export class TraceGenerator {
     this.sdk.start();
 
     this.context = context.active();
-    //this.rootSpan = this.tracer.startSpan("root");
-    //this.context = trace.setSpan(this.context, this.rootSpan);
-  }
-
-  startNewTrace() {
-    //this.rootSpan.end();
-    //this.rootSpan = this.tracer.startSpan("root");
   }
 
   setUrl(hostname: string, port: number) {
@@ -99,38 +91,56 @@ export class TraceGenerator {
     this.tracer_provider.addSpanProcessor(this.spanProcessor);
   }
 
-  writeSpan(fakeSpan: FakeSpan, context: Context, parentSpan?: Span) {
+  private async writeSpan(
+    fakeSpan: FakeSpan,
+    globalStartTime: HrTime,
+    realTime: boolean = false,
+  ) {
     const opts: SpanOptions = {
-      //startTime: fakeSpan.startTime,
+      startTime: addHrTimes(
+        globalStartTime,
+        millisToHrTime(fakeSpan.relativeStartTime),
+      ),
       attributes: fakeSpan.attributes,
     };
 
-    let newContext = context;
-    if (parentSpan !== undefined) {
-      newContext = trace.setSpan(context, parentSpan);
-    }
-
-    const span = this.tracer.startSpan(fakeSpan.name, opts, newContext);
-
-    fakeSpan.children?.forEach((child) => {
-      this.writeSpan(child, newContext, span);
+    this.tracer.startActiveSpan(fakeSpan.name, opts, async (span: Span) => {
+      for (let i = 0; i < fakeSpan.children.length; i++) {
+        const childSpan = fakeSpan.children[i];
+        if (realTime) {
+          await new Promise((r) =>
+            setTimeout(
+              r,
+              childSpan.relativeStartTime - fakeSpan.relativeStartTime,
+            ),
+          );
+        }
+        this.writeSpan(childSpan, globalStartTime, realTime);
+        if (realTime && i < fakeSpan.children.length - 1) {
+          const nextChildSpan = fakeSpan.children[i + 1];
+          await new Promise((r) =>
+            setTimeout(
+              r,
+              nextChildSpan.relativeStartTime - childSpan.relativeEndTime,
+            ),
+          );
+        }
+      }
+      span.end(
+        addHrTimes(globalStartTime, millisToHrTime(fakeSpan.relativeEndTime)),
+      );
     });
-
-    span.end();
-    //span.end(fakeSpan.endTime);
   }
 
-  writeTrace(fakeTrace: FakeTrace) {
+  async writeTrace(fakeTrace: FakeTrace, realTime: boolean = false) {
     fakeTrace.forEach((span) => {
-      //this.writeSpan(span, this.context, this.rootSpan);
-      this.writeSpan(span, this.context);
+      this.writeSpan(span, hrTime(), realTime);
     });
 
     console.log("Trace written successfully");
   }
 
   async shutdown(): Promise<void> {
-    //this.rootSpan.end();
     await this.tracer_provider.forceFlush();
     return this.sdk.shutdown();
   }

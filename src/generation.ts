@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { FakeTrace, FakeSpan } from "./tracing";
-import { capitalizeString, getHostname, getHostIP } from "./utils";
+import { hrTime } from "@opentelemetry/core";
 import { strict as assert } from "assert";
 import { Attributes } from "@opentelemetry/api";
 import {
@@ -533,6 +533,10 @@ export function generateFakeTrace(
     throw new RangeError("Must provide at least 1 app to generate a trace for");
   }
 
+  if (params.maxConnectionDepth < 1) {
+    throw new RangeError("Max Connection Depth may not be less than 1");
+  }
+
   if (params.seed !== undefined) {
     faker.seed(params.seed);
   } else {
@@ -562,8 +566,8 @@ export function generateFakeTrace(
 
   let entrySpan: FakeSpan = {
     name: `${entryPointFqn}.${entryMethod.identifier}`,
-    startTime: 0,
-    endTime: params.duration,
+    relativeStartTime: 0,
+    relativeEndTime: params.duration,
     attributes: { ...spanAttrs },
     children: [],
   };
@@ -592,11 +596,11 @@ export function generateFakeTrace(
         params.allowCyclicCalls,
       );
     } catch (err) {
-      const head = classStack.pop() as [FakeClass, FakeSpan];
-      visitedClasses.delete(head[0]);
-      if (classStack.length === 0) {
-        resultTrace.push(head[1]);
-      } else {
+      // Next class couldn't be determined, classStack is probably at max length
+      if (classStack.length > 1) {
+        const head = classStack.pop() as [FakeClass, FakeSpan];
+        head[1].relativeEndTime = timePassed;
+        visitedClasses.delete(head[0]);
         classStack[classStack.length - 1][1].children.push(head[1]);
         previousClass = classStack[classStack.length - 1][0];
       }
@@ -609,8 +613,8 @@ export function generateFakeTrace(
     spanAttrs[SEMATTRS_CODE_FUNCTION] = nextMethod.identifier;
     let nextSpan: FakeSpan = {
       name: `${classFqn}.${nextMethod.identifier}`,
-      startTime: 0,
-      endTime: params.duration,
+      relativeStartTime: timePassed,
+      relativeEndTime: -1,
       attributes: { ...spanAttrs },
       children: [],
     };
@@ -619,17 +623,12 @@ export function generateFakeTrace(
     previousClass = nextClass;
 
     while (
-      classStack.length >= params.maxConnectionDepth ||
-      (classStack.length > 0 && faker.number.int({ min: 0, max: 1 }) === 1)
+      classStack.length > params.maxConnectionDepth ||
+      (classStack.length > 1 && faker.number.int({ min: 0, max: 1 }) === 1)
     ) {
       const head = classStack.pop() as [FakeClass, FakeSpan];
       visitedClasses.delete(head[0]);
-      if (classStack.length === 0) {
-        resultTrace.push(head[1]);
-        break;
-      } else {
-        classStack[classStack.length - 1][1].children.push(head[1]);
-      }
+      classStack[classStack.length - 1][1].children.push(head[1]);
       previousClass = classStack[classStack.length - 1][0];
     }
     classStack.push([nextClass, nextSpan]);
@@ -641,6 +640,7 @@ export function generateFakeTrace(
 
   while (classStack.length > 0) {
     const head = classStack.pop() as [FakeClass, FakeSpan];
+    head[1].relativeEndTime = timePassed;
     if (classStack.length === 0) {
       resultTrace.push(head[1]);
       break;

@@ -83,10 +83,6 @@ function parseRequestBody(
     customAttrCounter++;
   }
 
-  if (!("addToPreviousTrace" in reqBody)) {
-    traceGenerator.startNewTrace();
-  }
-
   return [
     {
       targetHostname: reqBody.targetHostname,
@@ -160,7 +156,7 @@ app.post("/", getValidationChains(), (req: Request, res: Response) => {
   console.log("Generated Trace:");
   console.log(traceToString(trace));
 
-  traceGenerator.writeTrace(trace);
+  traceGenerator.writeTrace(trace, false);
 
   return res.status(204).send(); // "No Content" response
 });
