@@ -45,7 +45,7 @@ export class TraceGenerator {
   private spanProcessor: SimpleSpanProcessor;
   private exporter: OTLPTraceExporter;
   private context: Context;
-  private rootSpan: Span;
+  //private rootSpan: Span;
 
   constructor(hostname: string, port: number) {
     this.collector_hostname = hostname;
@@ -74,13 +74,13 @@ export class TraceGenerator {
     this.sdk.start();
 
     this.context = context.active();
-    this.rootSpan = this.tracer.startSpan("root");
-    this.context = trace.setSpan(this.context, this.rootSpan);
+    //this.rootSpan = this.tracer.startSpan("root");
+    //this.context = trace.setSpan(this.context, this.rootSpan);
   }
 
   startNewTrace() {
-    this.rootSpan.end();
-    this.rootSpan = this.tracer.startSpan("root");
+    //this.rootSpan.end();
+    //this.rootSpan = this.tracer.startSpan("root");
   }
 
   setUrl(hostname: string, port: number) {
@@ -99,32 +99,38 @@ export class TraceGenerator {
     this.tracer_provider.addSpanProcessor(this.spanProcessor);
   }
 
-  writeSpan(fakeSpan: FakeSpan, context: Context, parentSpan: Span) {
+  writeSpan(fakeSpan: FakeSpan, context: Context, parentSpan?: Span) {
     const opts: SpanOptions = {
-      startTime: fakeSpan.startTime,
+      //startTime: fakeSpan.startTime,
       attributes: fakeSpan.attributes,
     };
 
-    const newContext = trace.setSpan(context, parentSpan);
+    let newContext = context;
+    if (parentSpan !== undefined) {
+      newContext = trace.setSpan(context, parentSpan);
+    }
+
     const span = this.tracer.startSpan(fakeSpan.name, opts, newContext);
 
     fakeSpan.children?.forEach((child) => {
       this.writeSpan(child, newContext, span);
     });
 
-    span.end(fakeSpan.endTime);
+    span.end();
+    //span.end(fakeSpan.endTime);
   }
 
   writeTrace(fakeTrace: FakeTrace) {
     fakeTrace.forEach((span) => {
-      this.writeSpan(span, this.context, this.rootSpan);
+      //this.writeSpan(span, this.context, this.rootSpan);
+      this.writeSpan(span, this.context);
     });
 
     console.log("Trace written successfully");
   }
 
   async shutdown(): Promise<void> {
-    this.rootSpan.end();
+    //this.rootSpan.end();
     await this.tracer_provider.forceFlush();
     return this.sdk.shutdown();
   }
