@@ -52,6 +52,7 @@ export class TraceGenerator {
     this.collector_port = port;
     this.exporter = new OTLPTraceExporter({
       url: `http://${this.collector_hostname}:${this.collector_port}`,
+      concurrencyLimit: Infinity,
     });
     this.tracer_provider = new NodeTracerProvider({
       resource: Resource.empty().merge(
@@ -87,6 +88,7 @@ export class TraceGenerator {
     this.exporter.shutdown();
     this.exporter = new OTLPTraceExporter({
       url: `http://${this.collector_hostname}:${this.collector_port}`,
+      concurrencyLimit: Infinity,
     });
     this.spanProcessor = new SimpleSpanProcessor(this.exporter);
     this.tracer_provider.addSpanProcessor(this.spanProcessor);
