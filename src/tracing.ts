@@ -45,7 +45,6 @@ export class TraceGenerator {
   private spanProcessor: SimpleSpanProcessor;
   private exporter: OTLPTraceExporter;
   private context: Context;
-  private tracesGenerated: number = 0;
 
   constructor(hostname: string, port: number) {
     this.collector_hostname = hostname;
@@ -99,10 +98,6 @@ export class TraceGenerator {
     globalStartTime: HrTime,
     realTime: boolean = false,
   ) {
-    if (fakeSpan.attributes && this.tracesGenerated > 0) {
-      let strPrev: string = fakeSpan.attributes["service.name"] as string;
-      fakeSpan.attributes["service.name"] = strPrev + this.tracesGenerated;
-    }
     const opts: SpanOptions = {
       startTime: addHrTimes(
         globalStartTime,
@@ -143,7 +138,6 @@ export class TraceGenerator {
     fakeTrace.forEach((span) => {
       this.writeSpan(span, hrTime(), realTime);
     });
-    this.tracesGenerated++;
     console.log("Trace written successfully");
   }
 
