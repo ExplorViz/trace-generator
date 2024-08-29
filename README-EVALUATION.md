@@ -34,4 +34,4 @@ Start the frontend:
 npm start
 ```
 
-Open URL in browser, by default `http://localhost:8079`. Modify parameters as desired, then click `Send Trace`.
+Open URL in browser, by default [http://localhost:8079](). Modify parameters as desired, then click `Send Trace`.
