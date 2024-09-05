@@ -74,12 +74,12 @@ export interface AppGenerationParameters {
    */
   packageDepth: number;
   /**
-   * How many classes the app should contain at the least.
+   * How many classes each generated app should contain at the least.
    * Must be greater than 0
    */
   minClassCount: number;
   /**
-   * The highest number of classes a package may contain, not including classes within subpackages
+   * The highest number of classes that each of the generated apps may contain
    */
   maxClassCount: number;
   /**
