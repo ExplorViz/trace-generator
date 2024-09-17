@@ -34,7 +34,7 @@ export interface FakeSpan {
 
 export type FakeTrace = Array<FakeSpan>;
 
-export class TraceGenerator {
+export class FakeTraceExporter {
   private readonly tracer_name: string = "trace-gen";
   private readonly tracer_version: string = "0.0.1";
   private readonly sdk: NodeSDK;

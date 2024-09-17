@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import { validationResult } from "express-validator";
-import { TraceGenerator, FakeTrace } from "../tracing";
+import { FakeTraceExporter, FakeTrace } from "../tracing";
 import {
   generateFakeApps,
   generateFakeTrace,
@@ -33,7 +33,7 @@ const DEFAULT_TARGET_HOSTNAME = "localhost";
 const DEFAULT_TARGET_PORT = 55678;
 const FRONTEND_PORT = 8079;
 
-const traceGenerator: TraceGenerator = new TraceGenerator(
+const traceExporter: FakeTraceExporter = new FakeTraceExporter(
   DEFAULT_TARGET_HOSTNAME,
   DEFAULT_TARGET_PORT,
 );
@@ -142,7 +142,7 @@ app.post("/", getValidationChains(), (req: Request, res: Response) => {
     return res.status(400).json(result.array()); // "Bad Request" response
   }
 
-  traceGenerator.setUrl(otelParams.targetHostname, otelParams.targetPort);
+  traceExporter.setUrl(otelParams.targetHostname, otelParams.targetPort);
   const apps: Array<FakeApp> = generateFakeApps(appParams);
   const trace: FakeTrace = generateFakeTrace(apps, traceParams);
 
@@ -156,7 +156,7 @@ app.post("/", getValidationChains(), (req: Request, res: Response) => {
   console.log("Generated Trace:");
   console.log(traceToString(trace));
 
-  traceGenerator.writeTrace(trace, false);
+  traceExporter.writeTrace(trace, false);
 
   return res.status(204).send(); // "No Content" response
 });
@@ -169,7 +169,7 @@ const server = app.listen(FRONTEND_PORT, () => {
 ["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) =>
   process.on(signal, () => {
     console.log("Shutting down...");
-    traceGenerator.shutdown().finally(() => {
+    traceExporter.shutdown().finally(() => {
       server.close(() => {
         process.exit();
       });
