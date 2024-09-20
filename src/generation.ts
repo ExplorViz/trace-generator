@@ -371,11 +371,7 @@ const strategyTrueRandom: NextClassStrategy = (
     return !visitedClasses.has(element);
   });
 
-  return faker.helpers.arrayElement(
-    classes.filter((element) => {
-      return !visitedClasses.has(element);
-    }),
-  );
+  return faker.helpers.arrayElement(remainingClasses);
 };
 
 const strategyCohesive: NextClassStrategy = (
@@ -403,6 +399,7 @@ const strategyCohesive: NextClassStrategy = (
   if (allowCyclicCalls) {
     return faker.helpers.arrayElement(neighbourClasses);
   }
+
   return faker.helpers.arrayElement(
     neighbourClasses.filter((element) => {
       return !visitedClasses.has(element);
@@ -432,7 +429,7 @@ const strategyRandomExit: NextClassStrategy = (
   let neighbourClasses = getAllChildClasses(previousClass.parent);
 
   if (faker.number.int({ min: 1, max: EXIT_CHANCE }) !== 1) {
-    // Stay inside case
+    // Stay inside package case
 
     if (allowCyclicCalls) {
       return faker.helpers.arrayElement(neighbourClasses);
@@ -442,13 +439,17 @@ const strategyRandomExit: NextClassStrategy = (
       (clazz) => !visitedClasses.has(clazz),
     );
 
+    // If there are unvisited neighbors left, choose one at random
+
     if (unvisitedNeighbourClasses.length !== 0) {
       return faker.helpers.arrayElement(unvisitedNeighbourClasses);
     }
-    // Otherwise, proceed to exit case anyways
+
+    // ... otherwise, proceed to exit case anyways to avoid cyclic calls
   }
 
-  // Exit case
+  // Exit package case
+
   if (allowCyclicCalls) {
     const outsiderClasses = classes.filter(
       (clazz) => !neighbourClasses.includes(clazz),
