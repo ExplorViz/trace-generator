@@ -339,12 +339,25 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
 }
 
 export const enum CommunicationStyle {
+  /**
+   * With this style, the next class is chosen completely at random. It can be
+   * from any app and any package, with uniform probability given to all classes.
+   */
   TRUE_RANDOM,
   /**
    * With this style, communication should mostly happen within packages.
-   * Only select interfaces communicate with other packages
+   * For each package, a single class is selected as an interface class which
+   * is linked to a class from another package. When such an interface class
+   * is chosen, the next chosen class will be the interface class. Otherwise,
+   * we choose a random class from within the package we were in previously.
    */
   COHESIVE,
+  /**
+   * With this style, communication should mostly happen within packages.
+   * By default, we stay within the package we were in previously (also including
+   * any subpackages of that package). Every time we choose a new class, there is
+   * a random chance that we leave our package to enter a different one.
+   */
   RANDOM_EXIT,
 }
 
@@ -490,7 +503,7 @@ export interface TraceGenerationParameters {
   communicationStyle: CommunicationStyle;
   /**
    * Whether there may exist cyclic method calls in the trace.
-   * Setting this to true won't guarantee cyclic calls to be in the generated trace
+   * Setting this to true won't guarantee cyclic calls to be in the generated trace, it only allows them
    */
   allowCyclicCalls: boolean;
   /**
