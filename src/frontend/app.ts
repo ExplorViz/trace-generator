@@ -158,7 +158,7 @@ app.post("/", getValidationChains(), (req: Request, res: Response) => {
   console.log("Generated Trace:");
   console.log(traceToString(trace));
 
-  traceExporter.writeTrace(trace, false);
+  traceExporter.writeTrace(trace);
 
   return res.status(204).send(); // "No Content" response
 });

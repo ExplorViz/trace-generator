@@ -1,6 +1,5 @@
 import { faker } from "@faker-js/faker";
 import { FakeTrace, FakeSpan } from "./tracing";
-import { hrTime } from "@opentelemetry/core";
 import { strict as assert } from "assert";
 import { Attributes } from "@opentelemetry/api";
 import {
@@ -120,7 +119,7 @@ export function generateFakeApps(
     faker.seed(); // Use random seed
   }
 
-  return Array.from(Array(params.appCount), (_) => generateFakeApp(params));
+  return Array.from(Array(params.appCount), () => generateFakeApp(params));
 }
 
 /**
@@ -198,29 +197,26 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
     });
     remainingClassCount -= classesInLayer;
 
-    let newClasses: Array<FakeClass> = Array.from(
-      Array(classesInLayer),
-      (_) => {
-        const numMethods = faker.number.int({
-          min: params.minMethodCount,
-          max: params.maxMethodCount,
-        });
-        const newMethods = Array.from(Array(numMethods), (_) => {
-          const newMethod = {
-            identifier: nameGenerator.getRandomMethodName(),
-          };
-          methods.push(newMethod);
-          return newMethod;
-        });
-        const newClass = {
-          identifier: nameGenerator.getRandomClassName(),
-          methods: newMethods,
-          parentAppName: appName,
+    let newClasses: Array<FakeClass> = Array.from(Array(classesInLayer), () => {
+      const numMethods = faker.number.int({
+        min: params.minMethodCount,
+        max: params.maxMethodCount,
+      });
+      const newMethods = Array.from(Array(numMethods), () => {
+        const newMethod = {
+          identifier: nameGenerator.getRandomMethodName(),
         };
-        classes.push(newClass);
-        return newClass;
-      },
-    );
+        methods.push(newMethod);
+        return newMethod;
+      });
+      const newClass = {
+        identifier: nameGenerator.getRandomClassName(),
+        methods: newMethods,
+        parentAppName: appName,
+      };
+      classes.push(newClass);
+      return newClass;
+    });
 
     // Shuffle generated classes inbetween (potential) existing packages from previous iterations.
     // This is to prevent the packages and classes from being grouped separately (more heterogeneous structure)
@@ -300,12 +296,12 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
   // Fill root layer with remaining classes, if any
 
-  let remainingClasses = Array.from(Array(remainingClassCount), (_) => {
+  let remainingClasses = Array.from(Array(remainingClassCount), () => {
     const numMethods = faker.number.int({
       min: params.minMethodCount,
       max: params.maxMethodCount,
     });
-    const newMethods = Array.from(Array(numMethods), (_) => {
+    const newMethods = Array.from(Array(numMethods), () => {
       const newMethod = {
         identifier: nameGenerator.getRandomMethodName(),
       };
