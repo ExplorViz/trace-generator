@@ -5,6 +5,7 @@ import { Attributes } from "@opentelemetry/api";
 import {
   SEMATTRS_CODE_FUNCTION,
   SEMATTRS_CODE_NAMESPACE,
+  SEMRESATTRS_SERVICE_NAME,
 } from "@opentelemetry/semantic-conventions";
 import { NameGenerator } from "./naming";
 
@@ -16,7 +17,7 @@ interface FakeClass {
   identifier: string;
   methods: Array<FakeMethod>;
   parent?: FakePackage;
-  parentAppName: string; // TODO very hacky solution
+  parentAppName: string;
   linkedClass?: FakeClass;
 }
 
@@ -188,7 +189,7 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
     const minClassesInLayer = layer == params.packageDepth ? 1 : 0; // Deepest layer requires at least 1 class
     const maxClassesInLayer = Math.max(
-      Math.floor(remainingClassCount * params.balance),
+      Math.floor(remainingClassCount * params.balance), // Lower balance limits number of classes in lower layers
       minClassesInLayer,
     );
     const classesInLayer = faker.number.int({
@@ -513,6 +514,10 @@ export interface TraceGenerationParameters {
   seed?: number;
 }
 
+/**
+ * Link one class from each package to a class from another package for use with the "cohesive" class strategy
+ * @param apps The app structure for which to place interface classes
+ */
 function placeInterfaceClasses(apps: Array<FakeApp>) {
   const packages = apps
     .map((app) => app.packages)
@@ -533,14 +538,38 @@ function placeInterfaceClasses(apps: Array<FakeApp>) {
   }
 }
 
+/**
+ * Generate a {@link FakeTrace} upon a previously generated app structure
+ * @param apps The app structure on which to simulate a trace
+ * @param params
+ * @returns
+ * @throws RangeError
+ */
 export function generateFakeTrace(
   apps: Array<FakeApp>,
   params: TraceGenerationParameters,
 ): FakeTrace {
-  // TODO check parameter validity
+  /**
+   * This function generates spans by simulating a call stack. We perform as many iterations
+   * as there are method calls specified in the parameters. In each iteration, we add a method
+   * call to the call stack. We then remove calls from the stack at random. When removing calls
+   * from the stack, we set the corresponding span to be a child span of the span below.
+   * Once all iterations are complete, we remove all calls from the stack, leaving only the
+   * root span behind which contains every generated span as a child.
+   */
+
+  // Check for parameter validity
 
   if (apps.length < 1) {
     throw new RangeError("Must provide at least 1 app to generate a trace for");
+  }
+
+  if (params.duration < 1) {
+    throw new RangeError("Duration may not be less than 1");
+  }
+
+  if (params.callCount < 1) {
+    throw new RangeError("Trace must have at least one method call");
   }
 
   if (params.maxConnectionDepth < 1) {
@@ -570,7 +599,7 @@ export function generateFakeTrace(
       ...params.fixedAttributes,
     };
   }
-  spanAttrs["service.name"] = startingApp.name;
+  spanAttrs[SEMRESATTRS_SERVICE_NAME] = startingApp.name;
   spanAttrs[SEMATTRS_CODE_NAMESPACE] = entryPointFqn;
   spanAttrs[SEMATTRS_CODE_FUNCTION] = entryMethod.identifier;
 
@@ -619,7 +648,7 @@ export function generateFakeTrace(
     }
     const nextMethod = faker.helpers.arrayElement(nextClass.methods);
     const classFqn = getClassFqn(nextClass);
-    spanAttrs["service.name"] = nextClass.parentAppName;
+    spanAttrs[SEMRESATTRS_SERVICE_NAME] = nextClass.parentAppName;
     spanAttrs[SEMATTRS_CODE_NAMESPACE] = classFqn;
     spanAttrs[SEMATTRS_CODE_FUNCTION] = nextMethod.identifier;
     let nextSpan: FakeSpan = {
