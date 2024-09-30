@@ -29,56 +29,55 @@ export interface FakeSpan {
 export type FakeTrace = Array<FakeSpan>;
 
 export class FakeTraceExporter {
-  private readonly tracer_name: string = "trace-generator";
-  private readonly tracer_version: string = "0.0.1";
+  private readonly tracerName: string = "trace-generator";
   private readonly sdk: NodeSDK;
-  private collector_hostname: string;
-  private collector_port: number;
-  private tracer_provider: NodeTracerProvider;
+  private collectorHostname: string;
+  private collectorPort: number;
+  private tracerProvider: NodeTracerProvider;
   private tracer: Tracer;
   private spanProcessor: SimpleSpanProcessor;
   private exporter: OTLPTraceExporter;
 
   constructor(hostname: string, port: number) {
-    this.collector_hostname = hostname;
-    this.collector_port = port;
+    this.collectorHostname = hostname;
+    this.collectorPort = port;
     this.exporter = new OTLPTraceExporter({
-      url: `http://${this.collector_hostname}:${this.collector_port}`,
+      url: `http://${this.collectorHostname}:${this.collectorPort}`,
       concurrencyLimit: Infinity,
     });
-    this.tracer_provider = new NodeTracerProvider({
+    this.tracerProvider = new NodeTracerProvider({
       resource: Resource.empty().merge(
         new Resource({
           [SEMRESATTRS_SERVICE_NAME]: "trace-generator",
-          [SEMRESATTRS_SERVICE_VERSION]: "1.0",
+          [SEMRESATTRS_SERVICE_VERSION]: "1.0.0",
           [SEMRESATTRS_TELEMETRY_SDK_LANGUAGE]: "java",
         }),
       ),
     });
     this.spanProcessor = new SimpleSpanProcessor(this.exporter);
-    this.tracer_provider.addSpanProcessor(this.spanProcessor);
-    this.tracer_provider.register();
-    this.tracer = trace.getTracer(this.tracer_name, this.tracer_version);
+    this.tracerProvider.addSpanProcessor(this.spanProcessor);
+    this.tracerProvider.register();
+    this.tracer = trace.getTracer(this.tracerName);
 
     this.sdk = new NodeSDK();
     this.sdk.start();
   }
 
   setUrl(hostname: string, port: number) {
-    if (this.collector_hostname === hostname && this.collector_port === port) {
+    if (this.collectorHostname === hostname && this.collectorPort === port) {
       return;
     }
 
-    this.collector_hostname = hostname;
-    this.collector_port = port;
+    this.collectorHostname = hostname;
+    this.collectorPort = port;
     this.spanProcessor.shutdown();
     this.exporter.shutdown();
     this.exporter = new OTLPTraceExporter({
-      url: `http://${this.collector_hostname}:${this.collector_port}`,
+      url: `http://${this.collectorHostname}:${this.collectorPort}`,
       concurrencyLimit: Infinity,
     });
     this.spanProcessor = new SimpleSpanProcessor(this.exporter);
-    this.tracer_provider.addSpanProcessor(this.spanProcessor);
+    this.tracerProvider.addSpanProcessor(this.spanProcessor);
   }
 
   private writeSpan(fakeSpan: FakeSpan, globalStartTime: HrTime) {
@@ -108,7 +107,7 @@ export class FakeTraceExporter {
   }
 
   async shutdown(): Promise<void> {
-    await this.tracer_provider.forceFlush();
+    await this.tracerProvider.forceFlush();
     return this.sdk.shutdown();
   }
 }
