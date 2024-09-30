@@ -1,6 +1,6 @@
-# TraceGen
+# trace-generator
 
-TraceGen is a development utility for testing and debugging OpenTelemetry-based applications. It was developed to be used with the [ExplorViz](https://explorviz.dev/) software visualization tool.
+`trace-generator` is a development utility for testing and debugging OpenTelemetry-based applications. It was developed to be used with the [ExplorViz](https://explorviz.dev/) software visualization tool.
 
 The goal is to easily create telemetry data for applications of various sizes and shapes. This is achieved by first generating fake class-based application structures and then generating traces upon those structures in a randomized manner.
 
@@ -15,7 +15,7 @@ git clone [REPOSITORY_URL]
 Navigate into the repository folder:
 
 ```
-cd trace-gen
+cd trace-generator
 ```
 
 Install npm packages:
@@ -41,7 +41,7 @@ Open URL in browser, by default `http://localhost:8079`. Modify parameters as de
 Usage example (with sensible parameters):
 
 ```typescript
-const traceGenerator: TraceGenerator = new TraceGenerator(
+const traceExporter: FakeTraceExporter = new FakeTraceExporter(
   TARGET_HOSTNAME,
   TARGET_PORT,
 );
