@@ -428,7 +428,45 @@
         </div>
       </div>
 
-      <br />
+      <div class="custom_attribute">
+        <input
+          type="text"
+          value="telemetry.sdk.language"
+          name="key_customAttribute3"
+          style="opacity: 0.5"
+          readonly
+        />
+        <div style="display: inline">:</div>
+        <input
+          type="text"
+          value="java"
+          name="value_customAttribute3"
+          pattern="[a-zA-Z0-9\.\-]+"
+          required
+          oninvalid="this.setCustomValidity('Value may only include A-Z, a-z, 0-9, . and -')"
+          oninput="this.setCustomValidity('')"
+        />
+      </div>
+
+      <div class="custom_attribute">
+        <input
+          type="text"
+          value="service.instance.id"
+          name="key_customAttribute4"
+          style="opacity: 0.5"
+          readonly
+        />
+        <div style="display: inline">:</div>
+        <input
+          type="text"
+          value="0"
+          name="value_customAttribute4"
+          pattern="[a-zA-Z0-9\.\-]+"
+          required
+          oninvalid="this.setCustomValidity('Value may only include A-Z, a-z, 0-9, . and -')"
+          oninput="this.setCustomValidity('')"
+        />
+      </div>
 
       <div>
         <button type="submit" class="button_submit" id="button_submit">

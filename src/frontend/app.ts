@@ -8,7 +8,6 @@ import {
   FakeApp,
   AppGenerationParameters,
   TraceGenerationParameters,
-  CommunicationStyle,
 } from "../generation";
 import {
   appTreeToString,
@@ -19,6 +18,10 @@ import {
 } from "../utils";
 import { getValidationChains } from "./form-validation";
 import { constants } from "../constants";
+import {
+  SEMRESATTRS_SERVICE_INSTANCE_ID,
+  SEMRESATTRS_TELEMETRY_SDK_LANGUAGE,
+} from "@opentelemetry/semantic-conventions";
 
 console.log(String.raw`
   _                                                            _
@@ -65,12 +68,14 @@ function parseRequestBody(
   const commStyle =
     constants.COMMUNICATION_STYLE_NAMES[reqBody.communicationStyle];
 
-  interface customAttributes {
+  interface CustomAttributes {
     [key: string]: string;
   }
 
-  let customAttrs: customAttributes = {};
+  let customAttrs: CustomAttributes = {};
   let customAttrCounter = 1;
+
+  // Parse as many custom attributes as are provided in the request
   while (
     `key_customAttribute${customAttrCounter}` in reqBody &&
     `value_customAttribute${customAttrCounter}` in reqBody
@@ -113,8 +118,6 @@ function parseRequestBody(
       allowCyclicCalls: "allowCyclicCalls" in reqBody,
       fixedAttributes: {
         ...customAttrs,
-        "telemetry.sdk.language": "java",
-        "service.instance.id": "0",
         host: getHostname(),
         host_address: getHostIP(),
       },
