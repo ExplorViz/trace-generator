@@ -13,7 +13,6 @@ import { Resource } from "@opentelemetry/resources";
 import {
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
-  SEMRESATTRS_SERVICE_INSTANCE_ID,
   SEMRESATTRS_TELEMETRY_SDK_LANGUAGE,
 } from "@opentelemetry/semantic-conventions";
 import { HrTime } from "@opentelemetry/api";
@@ -82,7 +81,7 @@ export class FakeTraceExporter {
     this.tracer_provider.addSpanProcessor(this.spanProcessor);
   }
 
-  private async writeSpan(fakeSpan: FakeSpan, globalStartTime: HrTime) {
+  private writeSpan(fakeSpan: FakeSpan, globalStartTime: HrTime) {
     const opts: SpanOptions = {
       startTime: addHrTimes(
         globalStartTime,
@@ -101,7 +100,7 @@ export class FakeTraceExporter {
     });
   }
 
-  async writeTrace(fakeTrace: FakeTrace) {
+  writeTrace(fakeTrace: FakeTrace) {
     fakeTrace.forEach((span) => {
       this.writeSpan(span, hrTime());
     });
