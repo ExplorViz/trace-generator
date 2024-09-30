@@ -134,7 +134,7 @@ export function getHostIP(): string {
  * @example
  *     // Output example
  *     org
- *     └─tracegen
+ *     └─tracegenerator
  *       └─randomapp
  *         ├─monitor
  *         | ├─feed

@@ -267,7 +267,7 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
 
   assert(currentLayer.filter(isClass).length === 0);
 
-  // Create root package ("org.tracegen.[APP_NAME]")
+  // Create root package ("org.tracegenerator.[APP_NAME]")
 
   let rootPackage1: FakePackage;
   let rootPackage2: FakePackage;
@@ -280,7 +280,7 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
   };
 
   rootPackage2 = {
-    name: "tracegen",
+    name: "tracegenerator",
     classes: [],
     subpackages: [],
     parent: rootPackage1,

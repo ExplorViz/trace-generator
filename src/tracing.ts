@@ -35,7 +35,7 @@ export interface FakeSpan {
 export type FakeTrace = Array<FakeSpan>;
 
 export class FakeTraceExporter {
-  private readonly tracer_name: string = "trace-gen";
+  private readonly tracer_name: string = "trace-generator";
   private readonly tracer_version: string = "0.0.1";
   private readonly sdk: NodeSDK;
   private collector_hostname: string;
@@ -56,7 +56,7 @@ export class FakeTraceExporter {
     this.tracer_provider = new NodeTracerProvider({
       resource: Resource.empty().merge(
         new Resource({
-          [SEMRESATTRS_SERVICE_NAME]: "trace-gen",
+          [SEMRESATTRS_SERVICE_NAME]: "trace-generator",
           [SEMRESATTRS_SERVICE_VERSION]: "1.0",
           [SEMRESATTRS_TELEMETRY_SDK_LANGUAGE]: "java",
         }),
