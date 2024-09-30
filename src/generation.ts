@@ -63,6 +63,10 @@ function getAllChildClasses(fakePackage: FakePackage): Array<FakeClass> {
   return result;
 }
 
+/**
+ * These parameters can be used to configure the first step of trace generation,
+ * in which application structures are generated.
+ */
 export interface AppGenerationParameters {
   /**
    * How many apps should be generated. All generated apps will use the same generation parameters.
@@ -120,17 +124,25 @@ export function generateFakeApps(
     faker.seed(); // Use random seed
   }
 
-  return Array.from(Array(params.appCount), () => generateFakeApp(params));
+  const nameGenerator: NameGenerator = new NameGenerator();
+
+  return Array.from(Array(params.appCount), () =>
+    generateFakeApp(params, nameGenerator),
+  );
 }
 
 /**
  * Generate a fake application tree structure consisting of packages (internal nodes)
  * and classes (leaf nodes).
  * @param params Specifies the generation behaviour, especially the size of the application. See {{@link AppGenerationParameters}
+ * @param nameGenerator Shared {@link NameGenerator} instance to use for all generated apps.
  * @returns A {@link FakeApp} which conforms to the specifed parameters
  * @throws {RangeError}
  */
-function generateFakeApp(params: AppGenerationParameters): FakeApp {
+function generateFakeApp(
+  params: AppGenerationParameters,
+  nameGenerator: NameGenerator,
+): FakeApp {
   /**
    * This function creates an application tree from the bottom up (at the leaf nodes).
    * First, we randomly determine how many classes the app should contain in total.
@@ -166,7 +178,6 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
     throw new RangeError("Balance value must be between 0 and 1");
   }
 
-  const nameGenerator: NameGenerator = new NameGenerator();
   const appName = nameGenerator.getRandomAppName();
 
   // Convenience arrays
@@ -335,6 +346,9 @@ function generateFakeApp(params: AppGenerationParameters): FakeApp {
   return fakeApp;
 }
 
+/**
+ * Defines the different strategies for class selection during trace generation.
+ */
 export const enum CommunicationStyle {
   /**
    * With this style, the next class is chosen completely at random. It can be
@@ -358,6 +372,9 @@ export const enum CommunicationStyle {
   RANDOM_EXIT,
 }
 
+/**
+ * A function type for class selection strategies used during trace generation.
+ */
 type NextClassStrategy = (
   apps: Array<FakeApp>,
   classes: Array<FakeClass>,
@@ -478,6 +495,10 @@ const nextClassStrats: Record<CommunicationStyle, NextClassStrategy> = {
   [CommunicationStyle.RANDOM_EXIT]: strategyRandomExit,
 };
 
+/**
+ * These parameters can be used to configure the second step of trace generation,
+ * in which a trace is simulated upon a previously generated app structure.
+ */
 export interface TraceGenerationParameters {
   /**
    * Duration of the trace in milliseconds. The method calls will be distributed equally within this timeframe
@@ -542,7 +563,7 @@ function placeInterfaceClasses(apps: Array<FakeApp>) {
  * Generate a {@link FakeTrace} upon a previously generated app structure
  * @param apps The app structure on which to simulate a trace
  * @param params
- * @returns
+ * @returns A {@link FakeTrace} object based upon the passed app structure
  * @throws RangeError
  */
 export function generateFakeTrace(
@@ -636,7 +657,7 @@ export function generateFakeTrace(
         params.allowCyclicCalls,
       );
     } catch (err) {
-      // Next class couldn't be determined, classStack is probably at max length
+      // Next class couldn't be determined, meaning there are no unvisted classes left
       if (classStack.length > 1) {
         const head = classStack.pop() as [FakeClass, FakeSpan];
         head[1].relativeEndTime = timePassed;
@@ -662,6 +683,7 @@ export function generateFakeTrace(
     visitedClasses.add(nextClass);
     previousClass = nextClass;
 
+    // Randomly remove calls from the stack for more dynamic behaviour
     while (
       classStack.length > params.maxConnectionDepth ||
       (classStack.length > 1 && faker.number.int({ min: 0, max: 1 }) === 1)
