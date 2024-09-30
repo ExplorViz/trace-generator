@@ -596,8 +596,9 @@ export function generateFakeTrace(
     }, []);
   const visitedClasses: Set<FakeClass> = new Set([entryPoint]);
   let previousClass: FakeClass = entryPoint;
+  let generatedSpanCount: number = 0;
 
-  while (timePassed < params.duration) {
+  while (generatedSpanCount < params.callCount) {
     // Select next class for method call
 
     let nextClass: FakeClass;
@@ -641,6 +642,7 @@ export function generateFakeTrace(
       (classStack.length > 1 && faker.number.int({ min: 0, max: 1 }) === 1)
     ) {
       const head = classStack.pop() as [FakeClass, FakeSpan];
+      head[1].relativeEndTime = timePassed;
       visitedClasses.delete(head[0]);
       classStack[classStack.length - 1][1].children.push(head[1]);
       previousClass = classStack[classStack.length - 1][0];
@@ -648,6 +650,7 @@ export function generateFakeTrace(
     classStack.push([nextClass, nextSpan]);
 
     timePassed += callInterval;
+    generatedSpanCount++;
   }
 
   // Clear remaining stack
