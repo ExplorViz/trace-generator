@@ -18,10 +18,6 @@ import {
 } from "../utils";
 import { getValidationChains } from "./form-validation";
 import { constants } from "../constants";
-import {
-  SEMRESATTRS_SERVICE_INSTANCE_ID,
-  SEMRESATTRS_TELEMETRY_SDK_LANGUAGE,
-} from "@opentelemetry/semantic-conventions";
 
 console.log(String.raw`
   _                                                            _
