@@ -86,6 +86,14 @@ function parseRequestBody(
     customAttrCounter++;
   }
 
+  const isK8sDeployment = false;
+  if (isK8sDeployment) {
+    customAttrs["k8s.namespace.name"] = "namespace";
+    customAttrs["k8s.deployment.name"] = "deployment";
+    customAttrs["k8s.node.name"] = "node";
+    customAttrs["k8s.pod.name"] = "pod";
+  }
+
   return [
     {
       targetHostname: reqBody.targetHostname,
