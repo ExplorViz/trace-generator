@@ -2,10 +2,10 @@ import { faker } from "@faker-js/faker";
 import fs from "node:fs";
 import { capitalizeString, sanitizeJavaIdentifier } from "./utils";
 
-const PATH_CLASS_NAMES = "src/resources/class-names.txt";
-const PATH_PACKAGE_NAMES = "src/resources/package-names.txt";
-const PATH_METHOD_NAMES = "src/resources/method-names.txt";
-const PATH_APP_NAMES = "src/resources/app-names.txt";
+const PATH_CLASS_NAMES = "public/resources/class-names.txt";
+const PATH_PACKAGE_NAMES = "public/resources/package-names.txt";
+const PATH_METHOD_NAMES = "public/resources/method-names.txt";
+const PATH_APP_NAMES = "public/resources/app-names.txt";
 
 export class NameGenerator {
   private readonly classNames: Array<string>;
