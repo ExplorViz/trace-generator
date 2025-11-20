@@ -17,7 +17,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "node .husky/install.mjs || true"
   },
   "author": "",
   "license": "ISC",
@@ -51,9 +51,9 @@
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/core": "^1.28.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.55.0",
-    "@opentelemetry/resources": "^2.2.0",
+    "@opentelemetry/resources": "^1.28.0",
     "@opentelemetry/sdk-node": "^0.55.0",
-    "@opentelemetry/sdk-trace-base": "^2.2.0",
+    "@opentelemetry/sdk-trace-base": "^1.28.0",
     "@opentelemetry/sdk-trace-node": "^1.28.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
     "@types/cors": "^2.8.19",

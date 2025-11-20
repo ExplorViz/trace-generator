@@ -8,6 +8,7 @@ export const constants = {
   MAX_TRACE_DURATION: 10000,
   MAX_CALL_COUNT: 10000,
   MAX_CALL_DEPTH: 100,
+  MAX_CONNECTION_DEPTH: 100,
   COMMUNICATION_STYLE_NAMES: {
     true_random: CommunicationStyle.TRUE_RANDOM,
     cohesive: CommunicationStyle.COHESIVE,

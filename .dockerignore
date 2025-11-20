@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Development files
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+coverage/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Documentation
+README.md
+*.md
+
+# Environment files (will be copied explicitly if needed)
+.env.local
+.env.*.local
+
+# Misc
+.DS_Store
+.eslintcache
+.prettiercache
+
+

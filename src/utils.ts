@@ -162,7 +162,7 @@ export function appTreeToString(app: FakeApp): string {
 
     // Turn classes to string
 
-    let classStrs: Array<string> = pkg.classes.map((clazz) => clazz.identifier);
+    let classStrs: Array<string> = pkg.classes.map((classModel) => classModel.identifier);
     classStrs = classStrs.map((str) => '├─\x1b[33m' + str + '\x1b[0m');
 
     // Replace '├─' with '└─' for last package/class

@@ -3,9 +3,9 @@ import { FakeTrace, FakeSpan } from './tracing';
 import { strict as assert } from 'assert';
 import { Attributes } from '@opentelemetry/api';
 import {
-  SEMATTRS_CODE_FUNCTION,
+  ATTR_CODE_FUNCTION_NAME,
   SEMATTRS_CODE_NAMESPACE,
-  SEMRESATTRS_SERVICE_NAME,
+  ATTR_SERVICE_NAME,
 } from '@opentelemetry/semantic-conventions';
 import { NameGenerator } from './naming';
 
@@ -48,11 +48,9 @@ function getAllChildClasses(fakePackage: FakePackage): Array<FakeClass> {
   return result;
 }
 
-// AppGenerationParameters is now imported from shared/types
-
 /**
  * Generate some fake applications, with all the apps using the same generation parameters.
- * @param params Specifies the generation behaviour, especially the size of the applications. See {@link AppGenerationParameters}
+ * @param params Specifies the generation behavior, especially the size of the applications. See {@link AppGenerationParameters}
  * @returns A list of {@link FakeApp}s conforming to the specified parameters
  */
 export function generateFakeApps(params: AppGenerationParameters): Array<FakeApp> {
@@ -335,40 +333,40 @@ const strategyCohesive: NextClassStrategy = (apps, classes, previousClass, visit
     return previousClass.linkedClass;
   }
 
-  const neighbourClasses = getAllChildClasses(previousClass.parent);
+  const neighborClasses = getAllChildClasses(previousClass.parent);
   if (allowCyclicCalls) {
-    return faker.helpers.arrayElement(neighbourClasses);
+    return faker.helpers.arrayElement(neighborClasses);
   }
 
   return faker.helpers.arrayElement(
-    neighbourClasses.filter((element) => {
+    neighborClasses.filter((element) => {
       return !visitedClasses.has(element);
     })
   );
 };
 
 const strategyRandomExit: NextClassStrategy = (apps, classes, previousClass, visitedClasses, allowCyclicCalls) => {
-  const EXIT_CHANCE = 5; // Chance is one in EXIT_CHANCE
+  const EXIT_CHANCE = 5;
 
   if (previousClass.parent === undefined) {
     return strategyTrueRandom(apps, classes, previousClass, visitedClasses, allowCyclicCalls);
   }
 
-  const neighbourClasses = getAllChildClasses(previousClass.parent);
+  const neighborClasses = getAllChildClasses(previousClass.parent);
 
   if (faker.number.int({ min: 1, max: EXIT_CHANCE }) !== 1) {
     // Stay inside package case
 
     if (allowCyclicCalls) {
-      return faker.helpers.arrayElement(neighbourClasses);
+      return faker.helpers.arrayElement(neighborClasses);
     }
 
-    const unvisitedNeighbourClasses = neighbourClasses.filter((clazz) => !visitedClasses.has(clazz));
+    const unvisitedNeighborClasses = neighborClasses.filter((classModel) => !visitedClasses.has(classModel));
 
     // If there are unvisited neighbors left, choose one at random
 
-    if (unvisitedNeighbourClasses.length !== 0) {
-      return faker.helpers.arrayElement(unvisitedNeighbourClasses);
+    if (unvisitedNeighborClasses.length !== 0) {
+      return faker.helpers.arrayElement(unvisitedNeighborClasses);
     }
 
     // ... otherwise, proceed to exit case anyways to avoid cyclic calls
@@ -377,10 +375,12 @@ const strategyRandomExit: NextClassStrategy = (apps, classes, previousClass, vis
   // Exit package case
 
   if (allowCyclicCalls) {
-    const outsiderClasses = classes.filter((clazz) => !neighbourClasses.includes(clazz));
+    const outsiderClasses = classes.filter((classModel) => !neighborClasses.includes(classModel));
     return faker.helpers.arrayElement(outsiderClasses);
   }
-  const outsiderClasses = classes.filter((clazz) => !neighbourClasses.includes(clazz) && !visitedClasses.has(clazz));
+  const outsiderClasses = classes.filter(
+    (classModel) => !neighborClasses.includes(classModel) && !visitedClasses.has(classModel)
+  );
   return faker.helpers.arrayElement(outsiderClasses);
 };
 
@@ -515,9 +515,9 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
       ...params.fixedAttributes,
     };
   }
-  spanAttrs[SEMRESATTRS_SERVICE_NAME] = startingApp.name;
+  spanAttrs[ATTR_SERVICE_NAME] = startingApp.name;
   spanAttrs[SEMATTRS_CODE_NAMESPACE] = entryPointFqn;
-  spanAttrs[SEMATTRS_CODE_FUNCTION] = entryMethod.identifier;
+  spanAttrs[ATTR_CODE_FUNCTION_NAME] = entryMethod.identifier;
 
   const entrySpan: FakeSpan = {
     name: `${entryPointFqn}.${entryMethod.identifier}`,
@@ -593,7 +593,7 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
           );
           nextMethod = faker.helpers.arrayElement(nextClass.methods);
         } catch {
-          // Next class couldn't be determined, meaning there are no unvisted classes left
+          // Next class couldn't be determined, meaning there are no unvisited classes left
           if (classStack.length > 1) {
             const head = classStack.pop() as [FakeClass, FakeSpan];
             head[1].relativeEndTime = timePassed;
@@ -615,7 +615,7 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
           params.allowCyclicCalls
         );
       } catch {
-        // Next class couldn't be determined, meaning there are no unvisted classes left
+        // Next class couldn't be determined, meaning there are no unvisited classes left
         if (classStack.length > 1) {
           const head = classStack.pop() as [FakeClass, FakeSpan];
           head[1].relativeEndTime = timePassed;
@@ -636,9 +636,9 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
       }
     }
     const classFqn = getClassFqn(nextClass);
-    spanAttrs[SEMRESATTRS_SERVICE_NAME] = nextClass.parentAppName;
+    spanAttrs[ATTR_SERVICE_NAME] = nextClass.parentAppName;
     spanAttrs[SEMATTRS_CODE_NAMESPACE] = classFqn;
-    spanAttrs[SEMATTRS_CODE_FUNCTION] = nextMethod.identifier;
+    spanAttrs[ATTR_CODE_FUNCTION_NAME] = nextMethod.identifier;
     const nextSpan: FakeSpan = {
       name: `${classFqn}.${nextMethod.identifier}`,
       relativeStartTime: timePassed,

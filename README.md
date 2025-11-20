@@ -61,3 +61,40 @@ pnpm run dev:frontend
 Open URL in browser. By default, the frontend runs on `http://localhost:3000` and the backend on
 `http://localhost:8079` (configurable via `.env`). Modify parameters as desired, then click
 `Send Trace`.
+
+### Using Docker
+
+#### Build and run backend
+
+```bash
+# Build backend image
+docker build -f Dockerfile.backend -t trace-generator-backend .
+
+# Run backend container
+docker run -p 8079:8079 --env-file .env trace-generator-backend
+```
+
+#### Build and run frontend
+
+```bash
+# Build frontend image
+docker build -f Dockerfile.frontend -t trace-generator-frontend .
+
+# Run frontend container
+docker run -p 80:80 trace-generator-frontend
+```
+
+If running frontend separately, you'll need to configure the backend URL via environment variables
+or build-time configuration.
+
+#### Using Docker Compose
+
+```bash
+# Build and start both services
+docker-compose up --build
+
+# Or run in detached mode
+docker-compose up -d --build
+```
+
+This will start both the backend (on port 8079) and frontend (on port 80) services.
