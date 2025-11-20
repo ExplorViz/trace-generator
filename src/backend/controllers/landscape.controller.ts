@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { LandscapeService } from "../services/landscape.service";
+import { Request, Response } from 'express';
+import { LandscapeService } from '../services/landscape.service';
 
 export class LandscapeController {
   private landscapeService: LandscapeService;
@@ -15,12 +15,12 @@ export class LandscapeController {
     try {
       const landscape = this.landscapeService.getLandscape();
       if (landscape === null) {
-        res.status(404).json({ error: "No landscape has been generated yet" });
+        res.status(404).json({ error: 'No landscape has been generated yet' });
         return;
       }
       res.status(200).json(landscape);
     } catch (error: any) {
-      res.status(500).json({ error: error.message || "Internal server error" });
+      res.status(500).json({ error: error.message || 'Internal server error' });
     }
   };
 
@@ -33,9 +33,7 @@ export class LandscapeController {
       const landscape = this.landscapeService.generateLandscape(params);
       res.status(200).json(landscape);
     } catch (error: any) {
-      res
-        .status(400)
-        .json({ error: error.message || "Failed to generate landscape" });
+      res.status(400).json({ error: error.message || 'Failed to generate landscape' });
     }
   };
 
@@ -47,9 +45,7 @@ export class LandscapeController {
       const landscape = this.landscapeService.updateLandscape(req.body);
       res.status(200).json(landscape);
     } catch (error: any) {
-      res
-        .status(400)
-        .json({ error: error.message || "Failed to update landscape" });
+      res.status(400).json({ error: error.message || 'Failed to update landscape' });
     }
   };
 }

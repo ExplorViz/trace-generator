@@ -1,4 +1,4 @@
-import { FakeApp } from "./generation";
+import { FakeApp } from './generation';
 
 /**
  * Stores and manages the generated landscape (applications structure)

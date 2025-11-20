@@ -1,4 +1,4 @@
-import { LandscapeStore } from "../../landscape";
+import { LandscapeStore } from '../../landscape';
 
 /**
  * Shared singleton instance of LandscapeStore

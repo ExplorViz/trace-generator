@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import { TraceService } from "../services/trace.service";
-import { constants } from "../../constants";
+import { Request, Response } from 'express';
+import { TraceService } from '../services/trace.service';
+import { constants } from '../../constants';
 
 export class TraceController {
   private traceService: TraceService;
@@ -14,16 +14,11 @@ export class TraceController {
    */
   generateTrace = (req: Request, res: Response): void => {
     try {
-      const request = this.traceService.parseTraceRequest(
-        req.body,
-        constants.COMMUNICATION_STYLE_NAMES,
-      );
+      const request = this.traceService.parseTraceRequest(req.body, constants.COMMUNICATION_STYLE_NAMES);
       this.traceService.generateAndExportTrace(request);
       res.status(204).send();
     } catch (error: any) {
-      res
-        .status(400)
-        .json({ error: error.message || "Failed to generate trace" });
+      res.status(400).json({ error: error.message || 'Failed to generate trace' });
     }
   };
 }

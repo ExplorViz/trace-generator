@@ -1,10 +1,6 @@
-import {
-  CleanedLandscape,
-  LandscapeGenerationRequest,
-  TraceGenerationRequest,
-} from "@shared/types";
+import { CleanedLandscape, LandscapeGenerationRequest, TraceGenerationRequest } from '@shared/types';
 
-const API_BASE_URL = "/api";
+const API_BASE_URL = '/api';
 
 export class ApiClient {
   /**
@@ -24,20 +20,18 @@ export class ApiClient {
   /**
    * Generate new landscape
    */
-  async generateLandscape(
-    params: LandscapeGenerationRequest,
-  ): Promise<CleanedLandscape[]> {
+  async generateLandscape(params: LandscapeGenerationRequest): Promise<CleanedLandscape[]> {
     const response = await fetch(`${API_BASE_URL}/landscape`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(params),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to generate landscape");
+      throw new Error(error.error || 'Failed to generate landscape');
     }
 
     return response.json();
@@ -46,20 +40,18 @@ export class ApiClient {
   /**
    * Update landscape
    */
-  async updateLandscape(
-    landscape: CleanedLandscape[],
-  ): Promise<CleanedLandscape[]> {
+  async updateLandscape(landscape: CleanedLandscape[]): Promise<CleanedLandscape[]> {
     const response = await fetch(`${API_BASE_URL}/landscape`, {
-      method: "PUT",
+      method: 'PUT',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(landscape),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to update landscape");
+      throw new Error(error.error || 'Failed to update landscape');
     }
 
     return response.json();
@@ -90,16 +82,16 @@ export class ApiClient {
     }
 
     const response = await fetch(`${API_BASE_URL}/traces`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to generate trace");
+      throw new Error(error.error || 'Failed to generate trace');
     }
   }
 }

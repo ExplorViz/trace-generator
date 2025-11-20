@@ -1,11 +1,11 @@
-import { faker } from "@faker-js/faker";
-import fs from "node:fs";
-import { capitalizeString, sanitizeJavaIdentifier } from "./utils";
+import { faker } from '@faker-js/faker';
+import fs from 'node:fs';
+import { capitalizeString, sanitizeJavaIdentifier } from './utils';
 
-const PATH_CLASS_NAMES = "public/resources/class-names.txt";
-const PATH_PACKAGE_NAMES = "public/resources/package-names.txt";
-const PATH_METHOD_NAMES = "public/resources/method-names.txt";
-const PATH_APP_NAMES = "public/resources/app-names.txt";
+const PATH_CLASS_NAMES = 'public/resources/class-names.txt';
+const PATH_PACKAGE_NAMES = 'public/resources/package-names.txt';
+const PATH_METHOD_NAMES = 'public/resources/method-names.txt';
+const PATH_APP_NAMES = 'public/resources/app-names.txt';
 
 export class NameGenerator {
   private readonly classNames: Array<string>;
@@ -14,18 +14,10 @@ export class NameGenerator {
   private readonly appNames: Array<string>;
 
   constructor() {
-    this.classNames = fs
-      .readFileSync(PATH_CLASS_NAMES, { encoding: "utf-8" })
-      .split("\n");
-    this.packageNames = fs
-      .readFileSync(PATH_PACKAGE_NAMES, { encoding: "utf-8" })
-      .split("\n");
-    this.methodNames = fs
-      .readFileSync(PATH_METHOD_NAMES, { encoding: "utf-8" })
-      .split("\n");
-    this.appNames = fs
-      .readFileSync(PATH_APP_NAMES, { encoding: "utf-8" })
-      .split("\n");
+    this.classNames = fs.readFileSync(PATH_CLASS_NAMES, { encoding: 'utf-8' }).split('\n');
+    this.packageNames = fs.readFileSync(PATH_PACKAGE_NAMES, { encoding: 'utf-8' }).split('\n');
+    this.methodNames = fs.readFileSync(PATH_METHOD_NAMES, { encoding: 'utf-8' }).split('\n');
+    this.appNames = fs.readFileSync(PATH_APP_NAMES, { encoding: 'utf-8' }).split('\n');
   }
 
   getRandomClassName(): string {
@@ -69,28 +61,20 @@ export class NameGenerator {
   }
 
   private getRandomClassNameFallback(): string {
-    return sanitizeJavaIdentifier(
-      faker.hacker.noun() + capitalizeString(faker.hacker.noun()),
-    );
+    return sanitizeJavaIdentifier(faker.hacker.noun() + capitalizeString(faker.hacker.noun()));
   }
 
   private getRandomPackageNameFallback(): string {
     return sanitizeJavaIdentifier(
-      faker.hacker.noun() +
-        capitalizeString(faker.hacker.noun()) +
-        capitalizeString(faker.hacker.noun()),
+      faker.hacker.noun() + capitalizeString(faker.hacker.noun()) + capitalizeString(faker.hacker.noun())
     );
   }
 
   private getRandomMethodNameFallback(): string {
-    return sanitizeJavaIdentifier(
-      faker.hacker.verb() + capitalizeString(faker.hacker.noun()),
-    );
+    return sanitizeJavaIdentifier(faker.hacker.verb() + capitalizeString(faker.hacker.noun()));
   }
 
   private getRandomAppNameFallback(): string {
-    return sanitizeJavaIdentifier(
-      faker.hacker.noun() + faker.hacker.noun() + faker.hacker.noun(),
-    );
+    return sanitizeJavaIdentifier(faker.hacker.noun() + faker.hacker.noun() + faker.hacker.noun());
   }
 }

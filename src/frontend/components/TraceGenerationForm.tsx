@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { TraceGenerationRequest } from "@shared/types";
-import { apiClient } from "../api/client";
-import { Info, Plus, RotateCcw, Send, Trash2 } from "lucide-react";
+import React, { useState } from 'react';
+import { TraceGenerationRequest } from '@shared/types';
+import { apiClient } from '../api/client';
+import { Info, Plus, RotateCcw, Send, Trash2 } from 'lucide-react';
 
 interface TraceGenerationFormProps {
   onError: (error: string) => void;
@@ -14,50 +14,36 @@ interface CustomAttribute {
   value: string;
 }
 
-const DEFAULT_CUSTOM_ATTRIBUTES: Omit<CustomAttribute, "id">[] = [
-  { key: "explorviz.token.id", value: "mytokenvalue" },
-  { key: "explorviz.token.secret", value: "mytokensecret" },
-  { key: "telemetry.sdk.language", value: "java" },
-  { key: "service.instance.id", value: "0" },
+const DEFAULT_CUSTOM_ATTRIBUTES: Omit<CustomAttribute, 'id'>[] = [
+  { key: 'explorviz.token.id', value: 'mytokenvalue' },
+  { key: 'explorviz.token.secret', value: 'mytokensecret' },
+  { key: 'telemetry.sdk.language', value: 'java' },
+  { key: 'service.instance.id', value: '0' },
 ];
 
-export function TraceGenerationForm({
-  onError,
-  onSuccess,
-}: TraceGenerationFormProps) {
-  const [formData, setFormData] = useState<
-    Omit<TraceGenerationRequest, "customAttributes">
-  >({
-    targetHostname: "localhost",
+export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormProps) {
+  const [formData, setFormData] = useState<Omit<TraceGenerationRequest, 'customAttributes'>>({
+    targetHostname: 'localhost',
     targetPort: 55678,
     duration: 1000,
     callCount: 50,
     maxCallDepth: 10,
-    communicationStyle: "true_random",
+    communicationStyle: 'true_random',
     allowCyclicCalls: false,
     visitAllMethods: false,
   });
-  const [customAttributes, setCustomAttributes] = useState<CustomAttribute[]>(
-    () =>
-      DEFAULT_CUSTOM_ATTRIBUTES.map((attr, idx) => ({ ...attr, id: idx + 1 })),
+  const [customAttributes, setCustomAttributes] = useState<CustomAttribute[]>(() =>
+    DEFAULT_CUSTOM_ATTRIBUTES.map((attr, idx) => ({ ...attr, id: idx + 1 }))
   );
-  const [nextAttrId, setNextAttrId] = useState(
-    DEFAULT_CUSTOM_ATTRIBUTES.length + 1,
-  );
+  const [nextAttrId, setNextAttrId] = useState(DEFAULT_CUSTOM_ATTRIBUTES.length + 1);
   const [loading, setLoading] = useState(false);
 
-  const updateValue = <K extends keyof typeof formData>(
-    field: K,
-    value: (typeof formData)[K],
-  ) => {
+  const updateValue = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const addCustomAttribute = () => {
-    setCustomAttributes((prev) => [
-      ...prev,
-      { id: nextAttrId, key: "", value: "" },
-    ]);
+    setCustomAttributes((prev) => [...prev, { id: nextAttrId, key: '', value: '' }]);
     setNextAttrId((prev) => prev + 1);
   };
 
@@ -65,22 +51,12 @@ export function TraceGenerationForm({
     setCustomAttributes((prev) => prev.filter((attr) => attr.id !== id));
   };
 
-  const updateCustomAttribute = (
-    id: number,
-    field: "key" | "value",
-    value: string,
-  ) => {
-    setCustomAttributes((prev) =>
-      prev.map((attr) => (attr.id === id ? { ...attr, [field]: value } : attr)),
-    );
+  const updateCustomAttribute = (id: number, field: 'key' | 'value', value: string) => {
+    setCustomAttributes((prev) => prev.map((attr) => (attr.id === id ? { ...attr, [field]: value } : attr)));
   };
 
   const resetCustomAttributes = () => {
-    if (
-      confirm(
-        "Reset all custom attributes to default values? This will remove all current attributes.",
-      )
-    ) {
+    if (confirm('Reset all custom attributes to default values? This will remove all current attributes.')) {
       const reset = DEFAULT_CUSTOM_ATTRIBUTES.map((attr, idx) => ({
         ...attr,
         id: idx + 1,
@@ -108,9 +84,9 @@ export function TraceGenerationForm({
       };
 
       await apiClient.generateTrace(request);
-      onSuccess?.("Trace generated and sent successfully!");
+      onSuccess?.('Trace generated and sent successfully!');
     } catch (err: any) {
-      onError(err.message || "Failed to generate trace");
+      onError(err.message || 'Failed to generate trace');
     } finally {
       setLoading(false);
     }
@@ -120,9 +96,7 @@ export function TraceGenerationForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* OpenTelemetry Collector Settings */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-          OpenTelemetry Collector Settings
-        </h3>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">OpenTelemetry Collector Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -131,15 +105,13 @@ export function TraceGenerationForm({
                 <span className="info-icon">
                   <Info className="w-4 h-4" />
                 </span>
-                <span className="tooltip w-64">
-                  Hostname of the OpenTelemetry Collector
-                </span>
+                <span className="tooltip w-64">Hostname of the OpenTelemetry Collector</span>
               </div>
             </label>
             <input
               type="text"
               value={formData.targetHostname}
-              onChange={(e) => updateValue("targetHostname", e.target.value)}
+              onChange={(e) => updateValue('targetHostname', e.target.value)}
               pattern="[a-zA-Z0-9\.\-]+"
               required
               className="material-input w-full"
@@ -154,9 +126,7 @@ export function TraceGenerationForm({
                 <span className="info-icon">
                   <Info className="w-4 h-4" />
                 </span>
-                <span className="tooltip w-64">
-                  Port of the OpenTelemetry Collector
-                </span>
+                <span className="tooltip w-64">Port of the OpenTelemetry Collector</span>
               </div>
             </label>
             <input
@@ -165,9 +135,7 @@ export function TraceGenerationForm({
               max="65535"
               step="1"
               value={formData.targetPort}
-              onChange={(e) =>
-                updateValue("targetPort", parseInt(e.target.value))
-              }
+              onChange={(e) => updateValue('targetPort', parseInt(e.target.value))}
               required
               className="material-input w-full"
             />
@@ -177,9 +145,7 @@ export function TraceGenerationForm({
 
       {/* Trace Generation Settings */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-          Trace Generation Settings
-        </h3>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Trace Generation Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -188,9 +154,7 @@ export function TraceGenerationForm({
                 <span className="info-icon">
                   <Info className="w-4 h-4" />
                 </span>
-                <span className="tooltip w-64">
-                  How long the trace should last (calls evenly distributed)
-                </span>
+                <span className="tooltip w-64">How long the trace should last (calls evenly distributed)</span>
               </div>
             </label>
             <div className="flex items-center gap-4">
@@ -199,14 +163,10 @@ export function TraceGenerationForm({
                 min="100"
                 max="10000"
                 value={formData.duration}
-                onChange={(e) =>
-                  updateValue("duration", parseInt(e.target.value))
-                }
+                onChange={(e) => updateValue('duration', parseInt(e.target.value))}
                 className="flex-1"
               />
-              <span className="text-sm font-semibold w-20 text-right">
-                {formData.duration}
-              </span>
+              <span className="text-sm font-semibold w-20 text-right">{formData.duration}</span>
             </div>
           </div>
 
@@ -217,9 +177,7 @@ export function TraceGenerationForm({
                 <span className="info-icon">
                   <Info className="w-4 h-4" />
                 </span>
-                <span className="tooltip w-64">
-                  Number of method calls in the trace
-                </span>
+                <span className="tooltip w-64">Number of method calls in the trace</span>
               </div>
             </label>
             <div className="flex items-center gap-4">
@@ -228,14 +186,10 @@ export function TraceGenerationForm({
                 min="1"
                 max="250"
                 value={formData.callCount}
-                onChange={(e) =>
-                  updateValue("callCount", parseInt(e.target.value))
-                }
+                onChange={(e) => updateValue('callCount', parseInt(e.target.value))}
                 className="flex-1"
               />
-              <span className="text-sm font-semibold w-20 text-right">
-                {formData.callCount}
-              </span>
+              <span className="text-sm font-semibold w-20 text-right">{formData.callCount}</span>
             </div>
           </div>
 
@@ -246,9 +200,7 @@ export function TraceGenerationForm({
                 <span className="info-icon">
                   <Info className="w-4 h-4" />
                 </span>
-                <span className="tooltip w-64">
-                  Maximum nesting depth of method calls
-                </span>
+                <span className="tooltip w-64">Maximum nesting depth of method calls</span>
               </div>
             </label>
             <div className="flex items-center gap-4">
@@ -257,14 +209,10 @@ export function TraceGenerationForm({
                 min="1"
                 max="100"
                 value={formData.maxCallDepth}
-                onChange={(e) =>
-                  updateValue("maxCallDepth", parseInt(e.target.value))
-                }
+                onChange={(e) => updateValue('maxCallDepth', parseInt(e.target.value))}
                 className="flex-1"
               />
-              <span className="text-sm font-semibold w-20 text-right">
-                {formData.maxCallDepth}
-              </span>
+              <span className="text-sm font-semibold w-20 text-right">{formData.maxCallDepth}</span>
             </div>
           </div>
 
@@ -286,9 +234,7 @@ export function TraceGenerationForm({
             </label>
             <select
               value={formData.communicationStyle}
-              onChange={(e) =>
-                updateValue("communicationStyle", e.target.value)
-              }
+              onChange={(e) => updateValue('communicationStyle', e.target.value)}
               required
               className="material-input w-full"
             >
@@ -302,21 +248,15 @@ export function TraceGenerationForm({
             <input
               type="checkbox"
               checked={formData.allowCyclicCalls}
-              onChange={(e) =>
-                updateValue("allowCyclicCalls", e.target.checked)
-              }
+              onChange={(e) => updateValue('allowCyclicCalls', e.target.checked)}
               className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500"
             />
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              Allow cyclic calls
-            </span>
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Allow cyclic calls</span>
             <div className="group relative">
               <span className="info-icon">
                 <Info className="w-4 h-4" />
               </span>
-              <span className="tooltip w-64">
-                Allow loops and recursive calls in the trace
-              </span>
+              <span className="tooltip w-64">Allow loops and recursive calls in the trace</span>
             </div>
           </label>
 
@@ -324,19 +264,16 @@ export function TraceGenerationForm({
             <input
               type="checkbox"
               checked={formData.visitAllMethods}
-              onChange={(e) => updateValue("visitAllMethods", e.target.checked)}
+              onChange={(e) => updateValue('visitAllMethods', e.target.checked)}
               className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500"
             />
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              Visit all methods
-            </span>
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Visit all methods</span>
             <div className="group relative">
               <span className="info-icon">
                 <Info className="w-4 h-4" />
               </span>
               <span className="tooltip w-80">
-                Visit every method in the landscape at least once. Call count
-                will be adjusted automatically.
+                Visit every method in the landscape at least once. Call count will be adjusted automatically.
               </span>
             </div>
           </label>
@@ -351,9 +288,7 @@ export function TraceGenerationForm({
             <span className="info-icon">
               <Info className="w-4 h-4" />
             </span>
-            <span className="tooltip w-64">
-              Fixed attributes included with every generated span
-            </span>
+            <span className="tooltip w-64">Fixed attributes included with every generated span</span>
           </div>
         </h3>
         <div className="space-y-3">
@@ -362,9 +297,7 @@ export function TraceGenerationForm({
               <input
                 type="text"
                 value={attr.key}
-                onChange={(e) =>
-                  updateCustomAttribute(attr.id, "key", e.target.value)
-                }
+                onChange={(e) => updateCustomAttribute(attr.id, 'key', e.target.value)}
                 placeholder="Attribute key"
                 pattern="[a-zA-Z0-9\.\-]+"
                 className="material-input w-48"
@@ -373,9 +306,7 @@ export function TraceGenerationForm({
               <input
                 type="text"
                 value={attr.value}
-                onChange={(e) =>
-                  updateCustomAttribute(attr.id, "value", e.target.value)
-                }
+                onChange={(e) => updateCustomAttribute(attr.id, 'value', e.target.value)}
                 placeholder="Attribute value"
                 pattern="[a-zA-Z0-9\.\-]+"
                 className="material-input flex-1"
@@ -411,11 +342,7 @@ export function TraceGenerationForm({
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="material-button w-full md:w-auto flex items-center gap-2"
-      >
+      <button type="submit" disabled={loading} className="material-button w-full md:w-auto flex items-center gap-2">
         <Send className="w-5 h-5" />
         Generate and Send Trace
       </button>

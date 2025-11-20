@@ -1,31 +1,18 @@
-import { faker } from "@faker-js/faker";
-import { FakeTrace, FakeSpan } from "./tracing";
-import { strict as assert } from "assert";
-import { Attributes } from "@opentelemetry/api";
+import { faker } from '@faker-js/faker';
+import { FakeTrace, FakeSpan } from './tracing';
+import { strict as assert } from 'assert';
+import { Attributes } from '@opentelemetry/api';
 import {
   SEMATTRS_CODE_FUNCTION,
   SEMATTRS_CODE_NAMESPACE,
   SEMRESATTRS_SERVICE_NAME,
-} from "@opentelemetry/semantic-conventions";
-import { NameGenerator } from "./naming";
+} from '@opentelemetry/semantic-conventions';
+import { NameGenerator } from './naming';
 
-import {
-  FakeMethod,
-  FakeClass,
-  FakePackage,
-  FakeApp,
-  AppGenerationParameters,
-  TraceGenerationParameters as SharedTraceGenerationParameters,
-} from "./shared/types";
+import { FakeMethod, FakeClass, FakePackage, FakeApp, AppGenerationParameters } from './shared/types';
 
 // Re-export types for backward compatibility
-export type {
-  FakeMethod,
-  FakeClass,
-  FakePackage,
-  FakeApp,
-  AppGenerationParameters,
-};
+export type { FakeMethod, FakeClass, FakePackage, FakeApp, AppGenerationParameters };
 
 // TraceGenerationParameters uses CommunicationStyle enum, so we keep a local version
 export interface TraceGenerationParameters {
@@ -43,22 +30,18 @@ function isClass(codeUnit: FakeClass | FakePackage): codeUnit is FakeClass {
   return (codeUnit as FakeClass).methods !== undefined;
 }
 
-function isPackage(codeUnit: FakeClass | FakePackage): codeUnit is FakePackage {
-  return (codeUnit as FakePackage).subpackages !== undefined;
-}
-
 export function getClassFqn(fakeClass: FakeClass): string {
   let fqn: string = fakeClass.identifier;
   let obj: FakeClass | FakePackage = fakeClass;
   while (obj.parent !== undefined) {
-    fqn = obj.parent.name + "." + fqn;
+    fqn = obj.parent.name + '.' + fqn;
     obj = obj.parent;
   }
   return fqn;
 }
 
 function getAllChildClasses(fakePackage: FakePackage): Array<FakeClass> {
-  let result = [...fakePackage.classes];
+  const result = [...fakePackage.classes];
   fakePackage.subpackages.forEach((subpackage) => {
     result.concat(getAllChildClasses(subpackage));
   });
@@ -72,9 +55,7 @@ function getAllChildClasses(fakePackage: FakePackage): Array<FakeClass> {
  * @param params Specifies the generation behaviour, especially the size of the applications. See {@link AppGenerationParameters}
  * @returns A list of {@link FakeApp}s conforming to the specified parameters
  */
-export function generateFakeApps(
-  params: AppGenerationParameters,
-): Array<FakeApp> {
+export function generateFakeApps(params: AppGenerationParameters): Array<FakeApp> {
   // Set seed, if one was provided (for reproducable results)
 
   if (params.seed !== undefined) {
@@ -85,9 +66,7 @@ export function generateFakeApps(
 
   const nameGenerator: NameGenerator = new NameGenerator();
 
-  return Array.from(Array(params.appCount), () =>
-    generateFakeApp(params, nameGenerator),
-  );
+  return Array.from(Array(params.appCount), () => generateFakeApp(params, nameGenerator));
 }
 
 /**
@@ -98,10 +77,7 @@ export function generateFakeApps(
  * @returns A {@link FakeApp} which conforms to the specifed parameters
  * @throws {RangeError}
  */
-function generateFakeApp(
-  params: AppGenerationParameters,
-  nameGenerator: NameGenerator,
-): FakeApp {
+function generateFakeApp(params: AppGenerationParameters, nameGenerator: NameGenerator): FakeApp {
   /**
    * This function creates an application tree from the bottom up (at the leaf nodes).
    * First, we randomly determine how many classes the app should contain in total.
@@ -114,36 +90,36 @@ function generateFakeApp(
   // Check for parameter validity
 
   if (params.minClassCount < 1) {
-    throw new RangeError("App requires at least 1 class");
+    throw new RangeError('App requires at least 1 class');
   }
 
   if (params.minMethodCount < 1) {
-    throw new RangeError("Each class requires at least 1 method");
+    throw new RangeError('Each class requires at least 1 method');
   }
 
   if (params.packageDepth < 0) {
-    throw new RangeError("Package depth may not be negative");
+    throw new RangeError('Package depth may not be negative');
   }
 
   if (params.maxClassCount < params.minClassCount) {
-    throw new RangeError("Class count min may not exceed max");
+    throw new RangeError('Class count min may not exceed max');
   }
 
   if (params.maxMethodCount < params.minMethodCount) {
-    throw new RangeError("Method count min may not exceed max");
+    throw new RangeError('Method count min may not exceed max');
   }
 
   if (params.balance < 0 || params.balance > 1) {
-    throw new RangeError("Balance value must be between 0 and 1");
+    throw new RangeError('Balance value must be between 0 and 1');
   }
 
   const appName = nameGenerator.getRandomAppName();
 
   // Convenience arrays
 
-  let classes: Array<FakeClass> = [];
-  let packages: Array<FakePackage> = [];
-  let methods: Array<FakeMethod> = [];
+  const classes: Array<FakeClass> = [];
+  const packages: Array<FakePackage> = [];
+  const methods: Array<FakeMethod> = [];
 
   const classCount: number = faker.number.int({
     min: params.minClassCount,
@@ -160,7 +136,7 @@ function generateFakeApp(
     const minClassesInLayer = layer == params.packageDepth ? 1 : 0; // Deepest layer requires at least 1 class
     const maxClassesInLayer = Math.max(
       Math.floor(remainingClassCount * params.balance), // Lower balance limits number of classes in lower layers
-      minClassesInLayer,
+      minClassesInLayer
     );
     const classesInLayer = faker.number.int({
       min: minClassesInLayer,
@@ -168,7 +144,7 @@ function generateFakeApp(
     });
     remainingClassCount -= classesInLayer;
 
-    let newClasses: Array<FakeClass> = Array.from(Array(classesInLayer), () => {
+    const newClasses: Array<FakeClass> = Array.from(Array(classesInLayer), () => {
       const numMethods = faker.number.int({
         min: params.minMethodCount,
         max: params.maxMethodCount,
@@ -198,7 +174,7 @@ function generateFakeApp(
 
     // Put the code units on this layer into packages
 
-    let newPackages = [];
+    const newPackages = [];
     let remainingComponents = currentLayer.length;
 
     while (remainingComponents > 0) {
@@ -207,9 +183,9 @@ function generateFakeApp(
         max: remainingComponents,
       });
       const componentsToPackage = currentLayer.slice(0, numComponentsToPackage);
-      let classesToPackage: Array<FakeClass> = [];
-      let packagesToPackage: Array<FakePackage> = [];
-      let newPackage = {
+      const classesToPackage: Array<FakeClass> = [];
+      const packagesToPackage: Array<FakePackage> = [];
+      const newPackage = {
         name: nameGenerator.getRandomPackageName(),
         classes: classesToPackage,
         subpackages: packagesToPackage,
@@ -236,25 +212,21 @@ function generateFakeApp(
 
   // Create root package ("org.tracegenerator.[APP_NAME]")
 
-  let rootPackage1: FakePackage;
-  let rootPackage2: FakePackage;
-  let rootPackage3: FakePackage;
-
-  rootPackage1 = {
-    name: "org",
+  const rootPackage1: FakePackage = {
+    name: 'org',
     classes: [],
     subpackages: [],
   };
 
-  rootPackage2 = {
-    name: "tracegenerator",
+  const rootPackage2: FakePackage = {
+    name: 'tracegenerator',
     classes: [],
     subpackages: [],
     parent: rootPackage1,
   };
 
-  rootPackage3 = {
-    name: appName.replace(/-/g, ""),
+  const rootPackage3: FakePackage = {
+    name: appName.replace(/-/g, ''),
     classes: [],
     subpackages: currentLayer as Array<FakePackage>, // Will only contain packages at this point
     parent: rootPackage2,
@@ -267,7 +239,7 @@ function generateFakeApp(
 
   // Fill root layer with remaining classes, if any
 
-  let remainingClasses = Array.from(Array(remainingClassCount), () => {
+  const remainingClasses = Array.from(Array(remainingClassCount), () => {
     const numMethods = faker.number.int({
       min: params.minMethodCount,
       max: params.maxMethodCount,
@@ -339,16 +311,10 @@ type NextClassStrategy = (
   classes: Array<FakeClass>,
   previousClass: FakeClass,
   visitedClasses: Set<FakeClass>,
-  allowCyclicCalls: boolean,
+  allowCyclicCalls: boolean
 ) => FakeClass;
 
-const strategyTrueRandom: NextClassStrategy = (
-  apps,
-  classes,
-  previousClass,
-  visitedClasses,
-  allowCyclicCalls,
-) => {
+const strategyTrueRandom: NextClassStrategy = (apps, classes, previousClass, visitedClasses, allowCyclicCalls) => {
   if (allowCyclicCalls) {
     return faker.helpers.arrayElement(classes);
   }
@@ -360,21 +326,9 @@ const strategyTrueRandom: NextClassStrategy = (
   return faker.helpers.arrayElement(remainingClasses);
 };
 
-const strategyCohesive: NextClassStrategy = (
-  apps,
-  classes,
-  previousClass,
-  visitedClasses,
-  allowCyclicCalls,
-) => {
+const strategyCohesive: NextClassStrategy = (apps, classes, previousClass, visitedClasses, allowCyclicCalls) => {
   if (previousClass.parent === undefined) {
-    return strategyTrueRandom(
-      apps,
-      classes,
-      previousClass,
-      visitedClasses,
-      allowCyclicCalls,
-    );
+    return strategyTrueRandom(apps, classes, previousClass, visitedClasses, allowCyclicCalls);
   }
 
   if (previousClass.linkedClass !== undefined) {
@@ -389,30 +343,18 @@ const strategyCohesive: NextClassStrategy = (
   return faker.helpers.arrayElement(
     neighbourClasses.filter((element) => {
       return !visitedClasses.has(element);
-    }),
+    })
   );
 };
 
-const strategyRandomExit: NextClassStrategy = (
-  apps,
-  classes,
-  previousClass,
-  visitedClasses,
-  allowCyclicCalls,
-) => {
+const strategyRandomExit: NextClassStrategy = (apps, classes, previousClass, visitedClasses, allowCyclicCalls) => {
   const EXIT_CHANCE = 5; // Chance is one in EXIT_CHANCE
 
   if (previousClass.parent === undefined) {
-    return strategyTrueRandom(
-      apps,
-      classes,
-      previousClass,
-      visitedClasses,
-      allowCyclicCalls,
-    );
+    return strategyTrueRandom(apps, classes, previousClass, visitedClasses, allowCyclicCalls);
   }
 
-  let neighbourClasses = getAllChildClasses(previousClass.parent);
+  const neighbourClasses = getAllChildClasses(previousClass.parent);
 
   if (faker.number.int({ min: 1, max: EXIT_CHANCE }) !== 1) {
     // Stay inside package case
@@ -421,9 +363,7 @@ const strategyRandomExit: NextClassStrategy = (
       return faker.helpers.arrayElement(neighbourClasses);
     }
 
-    const unvisitedNeighbourClasses = neighbourClasses.filter(
-      (clazz) => !visitedClasses.has(clazz),
-    );
+    const unvisitedNeighbourClasses = neighbourClasses.filter((clazz) => !visitedClasses.has(clazz));
 
     // If there are unvisited neighbors left, choose one at random
 
@@ -437,14 +377,10 @@ const strategyRandomExit: NextClassStrategy = (
   // Exit package case
 
   if (allowCyclicCalls) {
-    const outsiderClasses = classes.filter(
-      (clazz) => !neighbourClasses.includes(clazz),
-    );
+    const outsiderClasses = classes.filter((clazz) => !neighbourClasses.includes(clazz));
     return faker.helpers.arrayElement(outsiderClasses);
   }
-  const outsiderClasses = classes.filter(
-    (clazz) => !neighbourClasses.includes(clazz) && !visitedClasses.has(clazz),
-  );
+  const outsiderClasses = classes.filter((clazz) => !neighbourClasses.includes(clazz) && !visitedClasses.has(clazz));
   return faker.helpers.arrayElement(outsiderClasses);
 };
 
@@ -511,15 +447,13 @@ function placeInterfaceClasses(apps: Array<FakeApp>) {
     .filter((pkg) => pkg.classes.length > 0);
 
   if (packages.length === 0) {
-    console.debug("INFO: Apps contain no packages, cannot place interfaces");
+    console.debug('INFO: Apps contain no packages, cannot place interfaces');
     return;
   }
 
   for (let i = 0; i < packages.length; i++) {
     const selectedClass = faker.helpers.arrayElement(packages[i].classes);
-    const linkedClass = faker.helpers.arrayElement(
-      packages[(i + 1) % packages.length].classes,
-    );
+    const linkedClass = faker.helpers.arrayElement(packages[(i + 1) % packages.length].classes);
     selectedClass.linkedClass = linkedClass;
   }
 }
@@ -531,10 +465,7 @@ function placeInterfaceClasses(apps: Array<FakeApp>) {
  * @returns A {@link FakeTrace} object based upon the passed app structure
  * @throws RangeError
  */
-export function generateFakeTrace(
-  apps: Array<FakeApp>,
-  params: TraceGenerationParameters,
-): FakeTrace {
+export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationParameters): FakeTrace {
   /**
    * This function generates spans by simulating a call stack. We perform as many iterations
    * as there are method calls specified in the parameters. In each iteration, we add a method
@@ -547,19 +478,19 @@ export function generateFakeTrace(
   // Check for parameter validity
 
   if (apps.length < 1) {
-    throw new RangeError("Must provide at least 1 app to generate a trace for");
+    throw new RangeError('Must provide at least 1 app to generate a trace for');
   }
 
   if (params.duration < 1) {
-    throw new RangeError("Duration may not be less than 1");
+    throw new RangeError('Duration may not be less than 1');
   }
 
   if (params.callCount < 1) {
-    throw new RangeError("Trace must have at least one method call");
+    throw new RangeError('Trace must have at least one method call');
   }
 
   if (params.maxConnectionDepth < 1) {
-    throw new RangeError("Max Connection Depth may not be less than 1");
+    throw new RangeError('Max Connection Depth may not be less than 1');
   }
 
   if (params.seed !== undefined) {
@@ -588,7 +519,7 @@ export function generateFakeTrace(
   spanAttrs[SEMATTRS_CODE_NAMESPACE] = entryPointFqn;
   spanAttrs[SEMATTRS_CODE_FUNCTION] = entryMethod.identifier;
 
-  let entrySpan: FakeSpan = {
+  const entrySpan: FakeSpan = {
     name: `${entryPointFqn}.${entryMethod.identifier}`,
     relativeStartTime: 0,
     relativeEndTime: params.duration,
@@ -596,8 +527,8 @@ export function generateFakeTrace(
     children: [],
   };
 
-  let resultTrace: FakeTrace = [];
-  let classStack: Array<[FakeClass, FakeSpan]> = [[entryPoint, entrySpan]];
+  const resultTrace: FakeTrace = [];
+  const classStack: Array<[FakeClass, FakeSpan]> = [[entryPoint, entrySpan]];
 
   const classes: Array<FakeClass> = apps
     .map((app) => app.classes)
@@ -622,17 +553,13 @@ export function generateFakeTrace(
   const visitedMethods: Set<MethodReference> = new Set();
 
   // Mark entry method as visited
-  const entryMethodRef = allMethods.find(
-    (m) => m.class === entryPoint && m.method === entryMethod,
-  );
+  const entryMethodRef = allMethods.find((m) => m.class === entryPoint && m.method === entryMethod);
   if (entryMethodRef) {
     visitedMethods.add(entryMethodRef);
   }
 
   // Adjust callCount if visitAllMethods is enabled and we need more calls
-  const effectiveCallCount = params.visitAllMethods
-    ? Math.max(params.callCount, allMethods.length)
-    : params.callCount;
+  const effectiveCallCount = params.visitAllMethods ? Math.max(params.callCount, allMethods.length) : params.callCount;
 
   // Calculate call interval based on effective call count
   const callInterval = params.duration / effectiveCallCount;
@@ -662,10 +589,10 @@ export function generateFakeTrace(
             classes,
             previousClass,
             visitedClasses,
-            params.allowCyclicCalls,
+            params.allowCyclicCalls
           );
           nextMethod = faker.helpers.arrayElement(nextClass.methods);
-        } catch (err) {
+        } catch {
           // Next class couldn't be determined, meaning there are no unvisted classes left
           if (classStack.length > 1) {
             const head = classStack.pop() as [FakeClass, FakeSpan];
@@ -685,9 +612,9 @@ export function generateFakeTrace(
           classes,
           previousClass,
           visitedClasses,
-          params.allowCyclicCalls,
+          params.allowCyclicCalls
         );
-      } catch (err) {
+      } catch {
         // Next class couldn't be determined, meaning there are no unvisted classes left
         if (classStack.length > 1) {
           const head = classStack.pop() as [FakeClass, FakeSpan];
@@ -702,9 +629,7 @@ export function generateFakeTrace(
 
       // Track visited method if visitAllMethods is enabled
       if (params.visitAllMethods) {
-        const methodRef = allMethods.find(
-          (m) => m.class === nextClass && m.method === nextMethod,
-        );
+        const methodRef = allMethods.find((m) => m.class === nextClass && m.method === nextMethod);
         if (methodRef) {
           visitedMethods.add(methodRef);
         }
@@ -714,7 +639,7 @@ export function generateFakeTrace(
     spanAttrs[SEMRESATTRS_SERVICE_NAME] = nextClass.parentAppName;
     spanAttrs[SEMATTRS_CODE_NAMESPACE] = classFqn;
     spanAttrs[SEMATTRS_CODE_FUNCTION] = nextMethod.identifier;
-    let nextSpan: FakeSpan = {
+    const nextSpan: FakeSpan = {
       name: `${classFqn}.${nextMethod.identifier}`,
       relativeStartTime: timePassed,
       relativeEndTime: -1,

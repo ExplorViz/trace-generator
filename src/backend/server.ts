@@ -1,14 +1,12 @@
-import "dotenv/config";
-import cors from "cors";
-import express, { Express } from "express";
-import path from "path";
-import { fileURLToPath } from "url";
-import { landscapeRoutes } from "./routes/landscape.routes";
-import { traceRoutes } from "./routes/trace.routes";
+import 'dotenv/config';
+import cors from 'cors';
+import express, { Express } from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { landscapeRoutes } from './routes/landscape.routes';
+import { traceRoutes } from './routes/trace.routes';
 
-const DEFAULT_TARGET_HOSTNAME = "otel-collector";
-const DEFAULT_TARGET_PORT = 55678;
-const BACKEND_PORT = parseInt(process.env.BACKEND_PORT || "8079", 10);
+const BACKEND_PORT = parseInt(process.env.BACKEND_PORT || '8079', 10);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,25 +20,25 @@ export function createServer(): Express {
   app.use(express.urlencoded({ extended: true }));
 
   // Health check
-  app.get("/health", (req, res) => {
-    res.json({ status: "ok" });
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
   });
 
   // API routes
-  app.use("/api/landscape", landscapeRoutes);
-  app.use("/api/traces", traceRoutes);
+  app.use('/api/landscape', landscapeRoutes);
+  app.use('/api/traces', traceRoutes);
 
   // Serve static files from the built frontend (production)
-  const publicPath = path.join(__dirname, "../../dist/public");
+  const publicPath = path.join(__dirname, '../../dist/public');
   app.use(express.static(publicPath));
 
   // Fallback to index.html for client-side routing (SPA)
-  app.get("*", (req, res) => {
+  app.get('*', (req, res) => {
     // Don't serve index.html for API routes
-    if (req.path.startsWith("/api")) {
-      return res.status(404).json({ error: "Not found" });
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'Not found' });
     }
-    res.sendFile(path.join(publicPath, "index.html"));
+    res.sendFile(path.join(publicPath, 'index.html'));
   });
 
   return app;

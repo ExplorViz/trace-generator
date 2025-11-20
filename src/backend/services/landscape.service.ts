@@ -1,13 +1,13 @@
-import { FakeApp, AppGenerationParameters } from "@shared/types";
-import { generateFakeApps } from "../../generation";
-import { LandscapeStore } from "../../landscape";
-import { constants } from "../../constants";
-import { isValidInteger } from "../../utils";
+import { AppGenerationParameters } from '@shared/types';
+import { generateFakeApps } from '../../generation';
+import { LandscapeStore } from '../../landscape';
+import { constants } from '../../constants';
+import { isValidInteger } from '../../utils';
 import {
   cleanLandscapeForSerialization,
   reconstructParentReferences,
   CleanedLandscape,
-} from "../utils/landscape.utils";
+} from '../utils/landscape.utils';
 
 export class LandscapeService {
   private landscapeStore: LandscapeStore;
@@ -42,7 +42,7 @@ export class LandscapeService {
    */
   updateLandscape(landscapeData: any[]): CleanedLandscape[] {
     if (!Array.isArray(landscapeData)) {
-      throw new Error("Landscape must be an array");
+      throw new Error('Landscape must be an array');
     }
     const landscape = reconstructParentReferences(landscapeData);
     this.landscapeStore.setLandscape(landscape);
@@ -54,46 +54,31 @@ export class LandscapeService {
    */
   private validateGenerationParameters(params: AppGenerationParameters): void {
     if (params.appCount < 1 || params.appCount > constants.MAX_APP_COUNT) {
-      throw new Error("Invalid appCount");
+      throw new Error('Invalid appCount');
     }
-    if (
-      params.packageDepth < 0 ||
-      params.packageDepth > constants.MAX_PACKAGE_DEPTH
-    ) {
-      throw new Error("Invalid packageDepth");
+    if (params.packageDepth < 0 || params.packageDepth > constants.MAX_PACKAGE_DEPTH) {
+      throw new Error('Invalid packageDepth');
     }
-    if (
-      params.minClassCount < 1 ||
-      params.minClassCount > constants.MAX_CLASS_COUNT
-    ) {
-      throw new Error("Invalid minClassCount");
+    if (params.minClassCount < 1 || params.minClassCount > constants.MAX_CLASS_COUNT) {
+      throw new Error('Invalid minClassCount');
     }
-    if (
-      params.maxClassCount < 1 ||
-      params.maxClassCount > constants.MAX_CLASS_COUNT
-    ) {
-      throw new Error("Invalid maxClassCount");
+    if (params.maxClassCount < 1 || params.maxClassCount > constants.MAX_CLASS_COUNT) {
+      throw new Error('Invalid maxClassCount');
     }
     if (params.maxClassCount < params.minClassCount) {
-      throw new Error("maxClassCount must be >= minClassCount");
+      throw new Error('maxClassCount must be >= minClassCount');
     }
-    if (
-      params.minMethodCount < 1 ||
-      params.minMethodCount > constants.MAX_METHODS
-    ) {
-      throw new Error("Invalid minMethodCount");
+    if (params.minMethodCount < 1 || params.minMethodCount > constants.MAX_METHODS) {
+      throw new Error('Invalid minMethodCount');
     }
-    if (
-      params.maxMethodCount < 1 ||
-      params.maxMethodCount > constants.MAX_METHODS
-    ) {
-      throw new Error("Invalid maxMethodCount");
+    if (params.maxMethodCount < 1 || params.maxMethodCount > constants.MAX_METHODS) {
+      throw new Error('Invalid maxMethodCount');
     }
     if (params.maxMethodCount < params.minMethodCount) {
-      throw new Error("maxMethodCount must be >= minMethodCount");
+      throw new Error('maxMethodCount must be >= minMethodCount');
     }
     if (params.balance < 0 || params.balance > 1) {
-      throw new Error("balance must be between 0 and 1");
+      throw new Error('balance must be between 0 and 1');
     }
   }
 
@@ -109,10 +94,7 @@ export class LandscapeService {
       minMethodCount: parseInt(body.minMethodCount),
       maxMethodCount: parseInt(body.maxMethodCount),
       balance: parseFloat(body.balance),
-      seed:
-        body.appSeed !== undefined && isValidInteger(String(body.appSeed))
-          ? parseInt(body.appSeed)
-          : undefined,
+      seed: body.appSeed !== undefined && isValidInteger(String(body.appSeed)) ? parseInt(body.appSeed) : undefined,
     };
   }
 }

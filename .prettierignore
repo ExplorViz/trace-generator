@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+dist/
+build/
+
+# Build outputs
+*.js.map
+*.d.ts
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Public assets
+public/
+index.html
+
+# Old files
+public/script.js
+public/style.css
+public/index.html
+
+# Generated files
+coverage/
+*.log
+
+# Config files (keep their formatting)
+.prettierrc.js
+.eslintrc.js

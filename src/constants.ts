@@ -1,4 +1,4 @@
-import { CommunicationStyle } from "./generation";
+import { CommunicationStyle } from './generation';
 
 export const constants = {
   MAX_APP_COUNT: 500,

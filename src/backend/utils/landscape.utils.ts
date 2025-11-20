@@ -1,12 +1,5 @@
-import {
-  FakeApp,
-  FakePackage,
-  FakeClass,
-  CleanedLandscape,
-  CleanedPackage,
-  CleanedClass,
-} from "@shared/types";
-import { getClassFqn } from "../../generation";
+import { FakeApp, FakePackage, FakeClass, CleanedLandscape, CleanedPackage, CleanedClass } from '@shared/types';
+import { getClassFqn } from '../../generation';
 
 // Re-export types for convenience
 export type { CleanedLandscape, CleanedPackage, CleanedClass };
@@ -14,9 +7,7 @@ export type { CleanedLandscape, CleanedPackage, CleanedClass };
 /**
  * Clean landscape for JSON serialization (remove circular references)
  */
-export function cleanLandscapeForSerialization(
-  landscape: Array<FakeApp>,
-): CleanedLandscape[] {
+export function cleanLandscapeForSerialization(landscape: Array<FakeApp>): CleanedLandscape[] {
   return landscape.map((app) => {
     const entryPointFqn = getClassFqn(app.entryPoint);
     return {
@@ -70,9 +61,7 @@ function findClassByFqn(app: FakeApp, fqn: string): FakeClass | null {
 /**
  * Reconstruct parent references after deserialization
  */
-export function reconstructParentReferences(
-  landscapeData: Array<any>,
-): Array<FakeApp> {
+export function reconstructParentReferences(landscapeData: Array<any>): Array<FakeApp> {
   return landscapeData.map((appData: any) => {
     const app: FakeApp = {
       name: appData.name,

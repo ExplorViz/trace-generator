@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from "react";
-import { CleanedLandscape, CleanedPackage, CleanedClass } from "@shared/types";
-import { apiClient } from "../api/client";
+import React, { useState, useCallback } from 'react';
+import { CleanedLandscape, CleanedPackage, CleanedClass } from '@shared/types';
+import { apiClient } from '../api/client';
 import {
   Smartphone,
   Package,
@@ -16,7 +16,7 @@ import {
   RefreshCw,
   ChevronsDown,
   ChevronsUp,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface LandscapeEditorProps {
   landscape: CleanedLandscape[];
@@ -27,20 +27,13 @@ interface LandscapeEditorProps {
 type NodeId = string;
 
 function generateNodeId(type: string, ...parts: (string | number)[]): NodeId {
-  return `${type}_${parts.join("_")}`;
+  return `${type}_${parts.join('_')}`;
 }
 
-export function LandscapeEditor({
-  landscape,
-  onLandscapeUpdated,
-  onError,
-}: LandscapeEditorProps) {
+export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: LandscapeEditorProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<NodeId>>(new Set());
-  const [localLandscape, setLocalLandscape] =
-    useState<CleanedLandscape[]>(landscape);
-  const [originalLandscape, setOriginalLandscape] = useState<
-    CleanedLandscape[]
-  >(JSON.parse(JSON.stringify(landscape)));
+  const [localLandscape, setLocalLandscape] = useState<CleanedLandscape[]>(landscape);
+  const [originalLandscape, setOriginalLandscape] = useState<CleanedLandscape[]>(JSON.parse(JSON.stringify(landscape)));
 
   React.useEffect(() => {
     setLocalLandscape(landscape);
@@ -62,16 +55,12 @@ export function LandscapeEditor({
   const expandAll = useCallback(() => {
     const allNodes = new Set<NodeId>();
     localLandscape.forEach((app, appIdx) => {
-      allNodes.add(generateNodeId("app", appIdx));
+      allNodes.add(generateNodeId('app', appIdx));
       const collectNodes = (pkg: CleanedPackage) => {
-        allNodes.add(
-          generateNodeId("pkg", appIdx, pkg.name.replace(/\./g, "_")),
-        );
+        allNodes.add(generateNodeId('pkg', appIdx, pkg.name.replace(/\./g, '_')));
         pkg.subpackages.forEach((subPkg) => collectNodes(subPkg));
         pkg.classes.forEach((cls) => {
-          allNodes.add(
-            generateNodeId("cls", appIdx, cls.identifier.replace(/\./g, "_")),
-          );
+          allNodes.add(generateNodeId('cls', appIdx, cls.identifier.replace(/\./g, '_')));
         });
       };
       if (app.rootPackage) {
@@ -92,7 +81,7 @@ export function LandscapeEditor({
       setOriginalLandscape(JSON.parse(JSON.stringify(updated)));
       onLandscapeUpdated(updated);
     } catch (err: any) {
-      onError(err.message || "Failed to save landscape");
+      onError(err.message || 'Failed to save landscape');
     }
   }, [localLandscape, onLandscapeUpdated, onError]);
 
@@ -101,10 +90,7 @@ export function LandscapeEditor({
     setExpandedNodes(new Set());
   }, [originalLandscape]);
 
-  const findPackage = (
-    app: CleanedLandscape,
-    packageName: string,
-  ): CleanedPackage | null => {
+  const findPackage = (app: CleanedLandscape, packageName: string): CleanedPackage | null => {
     const search = (pkg: CleanedPackage): CleanedPackage | null => {
       if (pkg.name === packageName) return pkg;
       for (const subPkg of pkg.subpackages) {
@@ -116,10 +102,7 @@ export function LandscapeEditor({
     return search(app.rootPackage);
   };
 
-  const findClass = (
-    app: CleanedLandscape,
-    className: string,
-  ): CleanedClass | null => {
+  const findClass = (app: CleanedLandscape, className: string): CleanedClass | null => {
     const search = (pkg: CleanedPackage): CleanedClass | null => {
       const cls = pkg.classes.find((c) => c.identifier === className);
       if (cls) return cls;
@@ -134,8 +117,8 @@ export function LandscapeEditor({
 
   const renameApp = (appIdx: number) => {
     const app = localLandscape[appIdx];
-    const newName = prompt("Enter new app name:", app.name);
-    if (newName && newName.trim() !== "") {
+    const newName = prompt('Enter new app name:', app.name);
+    if (newName && newName.trim() !== '') {
       const updated = [...localLandscape];
       updated[appIdx] = { ...app, name: newName.trim() };
       setLocalLandscape(updated);
@@ -146,8 +129,8 @@ export function LandscapeEditor({
     const app = localLandscape[appIdx];
     const pkg = findPackage(app, packageName);
     if (pkg) {
-      const newName = prompt("Enter new package name:", pkg.name);
-      if (newName && newName.trim() !== "") {
+      const newName = prompt('Enter new package name:', pkg.name);
+      if (newName && newName.trim() !== '') {
         const updated = [...localLandscape];
         const updatePkg = (p: CleanedPackage): CleanedPackage => {
           if (p.name === packageName) {
@@ -171,44 +154,32 @@ export function LandscapeEditor({
     const app = localLandscape[appIdx];
     const cls = findClass(app, className);
     if (cls) {
-      const newName = prompt("Enter new class name:", cls.identifier);
-      if (newName && newName.trim() !== "") {
+      const newName = prompt('Enter new class name:', cls.identifier);
+      if (newName && newName.trim() !== '') {
         const updated = [...localLandscape];
         const updateClass = (p: CleanedPackage): CleanedPackage => ({
           ...p,
-          classes: p.classes.map((c) =>
-            c.identifier === className
-              ? { ...c, identifier: newName.trim() }
-              : c,
-          ),
+          classes: p.classes.map((c) => (c.identifier === className ? { ...c, identifier: newName.trim() } : c)),
           subpackages: p.subpackages.map(updateClass),
         });
         updated[appIdx] = {
           ...app,
           rootPackage: updateClass(app.rootPackage),
-          classes: app.classes.map((c) =>
-            c.identifier === className
-              ? { ...c, identifier: newName.trim() }
-              : c,
-          ),
+          classes: app.classes.map((c) => (c.identifier === className ? { ...c, identifier: newName.trim() } : c)),
         };
         setLocalLandscape(updated);
       }
     }
   };
 
-  const renameMethod = (
-    appIdx: number,
-    className: string,
-    methodName: string,
-  ) => {
+  const renameMethod = (appIdx: number, className: string, methodName: string) => {
     const app = localLandscape[appIdx];
     const cls = findClass(app, className);
     if (cls) {
       const method = cls.methods.find((m) => m.identifier === methodName);
       if (method) {
-        const newName = prompt("Enter new method name:", method.identifier);
-        if (newName && newName.trim() !== "") {
+        const newName = prompt('Enter new method name:', method.identifier);
+        if (newName && newName.trim() !== '') {
           const updated = [...localLandscape];
           const updateMethod = (p: CleanedPackage): CleanedPackage => ({
             ...p,
@@ -216,13 +187,9 @@ export function LandscapeEditor({
               c.identifier === className
                 ? {
                     ...c,
-                    methods: c.methods.map((m) =>
-                      m.identifier === methodName
-                        ? { identifier: newName.trim() }
-                        : m,
-                    ),
+                    methods: c.methods.map((m) => (m.identifier === methodName ? { identifier: newName.trim() } : m)),
                   }
-                : c,
+                : c
             ),
             subpackages: p.subpackages.map(updateMethod),
           });
@@ -233,13 +200,9 @@ export function LandscapeEditor({
               c.identifier === className
                 ? {
                     ...c,
-                    methods: c.methods.map((m) =>
-                      m.identifier === methodName
-                        ? { identifier: newName.trim() }
-                        : m,
-                    ),
+                    methods: c.methods.map((m) => (m.identifier === methodName ? { identifier: newName.trim() } : m)),
                   }
-                : c,
+                : c
             ),
           };
           setLocalLandscape(updated);
@@ -249,8 +212,8 @@ export function LandscapeEditor({
   };
 
   const addPackage = (appIdx: number) => {
-    const packageName = prompt("Enter package name:", "newpackage");
-    if (packageName && packageName.trim() !== "") {
+    const packageName = prompt('Enter package name:', 'newpackage');
+    if (packageName && packageName.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
       let targetPkg = app.rootPackage;
@@ -281,8 +244,8 @@ export function LandscapeEditor({
   };
 
   const addSubPackage = (appIdx: number, parentPackageName: string) => {
-    const packageName = prompt("Enter subpackage name:", "newsubpackage");
-    if (packageName && packageName.trim() !== "") {
+    const packageName = prompt('Enter subpackage name:', 'newsubpackage');
+    if (packageName && packageName.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
       const newPkg: CleanedPackage = {
@@ -306,8 +269,8 @@ export function LandscapeEditor({
   };
 
   const addClass = (appIdx: number, packageName: string) => {
-    const className = prompt("Enter class name:", "NewClass");
-    if (className && className.trim() !== "") {
+    const className = prompt('Enter class name:', 'NewClass');
+    if (className && className.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
       const newClass: CleanedClass = {
@@ -331,27 +294,21 @@ export function LandscapeEditor({
   };
 
   const addMethod = (appIdx: number, className: string) => {
-    const methodName = prompt("Enter method name:", "newMethod");
-    if (methodName && methodName.trim() !== "") {
+    const methodName = prompt('Enter method name:', 'newMethod');
+    if (methodName && methodName.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
       const newMethod = { identifier: methodName.trim() };
       const updateMethod = (p: CleanedPackage): CleanedPackage => ({
         ...p,
-        classes: p.classes.map((c) =>
-          c.identifier === className
-            ? { ...c, methods: [...c.methods, newMethod] }
-            : c,
-        ),
+        classes: p.classes.map((c) => (c.identifier === className ? { ...c, methods: [...c.methods, newMethod] } : c)),
         subpackages: p.subpackages.map(updateMethod),
       });
       updated[appIdx] = {
         ...app,
         rootPackage: updateMethod(app.rootPackage),
         classes: app.classes.map((c) =>
-          c.identifier === className
-            ? { ...c, methods: [...c.methods, newMethod] }
-            : c,
+          c.identifier === className ? { ...c, methods: [...c.methods, newMethod] } : c
         ),
         methods: [...app.methods, newMethod],
       };
@@ -360,27 +317,21 @@ export function LandscapeEditor({
   };
 
   const deleteApp = (appIdx: number) => {
-    if (confirm("Are you sure you want to delete this app?")) {
+    if (confirm('Are you sure you want to delete this app?')) {
       const updated = localLandscape.filter((_, idx) => idx !== appIdx);
       setLocalLandscape(updated);
     }
   };
 
   const deletePackage = (appIdx: number, packageName: string) => {
-    if (
-      confirm(
-        `Are you sure you want to delete package "${packageName}" and all its contents?`,
-      )
-    ) {
+    if (confirm(`Are you sure you want to delete package "${packageName}" and all its contents?`)) {
       const updated = [...localLandscape];
       const app = updated[appIdx];
       const removePkg = (p: CleanedPackage): CleanedPackage | null => {
         if (p.name === packageName) return null;
         return {
           ...p,
-          subpackages: p.subpackages
-            .map(removePkg)
-            .filter((p): p is CleanedPackage => p !== null),
+          subpackages: p.subpackages.map(removePkg).filter((p): p is CleanedPackage => p !== null),
         };
       };
       const cleaned = removePkg(app.rootPackage);
@@ -409,11 +360,7 @@ export function LandscapeEditor({
     }
   };
 
-  const deleteMethod = (
-    appIdx: number,
-    className: string,
-    methodName: string,
-  ) => {
+  const deleteMethod = (appIdx: number, className: string, methodName: string) => {
     if (confirm(`Are you sure you want to delete method "${methodName}"?`)) {
       const updated = [...localLandscape];
       const app = updated[appIdx];
@@ -425,7 +372,7 @@ export function LandscapeEditor({
                 ...c,
                 methods: c.methods.filter((m) => m.identifier !== methodName),
               }
-            : c,
+            : c
         ),
         subpackages: p.subpackages.map(removeMethod),
       });
@@ -438,7 +385,7 @@ export function LandscapeEditor({
                 ...c,
                 methods: c.methods.filter((m) => m.identifier !== methodName),
               }
-            : c,
+            : c
         ),
         methods: app.methods.filter((m) => m.identifier !== methodName),
       };
@@ -446,16 +393,8 @@ export function LandscapeEditor({
     }
   };
 
-  const renderPackage = (
-    pkg: CleanedPackage,
-    appIdx: number,
-    depth: number,
-  ): React.ReactNode => {
-    const pkgNodeId = generateNodeId(
-      "pkg",
-      appIdx,
-      pkg.name.replace(/\./g, "_"),
-    );
+  const renderPackage = (pkg: CleanedPackage, appIdx: number, depth: number): React.ReactNode => {
+    const pkgNodeId = generateNodeId('pkg', appIdx, pkg.name.replace(/\./g, '_'));
     const hasChildren = pkg.subpackages.length > 0 || pkg.classes.length > 0;
     const isExpanded = expandedNodes.has(pkgNodeId);
 
@@ -465,8 +404,8 @@ export function LandscapeEditor({
           className="tree-node group"
           onClick={(e) => {
             if (
-              !(e.target as HTMLElement).closest(".action-buttons") &&
-              !(e.target as HTMLElement).closest(".action-btn")
+              !(e.target as HTMLElement).closest('.action-buttons') &&
+              !(e.target as HTMLElement).closest('.action-btn')
             ) {
               toggleNode(pkgNodeId);
             }
@@ -532,26 +471,16 @@ export function LandscapeEditor({
         </div>
         {hasChildren && isExpanded && (
           <div className="ml-5">
-            {pkg.classes.map((cls) => renderClass(cls, appIdx, pkg.name))}
-            {pkg.subpackages.map((subPkg) =>
-              renderPackage(subPkg, appIdx, depth + 1),
-            )}
+            {pkg.classes.map((cls) => renderClass(cls, appIdx))}
+            {pkg.subpackages.map((subPkg) => renderPackage(subPkg, appIdx, depth + 1))}
           </div>
         )}
       </React.Fragment>
     );
   };
 
-  const renderClass = (
-    cls: CleanedClass,
-    appIdx: number,
-    packageName: string,
-  ): React.ReactNode => {
-    const clsNodeId = generateNodeId(
-      "cls",
-      appIdx,
-      cls.identifier.replace(/\./g, "_"),
-    );
+  const renderClass = (cls: CleanedClass, appIdx: number): React.ReactNode => {
+    const clsNodeId = generateNodeId('cls', appIdx, cls.identifier.replace(/\./g, '_'));
     const hasChildren = cls.methods.length > 0;
     const isExpanded = expandedNodes.has(clsNodeId);
 
@@ -561,8 +490,8 @@ export function LandscapeEditor({
           className="tree-node group"
           onClick={(e) => {
             if (
-              !(e.target as HTMLElement).closest(".action-buttons") &&
-              !(e.target as HTMLElement).closest(".action-btn")
+              !(e.target as HTMLElement).closest('.action-buttons') &&
+              !(e.target as HTMLElement).closest('.action-btn')
             ) {
               toggleNode(clsNodeId);
             }
@@ -617,21 +546,13 @@ export function LandscapeEditor({
           </div>
         </div>
         {hasChildren && isExpanded && (
-          <div className="ml-5">
-            {cls.methods.map((method) =>
-              renderMethod(method, appIdx, cls.identifier),
-            )}
-          </div>
+          <div className="ml-5">{cls.methods.map((method) => renderMethod(method, appIdx, cls.identifier))}</div>
         )}
       </React.Fragment>
     );
   };
 
-  const renderMethod = (
-    method: { identifier: string },
-    appIdx: number,
-    className: string,
-  ): React.ReactNode => {
+  const renderMethod = (method: { identifier: string }, appIdx: number, className: string): React.ReactNode => {
     return (
       <div key={method.identifier} className="tree-node method group">
         <span className="tree-toggle leaf w-4 text-center flex items-center justify-center">
@@ -673,26 +594,26 @@ export function LandscapeEditor({
         <button
           type="button"
           onClick={() => {
-            const appName = prompt("Enter app name:", "newapp");
-            if (appName && appName.trim() !== "") {
+            const appName = prompt('Enter app name:', 'newapp');
+            if (appName && appName.trim() !== '') {
               const rootPkg3: CleanedPackage = {
-                name: appName.trim().replace(/-/g, ""),
+                name: appName.trim().replace(/-/g, ''),
                 classes: [],
                 subpackages: [],
               };
               const rootPkg2: CleanedPackage = {
-                name: "tracegenerator",
+                name: 'tracegenerator',
                 classes: [],
                 subpackages: [rootPkg3],
               };
               const rootPkg1: CleanedPackage = {
-                name: "org",
+                name: 'org',
                 classes: [],
                 subpackages: [rootPkg2],
               };
               const defaultClass: CleanedClass = {
-                identifier: "Main",
-                methods: [{ identifier: "main" }],
+                identifier: 'Main',
+                methods: [{ identifier: 'main' }],
                 parentAppName: appName.trim(),
               };
               rootPkg3.classes.push(defaultClass);
@@ -728,11 +649,7 @@ export function LandscapeEditor({
           <ChevronsUp className="w-4 h-4" />
           Collapse All
         </button>
-        <button
-          type="button"
-          onClick={saveLandscape}
-          className="material-button px-4 py-2 flex items-center gap-2"
-        >
+        <button type="button" onClick={saveLandscape} className="material-button px-4 py-2 flex items-center gap-2">
           <Save className="w-4 h-4" />
           Save Landscape
         </button>
@@ -747,16 +664,12 @@ export function LandscapeEditor({
       </div>
       <div className="material-card p-4 max-h-[600px] overflow-y-auto font-mono text-sm bg-gray-50 dark:bg-gray-800">
         {localLandscape.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400">
-            No landscape generated yet. Generate one above!
-          </p>
+          <p className="text-gray-500 dark:text-gray-400">No landscape generated yet. Generate one above!</p>
         ) : (
           localLandscape.map((app, appIdx) => {
-            const appNodeId = generateNodeId("app", appIdx);
+            const appNodeId = generateNodeId('app', appIdx);
             const hasChildren =
-              app.rootPackage &&
-              (app.rootPackage.subpackages.length > 0 ||
-                app.rootPackage.classes.length > 0);
+              app.rootPackage && (app.rootPackage.subpackages.length > 0 || app.rootPackage.classes.length > 0);
             const isExpanded = expandedNodes.has(appNodeId);
 
             return (
@@ -765,8 +678,8 @@ export function LandscapeEditor({
                   className="tree-node group"
                   onClick={(e) => {
                     if (
-                      !(e.target as HTMLElement).closest(".action-buttons") &&
-                      !(e.target as HTMLElement).closest(".action-btn")
+                      !(e.target as HTMLElement).closest('.action-buttons') &&
+                      !(e.target as HTMLElement).closest('.action-btn')
                     ) {
                       toggleNode(appNodeId);
                     }
@@ -820,11 +733,7 @@ export function LandscapeEditor({
                     </button>
                   </div>
                 </div>
-                {hasChildren && isExpanded && (
-                  <div className="ml-5">
-                    {renderPackage(app.rootPackage, appIdx, 0)}
-                  </div>
-                )}
+                {hasChildren && isExpanded && <div className="ml-5">{renderPackage(app.rootPackage, appIdx, 0)}</div>}
               </React.Fragment>
             );
           })

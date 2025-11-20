@@ -1,8 +1,12 @@
 # trace-generator
 
-`trace-generator` is a development utility for testing and debugging OpenTelemetry-based applications. It was developed to be used with the [ExplorViz](https://explorviz.dev/) software visualization tool.
+`trace-generator` is a development utility for testing and debugging OpenTelemetry-based
+applications. It was developed to be used with the [ExplorViz](https://explorviz.dev/) software
+visualization tool.
 
-The goal is to easily create telemetry data for applications of various sizes and shapes. This is achieved by first generating fake class-based application structures and then generating traces upon those structures in a randomized manner.
+The goal is to easily create telemetry data for applications of various sizes and shapes. This is
+achieved by first generating fake class-based application structures and then generating traces upon
+those structures in a randomized manner.
 
 ## Installation
 
@@ -54,4 +58,6 @@ pnpm run dev:backend
 pnpm run dev:frontend
 ```
 
-Open URL in browser. By default, the frontend runs on `http://localhost:3000` and the backend on `http://localhost:8079` (configurable via `.env`). Modify parameters as desired, then click `Send Trace`.
+Open URL in browser. By default, the frontend runs on `http://localhost:3000` and the backend on
+`http://localhost:8079` (configurable via `.env`). Modify parameters as desired, then click
+`Send Trace`.
