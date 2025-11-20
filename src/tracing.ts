@@ -9,7 +9,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import { SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
-import { Resource } from "@opentelemetry/resources";
+import { emptyResource, defaultResource } from "@opentelemetry/resources";
 import {
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
@@ -46,8 +46,8 @@ export class FakeTraceExporter {
       concurrencyLimit: Infinity,
     });
     this.tracerProvider = new NodeTracerProvider({
-      resource: Resource.empty().merge(
-        new Resource({
+      resource: emptyResource().merge(
+        defaultResource({
           [SEMRESATTRS_SERVICE_NAME]: "trace-generator",
           [SEMRESATTRS_SERVICE_VERSION]: "1.0.0",
           [SEMRESATTRS_TELEMETRY_SDK_LANGUAGE]: "java",

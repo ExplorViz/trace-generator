@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "outDir": "./dist",
+    "noEmit": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/backend/**/*",
+    "src/shared/**/*",
+    "src/landscape.ts",
+    "src/generation.ts",
+    "src/tracing.ts",
+    "src/naming.ts",
+    "src/utils.ts",
+    "src/constants.ts"
+  ],
+  "exclude": ["src/frontend", "node_modules", "dist"]
+}

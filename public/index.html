@@ -1,479 +1,1239 @@
 <!doctype html>
-<html>
+<html lang="en" class="scroll-smooth">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trace Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css" />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#eff6ff",
+                100: "#dbeafe",
+                200: "#bfdbfe",
+                300: "#93c5fd",
+                400: "#60a5fa",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+                800: "#1e40af",
+                900: "#1e3a8a",
+              },
+            },
+            backdropBlur: {
+              xs: "2px",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      /* Material Design */
+      body {
+        background: #f5f5f5;
+        min-height: 100vh;
+      }
+
+      .dark body {
+        background: #121212;
+      }
+
+      .material-card {
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, 0.1),
+          0 4px 8px rgba(0, 0, 0, 0.08);
+        transition: box-shadow 0.3s ease;
+      }
+
+      .material-card:hover {
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.12),
+          0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      .dark .material-card {
+        background: #1e1e1e;
+        box-shadow:
+          0 2px 4px rgba(0, 0, 0, 0.3),
+          0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .dark .material-card:hover {
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.4),
+          0 8px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .material-button {
+        background: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 24px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition:
+          background-color 0.2s ease,
+          box-shadow 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .material-button:hover {
+        background: #1565c0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .material-button:active {
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .material-button-secondary {
+        background: transparent;
+        color: #1976d2;
+        border: 1px solid #1976d2;
+        box-shadow: none;
+      }
+
+      .material-button-secondary:hover {
+        background: rgba(25, 118, 210, 0.08);
+      }
+
+      .dark .material-button-secondary {
+        color: #90caf9;
+        border-color: #90caf9;
+      }
+
+      .dark .material-button-secondary:hover {
+        background: rgba(144, 202, 249, 0.1);
+      }
+
+      .material-input {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 12px 16px;
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+        color: #212121;
+      }
+
+      .material-input:focus {
+        outline: none;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+      }
+
+      .dark .material-input {
+        background: #2c2c2c;
+        border-color: #424242;
+        color: #e0e0e0;
+      }
+
+      .dark .material-input:focus {
+        border-color: #90caf9;
+        box-shadow: 0 0 0 2px rgba(144, 202, 249, 0.2);
+      }
+
+      .material-input::placeholder {
+        color: #9e9e9e;
+      }
+
+      .dark .material-input::placeholder {
+        color: #757575;
+      }
+
+      .tree-toggle.collapsed::before {
+        content: "▶";
+      }
+      .tree-toggle.expanded::before {
+        content: "▼";
+      }
+      .tree-toggle.leaf::before {
+        content: "•";
+      }
+      .tree-children.collapsed {
+        display: none;
+      }
+
+      /* Material Design transitions */
+      * {
+        transition:
+          background-color 0.2s ease,
+          border-color 0.2s ease,
+          color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      /* Dark mode toggle animation */
+      .dark-toggle {
+        transition:
+          transform 0.2s ease,
+          background-color 0.2s ease;
+      }
+
+      .dark-toggle:hover {
+        transform: scale(1.05);
+      }
+
+      /* Range slider styling - Material Design */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+        width: 100%;
+        height: 6px;
+      }
+
+      input[type="range"]::-webkit-slider-runnable-track {
+        background: #e0e0e0;
+        height: 6px;
+        border-radius: 3px;
+        border: none;
+      }
+
+      input[type="range"]::-webkit-slider-track {
+        background: #e0e0e0;
+        height: 6px;
+        border-radius: 3px;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: #1976d2;
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease;
+        margin-top: -7px;
+        cursor: pointer;
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transform: scale(1.15);
+        background: #1565c0;
+      }
+
+      input[type="range"]::-moz-range-track {
+        background: #e0e0e0;
+        height: 6px;
+        border-radius: 3px;
+        border: none;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        background: #1976d2;
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      input[type="range"]::-moz-range-thumb:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        transform: scale(1.15);
+        background: #1565c0;
+      }
+
+      .dark input[type="range"]::-webkit-slider-runnable-track {
+        background: #424242;
+      }
+
+      .dark input[type="range"]::-webkit-slider-track {
+        background: #424242;
+      }
+
+      .dark input[type="range"]::-webkit-slider-thumb {
+        background: #90caf9;
+      }
+
+      .dark input[type="range"]::-webkit-slider-thumb:hover {
+        background: #64b5f6;
+      }
+
+      .dark input[type="range"]::-moz-range-track {
+        background: #424242;
+      }
+
+      .dark input[type="range"]::-moz-range-thumb {
+        background: #90caf9;
+      }
+
+      .dark input[type="range"]::-moz-range-thumb:hover {
+        background: #64b5f6;
+      }
+    </style>
   </head>
 
-  <body style="font-family: Verdana, Tahoma, Geneva, sans-serif">
-    <form method="post" id="form_main">
-      <h1>OpenTelemetry Collector Settings</h1>
-
-      <div class="param">
-        <p class="caption">Target hostname:</p>
-        <div class="tooltip" style="display: inline">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >Hostname of the OpenTelemetry Collector to send traces to</span
-          >
-        </div>
-        <br />
-        <input
-          type="text"
-          value="localhost"
-          name="targetHostname"
-          pattern="[a-zA-Z0-9\.\-]+"
-          required
-          oninvalid="this.setCustomValidity('Hostname may only include A-Z, a-z, 0-9, . and -')"
-          oninput="this.setCustomValidity('')"
-        />
-      </div>
-
-      <div class="param">
-        <p class="caption">Target port:</p>
-        <div class="tooltip" style="display: inline">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >Port of the OpenTelemetry Collector to send traces to</span
-          >
-        </div>
-        <br />
-        <input
-          type="number"
-          min="0"
-          step="1"
-          value="55678"
-          name="targetPort"
-          required
-        />
-      </div>
-
-      <h1>App generation settings</h1>
-
-      <div class="param">
-        <p class="caption">Number of apps:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How many applications should be involved in the trace</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="50"
-          value="1"
-          name="appCount"
-          id="range_appCount"
-        />
-        <label for="range_appCount" class="label" id="label_appCount"></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Package depth:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How deep the package structure of the generated apps should go,
-            i.e. up to 4 layers of packages</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value="4"
-          name="packageDepth"
-          id="range_packageDepth"
-        />
-        <label
-          for="range_packageDepth"
-          class="label"
-          id="label_packageDepth"
-        ></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Minimum class count:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How many classes all of the generated apps must have at the very
-            least</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="200"
-          value="5"
-          name="minClassCount"
-          id="range_minClassCount"
-        />
-        <label
-          for="range_minClassCount"
-          class="label"
-          id="label_minClassCount"
-        ></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Maximum class count:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How many classes any of the generated apps may have at the
-            most</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="200"
-          value="20"
-          name="maxClassCount"
-          id="range_maxClassCount"
-        />
-        <label
-          for="range_maxClassCount"
-          class="label"
-          id="label_maxClassCount"
-        ></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Minimum method count:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How many methods any of the generated <i>classes</i> must have at
-            the very least</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value="1"
-          name="minMethodCount"
-          id="range_minMethodCount"
-        />
-        <label
-          for="range_minMethodCount"
-          class="label"
-          id="label_minMethodCount"
-        ></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Maximum method count:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How many methods any of the generated <i>classes</i> may have at
-            the most</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value="5"
-          name="maxMethodCount"
-          id="range_maxMethodCount"
-        />
-        <label
-          for="range_maxMethodCount"
-          class="label"
-          id="label_maxMethodCount"
-        ></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Class Distribution Balance:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >This parameter controls how equally classes are distributed among
-            the different package layers of the application. Very low balance
-            values mean that classes are more likely to be placed near the root
-            package of the applications, meaning that the application is not
-            very nested. A value of 1 leads to a more balanced
-            distribution</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.2"
-          value="1"
-          name="balance"
-          id="range_balance"
-        />
-        <label for="range_balance" class="label" id="label_balance"></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">App Generation Seed:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >By setting a seed, the generation results become reproducable.
-            Leave empty for random seed</span
-          >
-        </div>
-        <br />
-        <input type="number" min="0" step="1" value="" name="appSeed" />
-      </div>
-
-      <h1>Trace generation settings</h1>
-
-      <div class="param">
-        <p class="caption">Duration (ms):</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How long the trace shoud last for (in milliseconds). The calls are
-            evenly distributed in this timeframe</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="100"
-          max="10000"
-          value="1000"
-          name="duration"
-          id="range_duration"
-        />
-        <label for="range_duration" class="label" id="label_duration"></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Method Call Count:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How many method calls should occur within the duration of the
-            trace. This corresponds to the number of spans that are sent
-            out</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="250"
-          value="50"
-          name="callCount"
-          id="range_callCount"
-        />
-        <label for="range_callCount" class="label" id="label_callCount"></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Max Call Depth:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >How nested the method call stack may become (one method calls
-            another, which calls another ...)</span
-          >
-        </div>
-        <br />
-        <input
-          type="range"
-          min="1"
-          max="100"
-          value="10"
-          name="maxCallDepth"
-          id="range_maxCallDepth"
-        />
-        <label
-          for="range_maxCallDepth"
-          class="label"
-          id="label_maxCallDepth"
-        ></label>
-      </div>
-
-      <div class="param">
-        <p class="caption">Communication Style:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >Controls in which way different classes communicate with one
-            another.<br />- True Random: The next class gets picked at random,
-            from any package in any app<br />- Cohesive: We stay inside the
-            package we're in. Every package contains one single "interface"
-            class, which when chosen leads to a linked class outside its package
-            in the next call<br />- Random Exit: We stay inside the package
-            we're in. We sometimes (at random) jump to a class outside our
-            package
-          </span>
-        </div>
-        <br />
-        <select
-          name="communicationStyle"
-          id="select_communicationStyle"
-          required
+  <body class="min-h-screen text-gray-900 dark:text-gray-100">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+      <!-- Dark Mode Toggle -->
+      <div class="fixed top-4 right-4 z-50">
+        <button
+          id="darkModeToggle"
+          class="material-card dark-toggle p-3 rounded-full text-gray-800 dark:text-gray-200 hover:shadow-lg flex items-center justify-center"
+          aria-label="Toggle dark mode"
         >
-          <option value="true_random">True Random</option>
-          <option value="cohesive">Cohesive</option>
-          <option value="random_exit">Random Exit</option>
-        </select>
-      </div>
-
-      <br />
-
-      <div class="param">
-        <p class="caption">Allow cyclic calls:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >Whether to allow loops in the method call stack. This also includes
-            recursive function calls</span
-          >
-        </div>
-        <br />
-        <input
-          type="checkbox"
-          name="cyclicCalls"
-          value="on"
-          id="checkbox_cyclicCalls"
-        />
-      </div>
-
-      <div class="param">
-        <p class="caption">Trace Generation Seed:</p>
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >By setting a seed, the generation results become reproducable.
-            Leave empty for random seed</span
-          >
-        </div>
-        <br />
-        <input type="number" min="0" step="1" value="" name="traceSeed" />
-      </div>
-
-      <h1 style="display: inline">Custom Span Attributes</h1>
-      <div class="tooltip" style="top: -5px">
-        <a><b>?</b></a>
-        <span class="tooltiptext"
-          >This section allows setting (fixed-valued) attributes which are
-          included with every generated span</span
-        >
-      </div>
-      <br />
-
-      <div class="custom_attribute">
-        <input
-          type="text"
-          value="explorviz.token.id"
-          name="key_customAttribute1"
-          style="opacity: 0.5"
-          readonly
-        />
-        <div style="display: inline">:</div>
-        <input
-          type="text"
-          value="mytokenvalue"
-          name="value_customAttribute1"
-          pattern="[a-zA-Z0-9\.\-]+"
-          required
-          oninvalid="this.setCustomValidity('Token ID may only include A-Z, a-z, 0-9, . and -')"
-          oninput="this.setCustomValidity('')"
-        />
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >The landscape token ID. Copy this from the landscape selection
-            screen</span
-          >
-        </div>
-      </div>
-
-      <div class="custom_attribute">
-        <input
-          type="text"
-          value="explorviz.token.secret"
-          name="key_customAttribute2"
-          style="opacity: 0.5"
-          readonly
-        />
-        <div style="display: inline">:</div>
-        <input
-          type="text"
-          value="mytokensecret"
-          name="value_customAttribute2"
-          pattern="[a-zA-Z0-9\.\-]+"
-          required
-          oninvalid="this.setCustomValidity('Token secret may only include A-Z, a-z, 0-9, . and -')"
-          oninput="this.setCustomValidity('')"
-        />
-        <div class="tooltip">
-          <a><b>?</b></a>
-          <span class="tooltiptext"
-            >The landscape token secret. Copy this from the landscape selection
-            screen</span
-          >
-        </div>
-      </div>
-
-      <div class="custom_attribute">
-        <input
-          type="text"
-          value="telemetry.sdk.language"
-          name="key_customAttribute3"
-          style="opacity: 0.5"
-          readonly
-        />
-        <div style="display: inline">:</div>
-        <input
-          type="text"
-          value="java"
-          name="value_customAttribute3"
-          pattern="[a-zA-Z0-9\.\-]+"
-          required
-          oninvalid="this.setCustomValidity('Value may only include A-Z, a-z, 0-9, . and -')"
-          oninput="this.setCustomValidity('')"
-        />
-      </div>
-
-      <div class="custom_attribute">
-        <input
-          type="text"
-          value="service.instance.id"
-          name="key_customAttribute4"
-          style="opacity: 0.5"
-          readonly
-        />
-        <div style="display: inline">:</div>
-        <input
-          type="text"
-          value="0"
-          name="value_customAttribute4"
-          pattern="[a-zA-Z0-9\.\-]+"
-          required
-          oninvalid="this.setCustomValidity('Value may only include A-Z, a-z, 0-9, . and -')"
-          oninput="this.setCustomValidity('')"
-        />
-      </div>
-
-      <div>
-        <button type="submit" class="button_submit" id="button_submit">
-          Send trace
+          <i data-lucide="moon" id="darkModeIcon" class="w-5 h-5"></i>
         </button>
       </div>
-    </form>
+
+      <!-- Header -->
+      <header class="mb-8 text-center">
+        <h1
+          class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4"
+        >
+          Trace Generator
+        </h1>
+        <p class="text-lg text-gray-700 dark:text-gray-300">
+          Generate OpenTelemetry traces for random application landscapes
+        </p>
+      </header>
+
+      <!-- Step 1: Landscape Generation -->
+      <section id="section_landscape" class="mb-12">
+        <div class="material-card p-6 md:p-8 mb-6">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+            Step 1: Generate Landscape
+          </h2>
+          <p class="text-gray-700 dark:text-gray-300 mb-6">
+            Generate a random landscape with applications, packages, classes,
+            and methods.
+          </p>
+
+          <form id="form_landscape" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Number of apps -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Number of apps
+                  <div class="group relative">
+                    <span class="info-icon">
+                      <i data-lucide="info" class="w-4 h-4"></i>
+                    </span>
+                    <span class="tooltip w-48">
+                      How many applications should be generated
+                    </span>
+                  </div>
+                </label>
+                <div class="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="50"
+                    value="1"
+                    name="appCount"
+                    id="range_appCount"
+                    class="flex-1"
+                  />
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-12 text-right"
+                    id="label_appCount"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Package depth -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Package depth
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span class="tooltip w-64">
+                      How deep the package structure should go (up to 4 layers)
+                    </span>
+                  </div>
+                </label>
+                <div class="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value="4"
+                    name="packageDepth"
+                    id="range_packageDepth"
+                    class="flex-1"
+                  />
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-12 text-right"
+                    id="label_packageDepth"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Min class count -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Minimum class count
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span class="tooltip w-64">
+                      Minimum number of classes per app
+                    </span>
+                  </div>
+                </label>
+                <div class="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="200"
+                    value="5"
+                    name="minClassCount"
+                    id="range_minClassCount"
+                    class="flex-1"
+                  />
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-12 text-right"
+                    id="label_minClassCount"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Max class count -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Maximum class count
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span class="tooltip w-64">
+                      Maximum number of classes per app
+                    </span>
+                  </div>
+                </label>
+                <div class="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="200"
+                    value="20"
+                    name="maxClassCount"
+                    id="range_maxClassCount"
+                    class="flex-1"
+                  />
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-12 text-right"
+                    id="label_maxClassCount"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Min method count -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Minimum method count
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span class="tooltip w-64">
+                      Minimum number of methods per class
+                    </span>
+                  </div>
+                </label>
+                <div class="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value="1"
+                    name="minMethodCount"
+                    id="range_minMethodCount"
+                    class="flex-1"
+                  />
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-12 text-right"
+                    id="label_minMethodCount"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Max method count -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Maximum method count
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span class="tooltip w-64">
+                      Maximum number of methods per class
+                    </span>
+                  </div>
+                </label>
+                <div class="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value="5"
+                    name="maxMethodCount"
+                    id="range_maxMethodCount"
+                    class="flex-1"
+                  />
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-12 text-right"
+                    id="label_maxMethodCount"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Balance -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Class Distribution Balance
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span
+                      class="absolute left-0 bottom-full mb-2 w-72 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+                    >
+                      Controls how equally classes are distributed among package
+                      layers. Lower values place classes near root.
+                    </span>
+                  </div>
+                </label>
+                <div class="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.2"
+                    value="1"
+                    name="balance"
+                    id="range_balance"
+                    class="flex-1"
+                  />
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-12 text-right"
+                    id="label_balance"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- App seed -->
+              <div class="space-y-2">
+                <label
+                  class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  App Generation Seed
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span class="tooltip w-64">
+                      Set a seed for reproducible results (leave empty for
+                      random)
+                    </span>
+                  </div>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value=""
+                  name="appSeed"
+                  class="material-input w-full"
+                  placeholder="Random"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              id="button_generate_landscape"
+              class="material-button w-full md:w-auto"
+            >
+              Generate Landscape
+            </button>
+          </form>
+        </div>
+
+        <div id="landscape_status"></div>
+
+        <!-- Landscape Editor -->
+        <div
+          id="landscape_editor_container"
+          class="material-card p-6 md:p-8 hidden"
+        >
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            Landscape Editor
+          </h3>
+          <p class="text-gray-700 dark:text-gray-300 mb-6">
+            Click on items to expand/collapse. Use the buttons to add, rename,
+            or delete entities.
+          </p>
+          <div class="flex flex-wrap gap-3 mb-6">
+            <button
+              type="button"
+              id="button_add_app"
+              class="material-button-secondary px-4 py-2 flex items-center gap-2"
+            >
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              Add App
+            </button>
+            <button
+              type="button"
+              id="button_expand_all"
+              class="material-button-secondary px-4 py-2 flex items-center gap-2"
+            >
+              <i data-lucide="chevrons-down" class="w-4 h-4"></i>
+              Expand All
+            </button>
+            <button
+              type="button"
+              id="button_collapse_all"
+              class="material-button-secondary px-4 py-2 flex items-center gap-2"
+            >
+              <i data-lucide="chevrons-up" class="w-4 h-4"></i>
+              Collapse All
+            </button>
+            <button
+              type="button"
+              id="button_save_landscape"
+              class="material-button px-4 py-2 flex items-center gap-2"
+            >
+              <i data-lucide="save" class="w-4 h-4"></i>
+              Save Landscape
+            </button>
+            <button
+              type="button"
+              id="button_reload_landscape"
+              class="material-button-secondary px-4 py-2 flex items-center gap-2"
+            >
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+              Reload Original
+            </button>
+          </div>
+          <div
+            id="landscape_editor"
+            class="material-card p-4 max-h-[600px] overflow-y-auto font-mono text-sm bg-gray-50 dark:bg-gray-800"
+          >
+            <!-- Landscape tree will be rendered here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Divider -->
+      <div class="border-t border-gray-300 dark:border-gray-700 my-12"></div>
+
+      <!-- Step 2: Trace Generation -->
+      <section id="section_traces">
+        <div class="material-card p-6 md:p-8">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+            Step 2: Generate Traces
+          </h2>
+          <p class="text-gray-700 dark:text-gray-300 mb-6">
+            Generate random traces based on the current landscape.
+          </p>
+
+          <form id="form_traces" class="space-y-6">
+            <!-- OpenTelemetry Collector Settings -->
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                OpenTelemetry Collector Settings
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label
+                    class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Target hostname
+                    <div class="group relative">
+                      <span
+                        class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span class="tooltip w-64">
+                        Hostname of the OpenTelemetry Collector
+                      </span>
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    value="localhost"
+                    name="targetHostname"
+                    id="input_targetHostname"
+                    pattern="[a-zA-Z0-9\.\-]+"
+                    required
+                    class="material-input w-full"
+                    oninvalid="this.setCustomValidity('Hostname may only include A-Z, a-z, 0-9, . and -')"
+                    oninput="this.setCustomValidity('')"
+                  />
+                </div>
+
+                <div class="space-y-2">
+                  <label
+                    class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Target port
+                    <div class="group relative">
+                      <span
+                        class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span class="tooltip w-64">
+                        Port of the OpenTelemetry Collector
+                      </span>
+                    </div>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value="55678"
+                    name="targetPort"
+                    id="input_targetPort"
+                    required
+                    class="material-input w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Trace generation settings -->
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                Trace Generation Settings
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                  <label
+                    class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Duration (ms)
+                    <div class="group relative">
+                      <span
+                        class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span class="tooltip w-64">
+                        How long the trace should last (calls evenly
+                        distributed)
+                      </span>
+                    </div>
+                  </label>
+                  <div class="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min="100"
+                      max="10000"
+                      value="1000"
+                      name="duration"
+                      id="range_duration"
+                      class="flex-1"
+                    />
+                    <span
+                      class="text-sm font-semibold text-gray-900 dark:text-gray-100 w-20 text-right"
+                      id="label_duration"
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <label
+                    class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Method Call Count
+                    <div class="group relative">
+                      <span
+                        class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span
+                        class="absolute left-0 bottom-full mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+                      >
+                        Number of method calls in the trace
+                      </span>
+                    </div>
+                  </label>
+                  <div class="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min="1"
+                      max="250"
+                      value="50"
+                      name="callCount"
+                      id="range_callCount"
+                      class="flex-1"
+                    />
+                    <span
+                      class="text-sm font-semibold text-primary-600 w-20 text-right"
+                      id="label_callCount"
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <label
+                    class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Max Call Depth
+                    <div class="group relative">
+                      <span
+                        class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span
+                        class="absolute left-0 bottom-full mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+                      >
+                        Maximum nesting depth of method calls
+                      </span>
+                    </div>
+                  </label>
+                  <div class="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value="10"
+                      name="maxCallDepth"
+                      id="range_maxCallDepth"
+                      class="flex-1"
+                    />
+                    <span
+                      class="text-sm font-semibold text-primary-600 w-20 text-right"
+                      id="label_maxCallDepth"
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <label
+                    class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Communication Style
+                    <div class="group relative">
+                      <span
+                        class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span
+                        class="absolute left-0 bottom-full mb-2 w-80 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+                      >
+                        True Random: Random class selection<br />
+                        Cohesive: Stay within packages<br />
+                        Random Exit: Mostly within packages, sometimes exit
+                      </span>
+                    </div>
+                  </label>
+                  <select
+                    name="communicationStyle"
+                    id="select_communicationStyle"
+                    required
+                    class="material-input w-full"
+                  >
+                    <option value="true_random">True Random</option>
+                    <option value="cohesive">Cohesive</option>
+                    <option value="random_exit">Random Exit</option>
+                  </select>
+                </div>
+
+                <div class="space-y-2">
+                  <label
+                    class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Trace Generation Seed
+                    <div class="group relative">
+                      <span
+                        class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </span>
+                      <span
+                        class="absolute left-0 bottom-full mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+                      >
+                        Set a seed for reproducible results (leave empty for
+                        random)
+                      </span>
+                    </div>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value=""
+                    name="traceSeed"
+                    class="material-input w-full"
+                    placeholder="Random"
+                  />
+                </div>
+              </div>
+
+              <div class="mt-4 space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="allowCyclicCalls"
+                    value="on"
+                    id="checkbox_cyclicCalls"
+                    class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span
+                    class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Allow cyclic calls
+                  </span>
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span class="tooltip w-64">
+                      Allow loops and recursive calls in the trace
+                    </span>
+                  </div>
+                </label>
+
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="visitAllMethods"
+                    value="on"
+                    id="checkbox_visitAllMethods"
+                    class="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span
+                    class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    Visit all methods
+                  </span>
+                  <div class="group relative">
+                    <span
+                      class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span
+                      class="absolute left-0 bottom-full mb-2 w-80 p-2 material-card text-gray-900 dark:text-gray-100 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg"
+                    >
+                      Visit every method in the landscape at least once. Call
+                      count will be adjusted automatically.
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Custom Span Attributes -->
+            <div>
+              <h3
+                class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"
+              >
+                Custom Span Attributes
+                <div class="group relative">
+                  <span
+                    class="cursor-help text-gray-500 dark:text-gray-400 flex items-center"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                  </span>
+                  <span
+                    class="absolute left-0 bottom-full mb-2 w-64 p-2 material-card text-gray-900 dark:text-gray-100 text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg"
+                  >
+                    Fixed attributes included with every generated span
+                  </span>
+                </div>
+              </h3>
+              <div id="custom_attributes_container" class="space-y-3">
+                <!-- Custom attributes will be dynamically added here -->
+              </div>
+              <div class="flex gap-3 mt-3">
+                <button
+                  type="button"
+                  id="button_add_custom_attribute"
+                  class="material-button-secondary flex items-center gap-2"
+                >
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  Add Attribute
+                </button>
+                <button
+                  type="button"
+                  id="button_reset_custom_attributes"
+                  class="material-button-secondary flex items-center gap-2"
+                >
+                  <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                  Reset to Defaults
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              id="button_generate_trace"
+              class="material-button w-full md:w-auto flex items-center gap-2"
+            >
+              <i data-lucide="send" class="w-5 h-5"></i>
+              Generate and Send Trace
+            </button>
+          </form>
+        </div>
+
+        <div id="trace_status" class="mt-4"></div>
+      </section>
+    </div>
 
     <script src="script.js"></script>
   </body>

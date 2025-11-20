@@ -1,17 +1,32 @@
 {
   "compilerOptions": {
     /* Language and Environment */
-    "target": "es2023" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+
     /* Modules */
-    "module": "NodeNext" /* Specify what module code is generated. */,
-    "rootDir": "./src" /* Specify the root folder within your source files. */,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "rootDir": "./src",
     "outDir": "./dist",
-    "forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
+    "forceConsistentCasingInFileNames": true,
 
     /* Type Checking */
-    "strict": true /* Enable all strict type-checking options. */,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
 
-    /* Completeness */
-    "skipLibCheck": true /* Skip type checking all .d.ts files. */
-  }
+    /* Path Mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

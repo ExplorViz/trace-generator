@@ -9,32 +9,34 @@ import {
 } from "@opentelemetry/semantic-conventions";
 import { NameGenerator } from "./naming";
 
-interface FakeMethod {
-  identifier: string;
-}
+import {
+  FakeMethod,
+  FakeClass,
+  FakePackage,
+  FakeApp,
+  AppGenerationParameters,
+  TraceGenerationParameters as SharedTraceGenerationParameters,
+} from "./shared/types";
 
-interface FakeClass {
-  identifier: string;
-  methods: Array<FakeMethod>;
-  parent?: FakePackage;
-  parentAppName: string;
-  linkedClass?: FakeClass;
-}
+// Re-export types for backward compatibility
+export type {
+  FakeMethod,
+  FakeClass,
+  FakePackage,
+  FakeApp,
+  AppGenerationParameters,
+};
 
-export interface FakePackage {
-  name: string;
-  subpackages: Array<FakePackage>;
-  classes: Array<FakeClass>;
-  parent?: FakePackage;
-}
-
-export interface FakeApp {
-  name: string;
-  rootPackage: FakePackage;
-  entryPoint: FakeClass;
-  classes: Array<FakeClass>;
-  packages: Array<FakePackage>;
-  methods: Array<FakeMethod>;
+// TraceGenerationParameters uses CommunicationStyle enum, so we keep a local version
+export interface TraceGenerationParameters {
+  duration: number;
+  callCount: number;
+  maxConnectionDepth: number;
+  communicationStyle: CommunicationStyle;
+  allowCyclicCalls: boolean;
+  visitAllMethods?: boolean;
+  fixedAttributes?: Attributes;
+  seed?: number;
 }
 
 function isClass(codeUnit: FakeClass | FakePackage): codeUnit is FakeClass {
@@ -45,7 +47,7 @@ function isPackage(codeUnit: FakeClass | FakePackage): codeUnit is FakePackage {
   return (codeUnit as FakePackage).subpackages !== undefined;
 }
 
-function getClassFqn(fakeClass: FakeClass): string {
+export function getClassFqn(fakeClass: FakeClass): string {
   let fqn: string = fakeClass.identifier;
   let obj: FakeClass | FakePackage = fakeClass;
   while (obj.parent !== undefined) {
@@ -63,50 +65,7 @@ function getAllChildClasses(fakePackage: FakePackage): Array<FakeClass> {
   return result;
 }
 
-/**
- * These parameters can be used to configure the first step of trace generation,
- * in which application structures are generated.
- */
-export interface AppGenerationParameters {
-  /**
-   * How many apps should be generated. All generated apps will use the same generation parameters.
-   */
-  appCount: number;
-  /**
-   * How deep the package structure should reach, not including the root package.
-   * A depth of 0 means that there are no sub-packages inside the root package, only classes
-   */
-  packageDepth: number;
-  /**
-   * How many classes each generated app should contain at the least.
-   * Must be greater than 0
-   */
-  minClassCount: number;
-  /**
-   * The highest number of classes that each of the generated apps may contain
-   */
-  maxClassCount: number;
-  /**
-   * How many methods any given class must possess at the minimum
-   */
-  minMethodCount: number;
-  /**
-   * The max number of methods any class may possess
-   */
-  maxMethodCount: number;
-  /**
-   * Influences the balance of generated trees, where 1 is perfectly balanced and 0 is extremely unbalanced.
-   * Low balance values mean that code units are more likely to be placed near the root package.
-   * Note that this only influences the random generation, the resulting application tree can be very unbalanced
-   * even for a balance value of 1.
-   * May only be between 0 and 1
-   */
-  balance: number;
-  /**
-   * Can optionally be used to yield reproducable results. The seed is set once before generating all the apps.
-   */
-  seed?: number;
-}
+// AppGenerationParameters is now imported from shared/types
 
 /**
  * Generate some fake applications, with all the apps using the same generation parameters.
@@ -349,7 +308,7 @@ function generateFakeApp(
 /**
  * Defines the different strategies for class selection during trace generation.
  */
-export const enum CommunicationStyle {
+export enum CommunicationStyle {
   /**
    * With this style, the next class is chosen completely at random. It can be
    * from any app and any package, with uniform probability given to all classes.
@@ -525,6 +484,12 @@ export interface TraceGenerationParameters {
    */
   allowCyclicCalls: boolean;
   /**
+   * Whether to ensure all methods in the landscape are visited at least once.
+   * When enabled, the trace will visit every method before continuing with normal generation.
+   * The callCount parameter will be adjusted if necessary to accommodate all methods.
+   */
+  visitAllMethods?: boolean;
+  /**
    * Attributes of constant value to include in every span of the trace
    */
   fixedAttributes?: Attributes;
@@ -608,7 +573,6 @@ export function generateFakeTrace(
   }
 
   const startingApp = apps[0];
-  const callInterval = params.duration / params.callCount;
   let timePassed = 0;
   const entryPoint = startingApp.entryPoint;
   const entryMethod = faker.helpers.arrayElement(entryPoint.methods);
@@ -644,30 +608,108 @@ export function generateFakeTrace(
   let previousClass: FakeClass = entryPoint;
   let generatedSpanCount: number = 0;
 
-  while (generatedSpanCount < params.callCount) {
+  // Collect all methods for visitAllMethods feature
+  interface MethodReference {
+    class: FakeClass;
+    method: FakeMethod;
+  }
+  const allMethods: Array<MethodReference> = [];
+  classes.forEach((cls) => {
+    cls.methods.forEach((method) => {
+      allMethods.push({ class: cls, method: method });
+    });
+  });
+  const visitedMethods: Set<MethodReference> = new Set();
+
+  // Mark entry method as visited
+  const entryMethodRef = allMethods.find(
+    (m) => m.class === entryPoint && m.method === entryMethod,
+  );
+  if (entryMethodRef) {
+    visitedMethods.add(entryMethodRef);
+  }
+
+  // Adjust callCount if visitAllMethods is enabled and we need more calls
+  const effectiveCallCount = params.visitAllMethods
+    ? Math.max(params.callCount, allMethods.length)
+    : params.callCount;
+
+  // Calculate call interval based on effective call count
+  const callInterval = params.duration / effectiveCallCount;
+
+  while (generatedSpanCount < effectiveCallCount) {
     // Select next class for method call
 
     let nextClass: FakeClass;
-    try {
-      nextClass = nextClassStrats[params.communicationStyle](
-        apps,
-        classes,
-        previousClass,
-        visitedClasses,
-        params.allowCyclicCalls,
-      );
-    } catch (err) {
-      // Next class couldn't be determined, meaning there are no unvisted classes left
-      if (classStack.length > 1) {
-        const head = classStack.pop() as [FakeClass, FakeSpan];
-        head[1].relativeEndTime = timePassed;
-        visitedClasses.delete(head[0]);
-        classStack[classStack.length - 1][1].children.push(head[1]);
-        previousClass = classStack[classStack.length - 1][0];
+    let nextMethod: FakeMethod;
+
+    // If visitAllMethods is enabled and there are unvisited methods, prioritize them
+    if (params.visitAllMethods && visitedMethods.size < allMethods.length) {
+      const unvisitedMethods = allMethods.filter((m) => !visitedMethods.has(m));
+      if (unvisitedMethods.length > 0) {
+        // Select a random unvisited method
+        const methodRef = faker.helpers.arrayElement(unvisitedMethods);
+        nextClass = methodRef.class;
+        nextMethod = methodRef.method;
+        visitedMethods.add(methodRef);
+        // Also mark the class as visited for communication style tracking
+        visitedClasses.add(nextClass);
+      } else {
+        // All methods visited, continue with normal selection
+        try {
+          nextClass = nextClassStrats[params.communicationStyle](
+            apps,
+            classes,
+            previousClass,
+            visitedClasses,
+            params.allowCyclicCalls,
+          );
+          nextMethod = faker.helpers.arrayElement(nextClass.methods);
+        } catch (err) {
+          // Next class couldn't be determined, meaning there are no unvisted classes left
+          if (classStack.length > 1) {
+            const head = classStack.pop() as [FakeClass, FakeSpan];
+            head[1].relativeEndTime = timePassed;
+            visitedClasses.delete(head[0]);
+            classStack[classStack.length - 1][1].children.push(head[1]);
+            previousClass = classStack[classStack.length - 1][0];
+          }
+          continue;
+        }
       }
-      continue;
+    } else {
+      // Normal selection mode
+      try {
+        nextClass = nextClassStrats[params.communicationStyle](
+          apps,
+          classes,
+          previousClass,
+          visitedClasses,
+          params.allowCyclicCalls,
+        );
+      } catch (err) {
+        // Next class couldn't be determined, meaning there are no unvisted classes left
+        if (classStack.length > 1) {
+          const head = classStack.pop() as [FakeClass, FakeSpan];
+          head[1].relativeEndTime = timePassed;
+          visitedClasses.delete(head[0]);
+          classStack[classStack.length - 1][1].children.push(head[1]);
+          previousClass = classStack[classStack.length - 1][0];
+        }
+        continue;
+      }
+      nextMethod = faker.helpers.arrayElement(nextClass.methods);
+
+      // Track visited method if visitAllMethods is enabled
+      if (params.visitAllMethods) {
+        const methodRef = allMethods.find(
+          (m) => m.class === nextClass && m.method === nextMethod,
+        );
+        if (methodRef) {
+          visitedMethods.add(methodRef);
+        }
+      }
     }
-    const nextMethod = faker.helpers.arrayElement(nextClass.methods);
     const classFqn = getClassFqn(nextClass);
     spanAttrs[SEMRESATTRS_SERVICE_NAME] = nextClass.parentAppName;
     spanAttrs[SEMATTRS_CODE_NAMESPACE] = classFqn;

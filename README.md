@@ -21,51 +21,37 @@ cd trace-generator
 Install npm packages:
 
 ```
-npm install
+pnpm install
 ```
+
+## Configuration
+
+Ports for the frontend and backend can be configured via environment variables in the `.env` file.
+
+The `.env` file supports the following variables:
+
+- `BACKEND_PORT` - Port for the backend server (default: 8079)
+- `VITE_FRONTEND_PORT` - Port for the frontend development server (default: 3000)
+- `VITE_BACKEND_URL` - Backend URL for the frontend proxy (default: http://localhost:8079)
 
 ## Usage
 
 ### Using the frontend
 
-Start the frontend:
+Start both frontend and backend:
 
 ```
-npm start
+pnpm run dev
 ```
 
-Open URL in browser, by default `http://localhost:8079`. Modify parameters as desired, then click `Send Trace`.
+Or start them separately:
 
-### Using the library
+```bash
+# Backend only
+pnpm run dev:backend
 
-Usage example (with sensible parameters):
-
-```typescript
-const traceExporter: FakeTraceExporter = new FakeTraceExporter(
-  TARGET_HOSTNAME,
-  TARGET_PORT,
-);
-
-appParams: AppGenerationParameters = {
-  appCount: 1,
-  packageDepth: 4,
-  minClassCount: 5,
-  maxClassCount: 20,
-  minMethodCount: 1,
-  maxMethodCount: 5,
-  balance: 1,
-};
-
-traceParams: TraceGenerationParameters = {
-  duration: 1000,
-  callCount: 100,
-  maxConnectionDepth: 10,
-  communicationStyle: CommunicationStyle.COHESIVE,
-  allowCyclicCalls: false,
-};
-
-const apps: Array<FakeApp> = generateFakeApps(appParams);
-const trace: FakeTrace = generateFakeTrace(apps, traceParams);
-
-traceGenerator.writeTrace(trace);
+# Frontend only
+pnpm run dev:frontend
 ```
+
+Open URL in browser. By default, the frontend runs on `http://localhost:3000` and the backend on `http://localhost:8079` (configurable via `.env`). Modify parameters as desired, then click `Send Trace`.
