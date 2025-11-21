@@ -1,21 +1,9 @@
 import { CleanedClass, CleanedLandscape, CleanedPackage } from '@shared/types';
-import {
-  ChevronDown,
-  ChevronRight,
-  ChevronsDown,
-  ChevronsUp,
-  Circle,
-  FileCode,
-  FileUp,
-  Package,
-  Pencil,
-  Plus,
-  Save,
-  Smartphone,
-  Trash2,
-  Zap,
-} from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { AppNode } from './landscape-editor/AppNode';
+import { LandscapeToolbar } from './landscape-editor/LandscapeToolbar';
+import { LandscapeEditorHandlers, NodeId } from './landscape-editor/types';
+import { generateNodeId } from './landscape-editor/utils';
 
 interface LandscapeEditorProps {
   landscape: CleanedLandscape[];
@@ -23,21 +11,21 @@ interface LandscapeEditorProps {
   onError: (error: string) => void;
 }
 
-type NodeId = string;
-
-function generateNodeId(type: string, ...parts: (string | number)[]): NodeId {
-  return `${type}_${parts.join('_')}`;
-}
-
 export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: LandscapeEditorProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<NodeId>>(new Set());
   const [localLandscape, setLocalLandscape] = useState<CleanedLandscape[]>(landscape);
+  const isInternalUpdateRef = useRef(false);
 
   React.useEffect(() => {
-    setLocalLandscape(landscape);
+    // Only update local landscape if the change came from outside (prop change)
+    // Skip if it's from an internal user edit (which already updated localLandscape)
+    if (!isInternalUpdateRef.current) {
+      setLocalLandscape(landscape);
+    }
+    isInternalUpdateRef.current = false;
   }, [landscape]);
 
-  const toggleNode = useCallback((nodeId: NodeId) => {
+  const toggleNode = (nodeId: NodeId) => {
     setExpandedNodes((prev) => {
       const next = new Set(prev);
       if (next.has(nodeId)) {
@@ -47,9 +35,9 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       }
       return next;
     });
-  }, []);
+  };
 
-  const expandAll = useCallback(() => {
+  const expandAll = () => {
     const allNodes = new Set<NodeId>();
     localLandscape.forEach((app, appIdx) => {
       allNodes.add(generateNodeId('app', appIdx));
@@ -65,13 +53,13 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       }
     });
     setExpandedNodes(allNodes);
-  }, [localLandscape]);
+  };
 
-  const collapseAll = useCallback(() => {
+  const collapseAll = () => {
     setExpandedNodes(new Set());
-  }, []);
+  };
 
-  const saveLandscape = useCallback(() => {
+  const saveLandscape = () => {
     try {
       const jsonString = JSON.stringify(localLandscape, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
@@ -86,41 +74,38 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     } catch (err: any) {
       onError(err.message || 'Failed to save landscape');
     }
-  }, [localLandscape, onError]);
+  };
 
-  const loadLandscape = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  const loadLandscape = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          const parsed = JSON.parse(content);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const parsed = JSON.parse(content);
 
-          if (!Array.isArray(parsed)) {
-            onError('Invalid landscape file: must be an array');
-            return;
-          }
-
-          setLocalLandscape(parsed);
-          onLandscapeUpdated(parsed);
-          setExpandedNodes(new Set());
-        } catch (err: any) {
-          onError(err.message || 'Failed to load landscape file');
+        if (!Array.isArray(parsed)) {
+          onError('Invalid landscape file: must be an array');
+          return;
         }
-      };
-      reader.onerror = () => {
-        onError('Failed to read landscape file');
-      };
-      reader.readAsText(file);
 
-      // Reset the input so the same file can be selected again
-      event.target.value = '';
-    },
-    [onLandscapeUpdated, onError]
-  );
+        setLocalLandscape(parsed);
+        onLandscapeUpdated(parsed);
+        setExpandedNodes(new Set());
+      } catch (err: any) {
+        onError(err.message || 'Failed to load landscape file');
+      }
+    };
+    reader.onerror = () => {
+      onError('Failed to read landscape file');
+    };
+    reader.readAsText(file);
+
+    // Reset the input so the same file can be selected again
+    event.target.value = '';
+  };
 
   const findPackage = (app: CleanedLandscape, packageName: string): CleanedPackage | null => {
     const search = (pkg: CleanedPackage): CleanedPackage | null => {
@@ -153,7 +138,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     if (newName && newName.trim() !== '') {
       const updated = [...localLandscape];
       updated[appIdx] = { ...app, name: newName.trim() };
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
@@ -177,7 +162,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           ...app,
           rootPackage: updatePkg(app.rootPackage),
         };
-        setLocalLandscape(updated);
+        updateLocalLandscape(updated);
       }
     }
   };
@@ -199,7 +184,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           rootPackage: updateClass(app.rootPackage),
           classes: app.classes.map((c) => (c.identifier === className ? { ...c, identifier: newName.trim() } : c)),
         };
-        setLocalLandscape(updated);
+        updateLocalLandscape(updated);
       }
     }
   };
@@ -237,7 +222,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
                 : c
             ),
           };
-          setLocalLandscape(updated);
+          updateLocalLandscape(updated);
         }
       }
     }
@@ -271,7 +256,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         rootPackage: updatePkg(app.rootPackage),
         packages: [...app.packages, newPkg],
       };
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
@@ -296,7 +281,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         rootPackage: updatePkg(app.rootPackage),
         packages: [...app.packages, newPkg],
       };
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
@@ -321,7 +306,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         rootPackage: updatePkg(app.rootPackage),
         classes: [...app.classes, newClass],
       };
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
@@ -344,14 +329,14 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         ),
         methods: [...app.methods, newMethod],
       };
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
   const deleteApp = (appIdx: number) => {
     if (confirm('Are you sure you want to delete this app?')) {
       const updated = localLandscape.filter((_, idx) => idx !== appIdx);
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
@@ -369,7 +354,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       const cleaned = removePkg(app.rootPackage);
       if (cleaned) {
         updated[appIdx] = { ...app, rootPackage: cleaned };
-        setLocalLandscape(updated);
+        updateLocalLandscape(updated);
       }
     }
   };
@@ -388,7 +373,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         rootPackage: removeClass(app.rootPackage),
         classes: app.classes.filter((c) => c.identifier !== className),
       };
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
@@ -421,282 +406,74 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         ),
         methods: app.methods.filter((m) => m.identifier !== methodName),
       };
-      setLocalLandscape(updated);
+      updateLocalLandscape(updated);
     }
   };
 
-  const renderPackage = (pkg: CleanedPackage, appIdx: number, depth: number): React.ReactNode => {
-    const pkgNodeId = generateNodeId('pkg', appIdx, pkg.name.replace(/\./g, '_'));
-    const hasChildren = pkg.subpackages.length > 0 || pkg.classes.length > 0;
-    const isExpanded = expandedNodes.has(pkgNodeId);
-
-    return (
-      <React.Fragment key={pkgNodeId}>
-        <div
-          className="tree-node group"
-          onClick={(e) => {
-            if (
-              !(e.target as HTMLElement).closest('.action-buttons') &&
-              !(e.target as HTMLElement).closest('.action-btn')
-            ) {
-              toggleNode(pkgNodeId);
-            }
-          }}
-        >
-          <span className="tree-toggle w-4 text-center flex items-center justify-center">
-            {hasChildren ? (
-              isExpanded ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )
-            ) : (
-              <Circle className="w-2 h-2" />
-            )}
-          </span>
-          <span className="entity-name text-success flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            {pkg.name}
-          </span>
-          <div className="action-buttons">
-            <button
-              className="action-btn action-btn-add-green"
-              onClick={(e) => {
-                e.stopPropagation();
-                addSubPackage(appIdx, pkg.name);
-              }}
-              title="Add Subpackage"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <button
-              className="action-btn action-btn-add-green"
-              onClick={(e) => {
-                e.stopPropagation();
-                addClass(appIdx, pkg.name);
-              }}
-              title="Add Class"
-            >
-              <FileCode className="w-4 h-4" />
-            </button>
-            <button
-              className="action-btn action-btn-edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                renamePackage(appIdx, pkg.name);
-              }}
-              title="Rename"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              className="action-btn action-btn-delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                deletePackage(appIdx, pkg.name);
-              }}
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        {hasChildren && isExpanded && (
-          <div className="ml-5">
-            {pkg.classes.map((cls) => renderClass(cls, appIdx))}
-            {pkg.subpackages.map((subPkg) => renderPackage(subPkg, appIdx, depth + 1))}
-          </div>
-        )}
-      </React.Fragment>
-    );
+  const addApp = () => {
+    const appName = prompt('Enter app name:', 'newapp');
+    if (appName && appName.trim() !== '') {
+      const rootPkg3: CleanedPackage = {
+        name: appName.trim().replace(/-/g, ''),
+        classes: [],
+        subpackages: [],
+      };
+      const rootPkg2: CleanedPackage = {
+        name: 'tracegenerator',
+        classes: [],
+        subpackages: [rootPkg3],
+      };
+      const rootPkg1: CleanedPackage = {
+        name: 'org',
+        classes: [],
+        subpackages: [rootPkg2],
+      };
+      const defaultClass: CleanedClass = {
+        identifier: 'Main',
+        methods: [{ identifier: 'main' }],
+        parentAppName: appName.trim(),
+      };
+      rootPkg3.classes.push(defaultClass);
+      const newApp: CleanedLandscape = {
+        name: appName.trim(),
+        rootPackage: rootPkg1,
+        entryPointFqn: `org.tracegenerator.${appName.trim()}.Main`,
+        classes: [defaultClass],
+        packages: [rootPkg2, rootPkg3],
+        methods: [defaultClass.methods[0]],
+      };
+      const updated = [...localLandscape, newApp];
+      updateLocalLandscape(updated);
+    }
   };
 
-  const renderClass = (cls: CleanedClass, appIdx: number): React.ReactNode => {
-    const clsNodeId = generateNodeId('cls', appIdx, cls.identifier.replace(/\./g, '_'));
-    const hasChildren = cls.methods.length > 0;
-    const isExpanded = expandedNodes.has(clsNodeId);
-
-    return (
-      <React.Fragment key={clsNodeId}>
-        <div
-          className="tree-node group"
-          onClick={(e) => {
-            if (
-              !(e.target as HTMLElement).closest('.action-buttons') &&
-              !(e.target as HTMLElement).closest('.action-btn')
-            ) {
-              toggleNode(clsNodeId);
-            }
-          }}
-        >
-          <span className="tree-toggle w-4 text-center flex items-center justify-center">
-            {hasChildren ? (
-              isExpanded ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )
-            ) : (
-              <Circle className="w-2 h-2" />
-            )}
-          </span>
-          <span className="entity-name text-secondary-color flex items-center gap-2">
-            <FileCode className="w-5 h-5" />
-            {cls.identifier}
-          </span>
-          <div className="action-buttons">
-            <button
-              className="action-btn action-btn-add-orange"
-              onClick={(e) => {
-                e.stopPropagation();
-                addMethod(appIdx, cls.identifier);
-              }}
-              title="Add Method"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <button
-              className="action-btn action-btn-edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                renameClass(appIdx, cls.identifier);
-              }}
-              title="Rename"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              className="action-btn action-btn-delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteClass(appIdx, cls.identifier);
-              }}
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-        {hasChildren && isExpanded && (
-          <div className="ml-5">{cls.methods.map((method) => renderMethod(method, appIdx, cls.identifier))}</div>
-        )}
-      </React.Fragment>
-    );
-  };
-
-  const renderMethod = (method: { identifier: string }, appIdx: number, className: string): React.ReactNode => {
-    return (
-      <div key={method.identifier} className="tree-node method group">
-        <span className="tree-toggle leaf w-4 text-center flex items-center justify-center">
-          <Circle className="w-2 h-2" />
-        </span>
-        <span className="text-muted text-sm flex items-center gap-2">
-          <Zap className="w-4 h-4" />
-          {method.identifier}
-        </span>
-        <div className="action-buttons">
-          <button
-            className="action-btn action-btn-edit"
-            onClick={(e) => {
-              e.stopPropagation();
-              renameMethod(appIdx, className, method.identifier);
-            }}
-            title="Rename"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            className="action-btn action-btn-delete"
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteMethod(appIdx, className, method.identifier);
-            }}
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    );
+  const handlers: LandscapeEditorHandlers = {
+    onLandscapeUpdated,
+    onError,
+    toggleNode,
+    renameApp,
+    renamePackage,
+    renameClass,
+    renameMethod,
+    addPackage,
+    addSubPackage,
+    addClass,
+    addMethod,
+    deleteApp,
+    deletePackage,
+    deleteClass,
+    deleteMethod,
   };
 
   return (
     <div>
-      <div className="flex flex-wrap gap-3 mb-6">
-        <button
-          type="button"
-          onClick={() => {
-            const appName = prompt('Enter app name:', 'newapp');
-            if (appName && appName.trim() !== '') {
-              const rootPkg3: CleanedPackage = {
-                name: appName.trim().replace(/-/g, ''),
-                classes: [],
-                subpackages: [],
-              };
-              const rootPkg2: CleanedPackage = {
-                name: 'tracegenerator',
-                classes: [],
-                subpackages: [rootPkg3],
-              };
-              const rootPkg1: CleanedPackage = {
-                name: 'org',
-                classes: [],
-                subpackages: [rootPkg2],
-              };
-              const defaultClass: CleanedClass = {
-                identifier: 'Main',
-                methods: [{ identifier: 'main' }],
-                parentAppName: appName.trim(),
-              };
-              rootPkg3.classes.push(defaultClass);
-              const newApp: CleanedLandscape = {
-                name: appName.trim(),
-                rootPackage: rootPkg1,
-                entryPointFqn: `org.tracegenerator.${appName.trim()}.Main`,
-                classes: [defaultClass],
-                packages: [rootPkg2, rootPkg3],
-                methods: [defaultClass.methods[0]],
-              };
-              setLocalLandscape([...localLandscape, newApp]);
-            }
-          }}
-          className="material-button-secondary px-4 py-2 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add App
-        </button>
-        <button
-          type="button"
-          onClick={expandAll}
-          className="material-button-secondary px-4 py-2 flex items-center gap-2"
-        >
-          <ChevronsDown className="w-4 h-4" />
-          Expand All
-        </button>
-        <button
-          type="button"
-          onClick={collapseAll}
-          className="material-button-secondary px-4 py-2 flex items-center gap-2"
-        >
-          <ChevronsUp className="w-4 h-4" />
-          Collapse All
-        </button>
-        <button type="button" onClick={saveLandscape} className="material-button px-4 py-2 flex items-center gap-2">
-          <Save className="w-4 h-4" />
-          Save Landscape
-        </button>
-        <label className="material-button-secondary px-4 py-2 flex items-center gap-2 cursor-pointer">
-          <FileUp className="w-4 h-4" />
-          Load Landscape
-          <input
-            type="file"
-            accept=".json,application/json"
-            onChange={loadLandscape}
-            className="hidden"
-            aria-label="Load landscape from file"
-          />
-        </label>
-      </div>
+      <LandscapeToolbar
+        onAddApp={addApp}
+        onExpandAll={expandAll}
+        onCollapseAll={collapseAll}
+        onSaveLandscape={saveLandscape}
+        onLoadLandscape={loadLandscape}
+      />
       <div className="material-card p-4 max-h-[600px] overflow-y-auto font-mono text-sm bg-light">
         {localLandscape.length === 0 ? (
           <p className="text-muted">No landscape generated yet. Generate one above!</p>
@@ -708,68 +485,15 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
             const isExpanded = expandedNodes.has(appNodeId);
 
             return (
-              <React.Fragment key={appNodeId}>
-                <div
-                  className="tree-node group"
-                  onClick={(e) => {
-                    if (
-                      !(e.target as HTMLElement).closest('.action-buttons') &&
-                      !(e.target as HTMLElement).closest('.action-btn')
-                    ) {
-                      toggleNode(appNodeId);
-                    }
-                  }}
-                >
-                  <span className="tree-toggle w-4 text-center flex items-center justify-center">
-                    {hasChildren ? (
-                      isExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )
-                    ) : (
-                      <Circle className="w-2 h-2" />
-                    )}
-                  </span>
-                  <span className="entity-name font-bold text-primary-color text-base flex items-center gap-2">
-                    <Smartphone className="w-5 h-5" />
-                    {app.name}
-                  </span>
-                  <div className="action-buttons">
-                    <button
-                      className="action-btn action-btn-add"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addPackage(appIdx);
-                      }}
-                      title="Add Package"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    <button
-                      className="action-btn action-btn-edit"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        renameApp(appIdx);
-                      }}
-                      title="Rename"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      className="action-btn action-btn-delete"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteApp(appIdx);
-                      }}
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                {hasChildren && isExpanded && <div className="ml-5">{renderPackage(app.rootPackage, appIdx, 0)}</div>}
-              </React.Fragment>
+              <AppNode
+                key={appNodeId}
+                app={app}
+                appIdx={appIdx}
+                isExpanded={isExpanded}
+                hasChildren={hasChildren}
+                handlers={handlers}
+                expandedNodes={expandedNodes}
+              />
             );
           })
         )}
