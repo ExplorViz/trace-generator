@@ -1,7 +1,8 @@
 import { TraceGenerationRequest } from '@shared/types';
-import { Info, Plus, RotateCcw, Send, Trash2 } from 'lucide-react';
+import { Info, Plus, Send, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { apiClient } from '../api/client';
+import { ResetButton } from './ResetButton';
 
 interface TraceGenerationFormProps {
   onError: (error: string) => void;
@@ -348,7 +349,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
             </div>
           ))}
         </div>
-        <div className="flex gap-3 mt-3">
+        <div className="flex gap-3 mt-3 justify-between items-center">
           <button
             type="button"
             onClick={addCustomAttribute}
@@ -357,14 +358,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
             <Plus className="w-4 h-4" />
             Add Attribute
           </button>
-          <button
-            type="button"
-            onClick={resetCustomAttributes}
-            className="material-button-secondary flex items-center gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset to Defaults
-          </button>
+          <ResetButton onReset={resetCustomAttributes} />
         </div>
       </div>
 

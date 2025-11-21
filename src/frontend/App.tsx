@@ -1,9 +1,10 @@
 import { CleanedLandscape } from '@shared/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { apiClient } from './api/client';
 import { DarkModeToggle } from './components/DarkModeToggle';
 import { LandscapeEditor } from './components/LandscapeEditor';
-import { LandscapeGenerationForm } from './components/LandscapeGenerationForm';
+import { LandscapeFormResetHandle, LandscapeGenerationForm } from './components/LandscapeGenerationForm';
+import { ResetButton } from './components/ResetButton';
 import { TraceGenerationForm } from './components/TraceGenerationForm';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
   const [, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const landscapeFormResetRef = useRef<LandscapeFormResetHandle>(null);
 
   useEffect(() => {
     loadLandscape();
@@ -66,11 +68,18 @@ function App() {
         {/* Step 1: Landscape Generation */}
         <section id="section_landscape" className="mb-12">
           <div className="material-card p-6 md:p-8 mb-6">
-            <h2 className="text-3xl font-bold text-primary mb-3">Step 1: Generate Landscape</h2>
+            <div className="flex justify-between items-start mb-3">
+              <h2 className="text-3xl font-bold text-primary">Step 1: Generate Landscape</h2>
+              <ResetButton onReset={() => landscapeFormResetRef.current?.reset()} />
+            </div>
             <p className="text-muted mb-6">
               Generate a random landscape with applications, packages, classes, and methods.
             </p>
-            <LandscapeGenerationForm onLandscapeGenerated={handleLandscapeGenerated} onError={setError} />
+            <LandscapeGenerationForm
+              onLandscapeGenerated={handleLandscapeGenerated}
+              onError={setError}
+              resetButtonRef={landscapeFormResetRef}
+            />
           </div>
         </section>
 

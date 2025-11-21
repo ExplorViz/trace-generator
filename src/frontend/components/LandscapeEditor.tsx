@@ -132,6 +132,12 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     return search(app.rootPackage);
   };
 
+  const updateLocalLandscape = (updated: CleanedLandscape[]) => {
+    isInternalUpdateRef.current = true;
+    setLocalLandscape(updated);
+    onLandscapeUpdated(updated);
+  };
+
   const renameApp = (appIdx: number) => {
     const app = localLandscape[appIdx];
     const newName = prompt('Enter new app name:', app.name);

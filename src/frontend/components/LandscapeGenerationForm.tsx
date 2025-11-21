@@ -3,22 +3,37 @@ import { Info } from 'lucide-react';
 import React, { useState } from 'react';
 import { apiClient } from '../api/client';
 
+export interface LandscapeFormResetHandle {
+  reset: () => void;
+}
+
 interface LandscapeGenerationFormProps {
   onLandscapeGenerated: (landscape: CleanedLandscape[]) => void;
   onError: (error: string) => void;
+  resetButtonRef?: React.RefObject<LandscapeFormResetHandle>;
 }
 
-export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: LandscapeGenerationFormProps) {
-  const [formData, setFormData] = useState<LandscapeGenerationRequest>({
-    appCount: 1,
-    packageDepth: 4,
-    minClassCount: 5,
-    maxClassCount: 20,
-    minMethodCount: 1,
-    maxMethodCount: 5,
-    balance: 0.5,
-  });
+const DEFAULT_FORM_DATA: LandscapeGenerationRequest = {
+  appCount: 1,
+  packageDepth: 4,
+  minClassCount: 5,
+  maxClassCount: 20,
+  minMethodCount: 1,
+  maxMethodCount: 5,
+  balance: 0.5,
+};
+
+export function LandscapeGenerationForm({
+  onLandscapeGenerated,
+  onError,
+  resetButtonRef,
+}: LandscapeGenerationFormProps) {
+  const [formData, setFormData] = useState<LandscapeGenerationRequest>(DEFAULT_FORM_DATA);
   const [loading, setLoading] = useState(false);
+
+  const resetToDefaults = () => {
+    setFormData(DEFAULT_FORM_DATA);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +87,15 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
       updateValue(field, numValue);
     }
   };
+
+  // Expose reset function via ref if provided
+  React.useImperativeHandle(
+    resetButtonRef,
+    () => ({
+      reset: resetToDefaults,
+    }),
+    []
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

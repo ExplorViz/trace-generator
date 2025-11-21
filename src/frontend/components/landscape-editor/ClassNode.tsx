@@ -1,5 +1,9 @@
-import { ChevronDown, ChevronRight, Circle, FileCode, Pencil, Plus, Trash2 } from 'lucide-react';
+import { FileCode, Pencil, Plus, Trash2 } from 'lucide-react';
+import React from 'react';
+import { ActionButtons } from './ActionButtons';
 import { MethodNode } from './MethodNode';
+import { TreeNode } from './TreeNode';
+import { TreeToggle } from './TreeToggle';
 import { ClassNodeProps } from './types';
 import { generateNodeId } from './utils';
 
@@ -8,67 +12,46 @@ export function ClassNode({ cls, appIdx, expandedNodes, handlers }: ClassNodePro
   const hasChildren = cls.methods.length > 0;
   const isExpanded = expandedNodes.has(clsNodeId);
 
+  const actionButtons = [
+    {
+      icon: Plus,
+      onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        handlers.addMethod(appIdx, cls.identifier);
+      },
+      title: 'Add Method',
+      variant: 'add-orange' as const,
+    },
+    {
+      icon: Pencil,
+      onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        handlers.renameClass(appIdx, cls.identifier);
+      },
+      title: 'Rename',
+      variant: 'edit' as const,
+    },
+    {
+      icon: Trash2,
+      onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        handlers.deleteClass(appIdx, cls.identifier);
+      },
+      title: 'Delete',
+      variant: 'delete' as const,
+    },
+  ];
+
   return (
     <>
-      <div
-        className="tree-node group"
-        onClick={(e) => {
-          if (
-            !(e.target as HTMLElement).closest('.action-buttons') &&
-            !(e.target as HTMLElement).closest('.action-btn')
-          ) {
-            handlers.toggleNode(clsNodeId);
-          }
-        }}
-      >
-        <span className="tree-toggle w-4 text-center flex items-center justify-center">
-          {hasChildren ? (
-            isExpanded ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )
-          ) : (
-            <Circle className="w-2 h-2" />
-          )}
-        </span>
+      <TreeNode nodeId={clsNodeId} onToggle={handlers.toggleNode}>
+        <TreeToggle hasChildren={hasChildren} isExpanded={isExpanded} />
         <span className="entity-name text-secondary-color flex items-center gap-2">
           <FileCode className="w-5 h-5" />
           {cls.identifier}
         </span>
-        <div className="action-buttons">
-          <button
-            className="action-btn action-btn-add-orange"
-            onClick={(e) => {
-              e.stopPropagation();
-              handlers.addMethod(appIdx, cls.identifier);
-            }}
-            title="Add Method"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-          <button
-            className="action-btn action-btn-edit"
-            onClick={(e) => {
-              e.stopPropagation();
-              handlers.renameClass(appIdx, cls.identifier);
-            }}
-            title="Rename"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            className="action-btn action-btn-delete"
-            onClick={(e) => {
-              e.stopPropagation();
-              handlers.deleteClass(appIdx, cls.identifier);
-            }}
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+        <ActionButtons buttons={actionButtons} />
+      </TreeNode>
       {hasChildren && isExpanded && (
         <div className="ml-5">
           {cls.methods.map((method) => (
