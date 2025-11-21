@@ -1,7 +1,7 @@
 import { Router } from 'express';
+import { FakeTraceExporter } from '../../tracing';
 import { TraceController } from '../controllers/trace.controller';
 import { TraceService } from '../services/trace.service';
-import { FakeTraceExporter } from '../../tracing';
 import { sharedLandscapeStore } from '../shared/landscape-store';
 
 const router = Router();

@@ -1,10 +1,10 @@
-import { TraceGenerationRequest } from '@shared/types';
-import { generateFakeTrace, TraceGenerationParameters, CommunicationStyle } from '../../generation';
-import { FakeTraceExporter } from '../../tracing';
-import { constants } from '../../constants';
-import { isValidInteger, getHostname, getHostIP } from '../../utils';
-import { LandscapeStore } from '../../landscape';
 import { Attributes } from '@opentelemetry/api';
+import { TraceGenerationRequest } from '@shared/types';
+import { constants } from '../../constants';
+import { CommunicationStyle, generateFakeTrace, TraceGenerationParameters } from '../../generation';
+import { LandscapeStore } from '../../landscape';
+import { FakeTraceExporter } from '../../tracing';
+import { getHostIP, getHostname, isValidInteger } from '../../utils';
 
 export class TraceService {
   private landscapeStore: LandscapeStore;
@@ -54,7 +54,6 @@ export class TraceService {
 
     const communicationStyle = constants.COMMUNICATION_STYLE_NAMES[communicationStyleKey];
     if (communicationStyle === undefined || communicationStyle === null) {
-      // Debug: log available keys and the received value
       const availableKeys = Object.keys(constants.COMMUNICATION_STYLE_NAMES).join(', ');
       throw new Error(`Unknown communication style: "${communicationStyleKey}". Available styles: ${availableKeys}`);
     }

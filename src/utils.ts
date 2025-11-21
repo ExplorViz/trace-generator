@@ -1,4 +1,4 @@
-import { FakeApp, FakePackage } from './generation';
+import { FakeApp, FakePackage } from '@/shared/types';
 import { FakeSpan, FakeTrace } from './tracing';
 import { hostname, networkInterfaces } from 'os';
 
@@ -150,7 +150,7 @@ export function appTreeToString(app: FakeApp): string {
   function packageTreeToString(pkg: FakePackage): string {
     let result: string = pkg.name + '\n';
 
-    // Recursively turn subpackages to string
+    // Recursively turn subpackages into strings
 
     let subpackageStrs: Array<string> = pkg.subpackages.map(packageTreeToString);
     subpackageStrs = subpackageStrs.map((str, idx) => {

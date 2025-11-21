@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
 import { TraceGenerationRequest } from '@shared/types';
-import { apiClient } from '../api/client';
 import { Info, Plus, RotateCcw, Send, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { apiClient } from '../api/client';
 
 interface TraceGenerationFormProps {
   onError: (error: string) => void;

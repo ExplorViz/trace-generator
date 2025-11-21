@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { LandscapeGenerationRequest } from '@shared/types';
-import { apiClient } from '../api/client';
-import { CleanedLandscape } from '@shared/types';
+import { CleanedLandscape, LandscapeGenerationRequest } from '@shared/types';
 import { Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { apiClient } from '../api/client';
 
 interface LandscapeGenerationFormProps {
   onLandscapeGenerated: (landscape: CleanedLandscape[]) => void;

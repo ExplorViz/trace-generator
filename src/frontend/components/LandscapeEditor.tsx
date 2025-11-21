@@ -1,22 +1,22 @@
-import React, { useState, useCallback } from 'react';
-import { CleanedLandscape, CleanedPackage, CleanedClass } from '@shared/types';
-import { apiClient } from '../api/client';
+import { CleanedClass, CleanedLandscape, CleanedPackage } from '@shared/types';
 import {
-  Smartphone,
-  Package,
-  FileCode,
-  Zap,
-  Plus,
-  Pencil,
-  Trash2,
   ChevronDown,
   ChevronRight,
-  Circle,
-  Save,
-  RefreshCw,
   ChevronsDown,
   ChevronsUp,
+  Circle,
+  FileCode,
+  Package,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Save,
+  Smartphone,
+  Trash2,
+  Zap,
 } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { apiClient } from '../api/client';
 
 interface LandscapeEditorProps {
   landscape: CleanedLandscape[];

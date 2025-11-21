@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { LandscapeGenerationForm } from './components/LandscapeGenerationForm';
-import { LandscapeEditor } from './components/LandscapeEditor';
-import { TraceGenerationForm } from './components/TraceGenerationForm';
-import { DarkModeToggle } from './components/DarkModeToggle';
 import { CleanedLandscape } from '@shared/types';
+import { useEffect, useState } from 'react';
 import { apiClient } from './api/client';
+import { DarkModeToggle } from './components/DarkModeToggle';
+import { LandscapeEditor } from './components/LandscapeEditor';
+import { LandscapeGenerationForm } from './components/LandscapeGenerationForm';
+import { TraceGenerationForm } from './components/TraceGenerationForm';
 
 function App() {
   const [landscape, setLandscape] = useState<CleanedLandscape[]>([]);

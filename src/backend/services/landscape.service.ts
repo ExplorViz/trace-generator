@@ -1,12 +1,12 @@
 import { AppGenerationParameters } from '@shared/types';
+import { constants } from '../../constants';
 import { generateFakeApps } from '../../generation';
 import { LandscapeStore } from '../../landscape';
-import { constants } from '../../constants';
 import { isValidInteger } from '../../utils';
 import {
+  CleanedLandscape,
   cleanLandscapeForSerialization,
   reconstructParentReferences,
-  CleanedLandscape,
 } from '../utils/landscape.utils';
 
 export class LandscapeService {

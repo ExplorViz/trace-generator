@@ -1,18 +1,15 @@
 import { faker } from '@faker-js/faker';
-import { FakeTrace, FakeSpan } from './tracing';
-import { strict as assert } from 'assert';
 import { Attributes } from '@opentelemetry/api';
 import {
   ATTR_CODE_FUNCTION_NAME,
-  SEMATTRS_CODE_NAMESPACE,
   ATTR_SERVICE_NAME,
+  SEMATTRS_CODE_NAMESPACE,
 } from '@opentelemetry/semantic-conventions';
+import { strict as assert } from 'assert';
 import { NameGenerator } from './naming';
+import { FakeSpan, FakeTrace } from './tracing';
 
-import { FakeMethod, FakeClass, FakePackage, FakeApp, AppGenerationParameters } from './shared/types';
-
-// Re-export types for backward compatibility
-export type { FakeMethod, FakeClass, FakePackage, FakeApp, AppGenerationParameters };
+import { AppGenerationParameters, FakeApp, FakeClass, FakeMethod, FakePackage } from './shared/types';
 
 // TraceGenerationParameters uses CommunicationStyle enum, so we keep a local version
 export interface TraceGenerationParameters {
