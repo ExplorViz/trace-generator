@@ -53,26 +53,26 @@ export class LandscapeService {
    * Validate landscape generation parameters
    */
   private validateGenerationParameters(params: AppGenerationParameters): void {
-    if (params.appCount < 1 || params.appCount > constants.MAX_APP_COUNT) {
-      throw new Error('Invalid appCount');
+    if (params.appCount < 1) {
+      throw new Error('Invalid appCount: must be >= 1');
     }
-    if (params.packageDepth < 0 || params.packageDepth > constants.MAX_PACKAGE_DEPTH) {
-      throw new Error('Invalid packageDepth');
+    if (params.packageDepth < 0) {
+      throw new Error('Invalid packageDepth: must be >= 0');
     }
-    if (params.minClassCount < 1 || params.minClassCount > constants.MAX_CLASS_COUNT) {
-      throw new Error('Invalid minClassCount');
+    if (params.minClassCount < 1) {
+      throw new Error('Invalid minClassCount: must be >= 1');
     }
-    if (params.maxClassCount < 1 || params.maxClassCount > constants.MAX_CLASS_COUNT) {
-      throw new Error('Invalid maxClassCount');
+    if (params.maxClassCount < 1) {
+      throw new Error('Invalid maxClassCount: must be >= 1');
     }
     if (params.maxClassCount < params.minClassCount) {
       throw new Error('maxClassCount must be >= minClassCount');
     }
-    if (params.minMethodCount < 1 || params.minMethodCount > constants.MAX_METHODS) {
-      throw new Error('Invalid minMethodCount');
+    if (params.minMethodCount < 1) {
+      throw new Error('Invalid minMethodCount: must be >= 1');
     }
-    if (params.maxMethodCount < 1 || params.maxMethodCount > constants.MAX_METHODS) {
-      throw new Error('Invalid maxMethodCount');
+    if (params.maxMethodCount < 1) {
+      throw new Error('Invalid maxMethodCount: must be >= 1');
     }
     if (params.maxMethodCount < params.minMethodCount) {
       throw new Error('maxMethodCount must be >= minMethodCount');

@@ -81,14 +81,14 @@ export class TraceService {
    * Validate trace generation parameters
    */
   private validateTraceParameters(params: TraceGenerationParameters): void {
-    if (params.duration < 1 || params.duration > constants.MAX_TRACE_DURATION) {
-      throw new Error('Invalid duration');
+    if (params.duration < 1) {
+      throw new Error('Invalid duration: must be >= 1');
     }
-    if (params.callCount < 1 || params.callCount > constants.MAX_CALL_COUNT) {
-      throw new Error('Invalid callCount');
+    if (params.callCount < 1) {
+      throw new Error('Invalid callCount: must be >= 1');
     }
-    if (params.maxConnectionDepth < 1 || params.maxConnectionDepth > constants.MAX_CONNECTION_DEPTH) {
-      throw new Error('Invalid maxConnectionDepth');
+    if (params.maxConnectionDepth < 1) {
+      throw new Error('Invalid maxConnectionDepth: must be >= 1');
     }
   }
 

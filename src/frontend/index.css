@@ -276,6 +276,25 @@ body {
   transform: scale(1.05);
 }
 
+.range-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.range-slider-container input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.range-slider-container input[type='number'] {
+  width: 4rem;
+  min-width: 4rem;
+  flex-shrink: 0;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;

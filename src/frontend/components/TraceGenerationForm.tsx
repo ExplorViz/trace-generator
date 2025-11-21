@@ -42,6 +42,17 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleInputChange = (field: keyof typeof formData, value: string, isNumber: boolean = true) => {
+    if (isNumber) {
+      const numValue = parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        updateValue(field as keyof typeof formData, numValue as any);
+      }
+    } else {
+      updateValue(field as keyof typeof formData, value as any);
+    }
+  };
+
   const addCustomAttribute = () => {
     setCustomAttributes((prev) => [...prev, { id: nextAttrId, key: '', value: '' }]);
     setNextAttrId((prev) => prev + 1);
@@ -157,16 +168,21 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
                 <span className="tooltip w-64">How long the trace should last (calls evenly distributed)</span>
               </div>
             </label>
-            <div className="flex items-center gap-4">
+            <div className="range-slider-container">
               <input
                 type="range"
                 min="100"
                 max="10000"
-                value={formData.duration}
+                value={Math.min(formData.duration, 10000)}
                 onChange={(e) => updateValue('duration', parseInt(e.target.value))}
-                className="flex-1"
               />
-              <span className="text-sm font-semibold w-20 text-right">{formData.duration}</span>
+              <input
+                type="number"
+                value={formData.duration}
+                onChange={(e) => handleInputChange('duration', e.target.value)}
+                className="material-input text-center"
+                min="100"
+              />
             </div>
           </div>
 
@@ -180,16 +196,21 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
                 <span className="tooltip w-64">Number of method calls in the trace</span>
               </div>
             </label>
-            <div className="flex items-center gap-4">
+            <div className="range-slider-container">
               <input
                 type="range"
                 min="1"
                 max="250"
-                value={formData.callCount}
+                value={Math.min(formData.callCount, 250)}
                 onChange={(e) => updateValue('callCount', parseInt(e.target.value))}
-                className="flex-1"
               />
-              <span className="text-sm font-semibold w-20 text-right">{formData.callCount}</span>
+              <input
+                type="number"
+                value={formData.callCount}
+                onChange={(e) => handleInputChange('callCount', e.target.value)}
+                className="material-input text-center"
+                min="1"
+              />
             </div>
           </div>
 
@@ -203,16 +224,21 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
                 <span className="tooltip w-64">Maximum nesting depth of method calls</span>
               </div>
             </label>
-            <div className="flex items-center gap-4">
+            <div className="range-slider-container">
               <input
                 type="range"
                 min="1"
                 max="100"
-                value={formData.maxCallDepth}
+                value={Math.min(formData.maxCallDepth, 100)}
                 onChange={(e) => updateValue('maxCallDepth', parseInt(e.target.value))}
-                className="flex-1"
               />
-              <span className="text-sm font-semibold w-20 text-right">{formData.maxCallDepth}</span>
+              <input
+                type="number"
+                value={formData.maxCallDepth}
+                onChange={(e) => handleInputChange('maxCallDepth', e.target.value)}
+                className="material-input text-center"
+                min="1"
+              />
             </div>
           </div>
 

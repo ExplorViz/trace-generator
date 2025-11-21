@@ -33,17 +33,17 @@ function getCustomValidatorLessThan(fieldNameSmaller: string): CustomValidator {
 
 export function getValidationChains(): Array<ValidationChain> {
   const validationChains: Array<ValidationChain> = [
-    body('targetPort').exists().isInt({ min: 0, max: constants.PORT_MAX }),
-    body('appCount').exists().isInt({ min: 1, max: constants.MAX_APP_COUNT }),
-    body('packageDepth').exists().isInt({ min: 0, max: constants.MAX_PACKAGE_DEPTH }),
-    body('minClassCount').exists().isInt({ min: 1, max: constants.MAX_CLASS_COUNT }),
-    body('maxClassCount').exists().isInt({ min: 1, max: constants.MAX_CLASS_COUNT }),
-    body('minMethodCount').exists().isInt({ min: 1, max: constants.MAX_METHODS }),
-    body('maxMethodCount').exists().isInt({ min: 1, max: constants.MAX_METHODS }),
-    body('duration').exists().isInt({ min: 1, max: constants.MAX_TRACE_DURATION }),
-    body('callCount').exists().isInt({ min: 1, max: constants.MAX_CALL_COUNT }),
-    body('maxCallDepth').exists().isInt({ min: 0, max: constants.MAX_CALL_DEPTH }),
-    body('balance').exists().isFloat({ min: 0, max: 1 }),
+    body('targetPort').exists().isInt({ min: 0, max: constants.PORT_MAX }), // PORT_MAX is a technical limit
+    body('appCount').exists().isInt({ min: 1 }),
+    body('packageDepth').exists().isInt({ min: 0 }),
+    body('minClassCount').exists().isInt({ min: 1 }),
+    body('maxClassCount').exists().isInt({ min: 1 }),
+    body('minMethodCount').exists().isInt({ min: 1 }),
+    body('maxMethodCount').exists().isInt({ min: 1 }),
+    body('duration').exists().isInt({ min: 1 }),
+    body('callCount').exists().isInt({ min: 1 }),
+    body('maxCallDepth').exists().isInt({ min: 0 }),
+    body('balance').exists().isFloat({ min: 0, max: 1 }), // Balance is logically 0-1
     body('communicationStyle').exists().isIn(Object.keys(constants.COMMUNICATION_STYLE_NAMES)),
     body('targetHostname').exists().isURL({
       require_tld: false,
