@@ -38,7 +38,7 @@ export function DarkModeToggle() {
     <div className="fixed top-4 right-4 z-50">
       <button
         onClick={toggleDarkMode}
-        className="material-card dark-toggle p-3 rounded-full text-gray-800 dark:text-gray-200 hover:shadow-lg flex items-center justify-center"
+        className="material-card dark-toggle p-3 rounded-full text-primary hover:shadow-lg flex items-center justify-center"
         aria-label="Toggle dark mode"
       >
         {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

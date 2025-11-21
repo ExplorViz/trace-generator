@@ -6,17 +6,16 @@ import {
   ChevronsUp,
   Circle,
   FileCode,
+  FileUp,
   Package,
   Pencil,
   Plus,
-  RefreshCw,
   Save,
   Smartphone,
   Trash2,
   Zap,
 } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
-import { apiClient } from '../api/client';
 
 interface LandscapeEditorProps {
   landscape: CleanedLandscape[];
@@ -33,11 +32,9 @@ function generateNodeId(type: string, ...parts: (string | number)[]): NodeId {
 export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: LandscapeEditorProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<NodeId>>(new Set());
   const [localLandscape, setLocalLandscape] = useState<CleanedLandscape[]>(landscape);
-  const [originalLandscape, setOriginalLandscape] = useState<CleanedLandscape[]>(JSON.parse(JSON.stringify(landscape)));
 
   React.useEffect(() => {
     setLocalLandscape(landscape);
-    setOriginalLandscape(JSON.parse(JSON.stringify(landscape)));
   }, [landscape]);
 
   const toggleNode = useCallback((nodeId: NodeId) => {
@@ -74,21 +71,56 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     setExpandedNodes(new Set());
   }, []);
 
-  const saveLandscape = useCallback(async () => {
+  const saveLandscape = useCallback(() => {
     try {
-      const updated = await apiClient.updateLandscape(localLandscape);
-      setLocalLandscape(updated);
-      setOriginalLandscape(JSON.parse(JSON.stringify(updated)));
-      onLandscapeUpdated(updated);
+      const jsonString = JSON.stringify(localLandscape, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `landscape-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err: any) {
       onError(err.message || 'Failed to save landscape');
     }
-  }, [localLandscape, onLandscapeUpdated, onError]);
+  }, [localLandscape, onError]);
 
-  const reloadLandscape = useCallback(() => {
-    setLocalLandscape(JSON.parse(JSON.stringify(originalLandscape)));
-    setExpandedNodes(new Set());
-  }, [originalLandscape]);
+  const loadLandscape = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const parsed = JSON.parse(content);
+
+          if (!Array.isArray(parsed)) {
+            onError('Invalid landscape file: must be an array');
+            return;
+          }
+
+          setLocalLandscape(parsed);
+          onLandscapeUpdated(parsed);
+          setExpandedNodes(new Set());
+        } catch (err: any) {
+          onError(err.message || 'Failed to load landscape file');
+        }
+      };
+      reader.onerror = () => {
+        onError('Failed to read landscape file');
+      };
+      reader.readAsText(file);
+
+      // Reset the input so the same file can be selected again
+      event.target.value = '';
+    },
+    [onLandscapeUpdated, onError]
+  );
 
   const findPackage = (app: CleanedLandscape, packageName: string): CleanedPackage | null => {
     const search = (pkg: CleanedPackage): CleanedPackage | null => {
@@ -422,7 +454,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
               <Circle className="w-2 h-2" />
             )}
           </span>
-          <span className="entity-name text-green-700 dark:text-green-400 flex items-center gap-2">
+          <span className="entity-name text-success flex items-center gap-2">
             <Package className="w-5 h-5" />
             {pkg.name}
           </span>
@@ -508,7 +540,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
               <Circle className="w-2 h-2" />
             )}
           </span>
-          <span className="entity-name text-orange-700 dark:text-orange-400 flex items-center gap-2">
+          <span className="entity-name text-secondary-color flex items-center gap-2">
             <FileCode className="w-5 h-5" />
             {cls.identifier}
           </span>
@@ -558,7 +590,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         <span className="tree-toggle leaf w-4 text-center flex items-center justify-center">
           <Circle className="w-2 h-2" />
         </span>
-        <span className="text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2">
+        <span className="text-muted text-sm flex items-center gap-2">
           <Zap className="w-4 h-4" />
           {method.identifier}
         </span>
@@ -653,18 +685,21 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           <Save className="w-4 h-4" />
           Save Landscape
         </button>
-        <button
-          type="button"
-          onClick={reloadLandscape}
-          className="material-button-secondary px-4 py-2 flex items-center gap-2"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Reload Original
-        </button>
+        <label className="material-button-secondary px-4 py-2 flex items-center gap-2 cursor-pointer">
+          <FileUp className="w-4 h-4" />
+          Load Landscape
+          <input
+            type="file"
+            accept=".json,application/json"
+            onChange={loadLandscape}
+            className="hidden"
+            aria-label="Load landscape from file"
+          />
+        </label>
       </div>
-      <div className="material-card p-4 max-h-[600px] overflow-y-auto font-mono text-sm bg-gray-50 dark:bg-gray-800">
+      <div className="material-card p-4 max-h-[600px] overflow-y-auto font-mono text-sm bg-light">
         {localLandscape.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400">No landscape generated yet. Generate one above!</p>
+          <p className="text-muted">No landscape generated yet. Generate one above!</p>
         ) : (
           localLandscape.map((app, appIdx) => {
             const appNodeId = generateNodeId('app', appIdx);
@@ -696,7 +731,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
                       <Circle className="w-2 h-2" />
                     )}
                   </span>
-                  <span className="entity-name font-bold text-blue-600 dark:text-blue-400 text-base flex items-center gap-2">
+                  <span className="entity-name font-bold text-primary-color text-base flex items-center gap-2">
                     <Smartphone className="w-5 h-5" />
                     {app.name}
                   </span>

@@ -96,10 +96,10 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* OpenTelemetry Collector Settings */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">OpenTelemetry Collector Settings</h3>
+        <h3 className="text-xl font-bold text-primary mb-4">OpenTelemetry Collector Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
               Target hostname
               <div className="group relative">
                 <span className="info-icon">
@@ -120,7 +120,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
               Target port
               <div className="group relative">
                 <span className="info-icon">
@@ -145,10 +145,10 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
 
       {/* Trace Generation Settings */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Trace Generation Settings</h3>
+        <h3 className="text-xl font-bold text-primary mb-4">Trace Generation Settings</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
               Duration (ms)
               <div className="group relative">
                 <span className="info-icon">
@@ -171,7 +171,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
               Method Call Count
               <div className="group relative">
                 <span className="info-icon">
@@ -194,7 +194,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
               Max Call Depth
               <div className="group relative">
                 <span className="info-icon">
@@ -217,7 +217,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
               Communication Style
               <div className="group relative">
                 <span className="info-icon">
@@ -249,9 +249,9 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
               type="checkbox"
               checked={formData.allowCyclicCalls}
               onChange={(e) => updateValue('allowCyclicCalls', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500"
+              className="w-5 h-5 rounded border-muted bg-light text-primary-color focus:ring-2 focus:ring-primary"
             />
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Allow cyclic calls</span>
+            <span className="text-sm font-medium text-primary">Allow cyclic calls</span>
             <div className="group relative">
               <span className="info-icon">
                 <Info className="w-4 h-4" />
@@ -265,9 +265,9 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
               type="checkbox"
               checked={formData.visitAllMethods}
               onChange={(e) => updateValue('visitAllMethods', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500"
+              className="w-5 h-5 rounded border-muted bg-light text-primary-color focus:ring-2 focus:ring-primary"
             />
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Visit all methods</span>
+            <span className="text-sm font-medium text-primary">Visit all methods</span>
             <div className="group relative">
               <span className="info-icon">
                 <Info className="w-4 h-4" />
@@ -282,7 +282,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
 
       {/* Custom Span Attributes */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
           Custom Span Attributes
           <div className="group relative">
             <span className="info-icon">
@@ -293,28 +293,28 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
         </h3>
         <div className="space-y-3">
           {customAttributes.map((attr) => (
-            <div key={attr.id} className="flex items-center gap-2">
+            <div key={attr.id} className="flex items-center gap-3">
               <input
                 type="text"
                 value={attr.key}
                 onChange={(e) => updateCustomAttribute(attr.id, 'key', e.target.value)}
                 placeholder="Attribute key"
                 pattern="[a-zA-Z0-9\.\-]+"
-                className="material-input w-48"
+                className="material-input min-w-[200px] flex-1 max-w-md"
               />
-              <span className="text-gray-700 dark:text-gray-300">:</span>
+              <span className="text-muted font-semibold">:</span>
               <input
                 type="text"
                 value={attr.value}
                 onChange={(e) => updateCustomAttribute(attr.id, 'value', e.target.value)}
                 placeholder="Attribute value"
                 pattern="[a-zA-Z0-9\.\-]+"
-                className="material-input flex-1"
+                className="material-input min-w-[200px] flex-1"
               />
               <button
                 type="button"
                 onClick={() => removeCustomAttribute(attr.id)}
-                className="action-btn action-btn-delete"
+                className="action-btn action-btn-delete flex-shrink-0"
                 title="Remove attribute"
               >
                 <Trash2 className="w-4 h-4" />

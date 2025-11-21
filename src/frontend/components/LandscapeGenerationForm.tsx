@@ -42,7 +42,7 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* App Count */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
             Number of apps
             <div className="group relative">
               <span className="info-icon">
@@ -66,7 +66,7 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
 
         {/* Package Depth */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
             Package depth
             <div className="group relative">
               <span className="info-icon">
@@ -90,7 +90,7 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
 
         {/* Min Class Count */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
             Minimum class count
             <div className="group relative">
               <span className="info-icon">
@@ -114,7 +114,7 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
 
         {/* Max Class Count */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
             Maximum class count
             <div className="group relative">
               <span className="info-icon">
@@ -138,7 +138,7 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
 
         {/* Min Method Count */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
             Minimum method count
             <div className="group relative">
               <span className="info-icon">
@@ -162,7 +162,7 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
 
         {/* Max Method Count */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
             Maximum method count
             <div className="group relative">
               <span className="info-icon">
@@ -186,7 +186,7 @@ export function LandscapeGenerationForm({ onLandscapeGenerated, onError }: Lands
 
         {/* Balance */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
             Balance
             <div className="group relative">
               <span className="info-icon">
