@@ -1,4 +1,4 @@
-import { CleanedClass, CleanedLandscape, CleanedPackage } from '@shared/types';
+import { CleanedClass, CleanedLandscape, CleanedPackage } from '../../backend/shared/types';
 import React, { useRef, useState } from 'react';
 import { AppNode } from './landscape-editor/AppNode';
 import { LandscapeToolbar } from './landscape-editor/LandscapeToolbar';

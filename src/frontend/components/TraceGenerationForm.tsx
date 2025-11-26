@@ -1,4 +1,4 @@
-import { TraceGenerationRequest } from '@shared/types';
+import { TraceGenerationRequest } from '../../backend/shared/types';
 import { Info, Plus, Send, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { apiClient } from '../api/client';

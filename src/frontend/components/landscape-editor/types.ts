@@ -1,4 +1,4 @@
-import { CleanedClass, CleanedLandscape, CleanedPackage } from '@shared/types';
+import { CleanedClass, CleanedLandscape, CleanedPackage } from '../../../backend/shared/types';
 
 export type NodeId = string;
 

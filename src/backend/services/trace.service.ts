@@ -1,10 +1,10 @@
 import { Attributes } from '@opentelemetry/api';
-import { TraceGenerationRequest } from '@shared/types';
-import { constants } from '../../constants';
-import { CommunicationStyle, generateFakeTrace, TraceGenerationParameters } from '../../generation';
-import { LandscapeStore } from '../../landscape';
-import { FakeTraceExporter } from '../../tracing';
-import { getHostIP, getHostname, isValidInteger } from '../../utils';
+import { TraceGenerationRequest } from '../shared/types';
+import { constants } from '../constants';
+import { CommunicationStyle, generateFakeTrace, TraceGenerationParameters } from '../generation';
+import { LandscapeStore } from '../landscape';
+import { FakeTraceExporter } from '../tracing';
+import { getHostIP, getHostname, isValidInteger } from '../utils';
 
 export class TraceService {
   private landscapeStore: LandscapeStore;

@@ -1,5 +1,5 @@
-import { FakeApp, FakePackage, FakeClass, CleanedLandscape, CleanedPackage, CleanedClass } from '@shared/types';
-import { getClassFqn } from '../../generation';
+import { FakeApp, FakePackage, FakeClass, CleanedLandscape, CleanedPackage, CleanedClass } from '../shared/types';
+import { getClassFqn } from '../generation';
 
 // Re-export types for convenience
 export type { CleanedLandscape, CleanedPackage, CleanedClass };

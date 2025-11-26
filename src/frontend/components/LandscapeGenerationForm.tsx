@@ -1,4 +1,4 @@
-import { CleanedLandscape, LandscapeGenerationRequest } from '@shared/types';
+import { CleanedLandscape, LandscapeGenerationRequest } from '../../backend/shared/types';
 import { Info } from 'lucide-react';
 import React, { useState } from 'react';
 import { apiClient } from '../api/client';

@@ -1,4 +1,4 @@
-import { CleanedLandscape } from '@shared/types';
+import { CleanedLandscape } from '../backend/shared/types';
 import { useEffect, useRef, useState } from 'react';
 import { apiClient } from './api/client';
 import { DarkModeToggle } from './components/DarkModeToggle';

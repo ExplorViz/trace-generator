@@ -1,8 +1,8 @@
-import { AppGenerationParameters } from '@shared/types';
-import { constants } from '../../constants';
-import { generateFakeApps } from '../../generation';
-import { LandscapeStore } from '../../landscape';
-import { isValidInteger } from '../../utils';
+import { AppGenerationParameters } from '../shared/types';
+import { constants } from '../constants';
+import { generateFakeApps } from '../generation';
+import { LandscapeStore } from '../landscape';
+import { isValidInteger } from '../utils';
 import {
   CleanedLandscape,
   cleanLandscapeForSerialization,

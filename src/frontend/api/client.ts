@@ -1,4 +1,4 @@
-import { CleanedLandscape, LandscapeGenerationRequest, TraceGenerationRequest } from '@shared/types';
+import { CleanedLandscape, LandscapeGenerationRequest, TraceGenerationRequest } from '../../backend/shared/types';
 
 const API_BASE_URL = '/api';
 
