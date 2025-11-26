@@ -24,7 +24,7 @@ const DEFAULT_CUSTOM_ATTRIBUTES: Omit<CustomAttribute, 'id'>[] = [
 
 export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormProps) {
   const [formData, setFormData] = useState<Omit<TraceGenerationRequest, 'customAttributes'>>({
-    targetHostname: 'localhost',
+    targetHostname: 'otel-collector',
     targetPort: 55678,
     duration: 1000,
     callCount: 50,
@@ -127,7 +127,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
               pattern="[a-zA-Z0-9\.\-]+"
               required
               className="material-input w-full"
-              placeholder="localhost"
+              placeholder="otel-collector"
             />
           </div>
 
