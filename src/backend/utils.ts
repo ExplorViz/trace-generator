@@ -1,4 +1,4 @@
-import { FakeApp, FakePackage } from '@/shared/types';
+import { FakeApp, FakePackage } from './shared/types';
 import { FakeSpan, FakeTrace } from './tracing';
 import { hostname, networkInterfaces } from 'os';
 

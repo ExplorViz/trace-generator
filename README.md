@@ -64,37 +64,34 @@ Open URL in browser. By default, the frontend runs on `http://localhost:3000` an
 
 ### Using Docker
 
-#### Build and run backend
+#### Build and run
 
 ```bash
-# Build backend image
-docker build -f Dockerfile.backend -t trace-generator-backend .
+# Build image
+docker build -t trace-generator .
 
-# Run backend container
-docker run -p 8079:8079 --env-file .env trace-generator-backend
+# Run container
+docker run -p 8079:8079 trace-generator
 ```
 
-#### Build and run frontend
+#### Environment Variables
+
+The following environment variables can be configured when running the Docker container:
+
+- `BACKEND_PORT` - Port for the backend server (default: 8079)
+- `OTEL_COLLECTOR_HOSTNAME` - OpenTelemetry collector hostname (default: otel-collector)
+- `OTEL_COLLECTOR_PORT` - OpenTelemetry collector port (default: 55678)
+
+Example with custom configuration:
 
 ```bash
-# Build frontend image
-docker build -f Dockerfile.frontend -t trace-generator-frontend .
-
-# Run frontend container
-docker run -p 80:80 trace-generator-frontend
+docker run -p 8079:8079 \
+  -e BACKEND_PORT=8079 \
+  -e OTEL_COLLECTOR_HOSTNAME=my-collector \
+  -e OTEL_COLLECTOR_PORT=4317 \
+  trace-generator
 ```
 
-If running frontend separately, you'll need to configure the backend URL via environment variables
-or build-time configuration.
-
-#### Using Docker Compose
-
-```bash
-# Build and start both services
-docker-compose up --build
-
-# Or run in detached mode
-docker-compose up -d --build
-```
-
-This will start both the backend (on port 8079) and frontend (on port 80) services.
+Note: The OpenTelemetry collector URL can also be configured per-request via the frontend form,
+which will override the default environment variable values for that specific trace generation
+request.

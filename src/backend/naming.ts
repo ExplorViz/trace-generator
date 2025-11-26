@@ -1,11 +1,18 @@
 import { faker } from '@faker-js/faker';
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { capitalizeString, sanitizeJavaIdentifier } from './utils';
 
-const PATH_CLASS_NAMES = 'public/resources/class-names.txt';
-const PATH_PACKAGE_NAMES = 'public/resources/package-names.txt';
-const PATH_METHOD_NAMES = 'public/resources/method-names.txt';
-const PATH_APP_NAMES = 'public/resources/app-names.txt';
+// Resolve paths relative to the compiled file location
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const RESOURCES_DIR = path.join(__dirname, '../../public/resources');
+
+const PATH_CLASS_NAMES = path.join(RESOURCES_DIR, 'class-names.txt');
+const PATH_PACKAGE_NAMES = path.join(RESOURCES_DIR, 'package-names.txt');
+const PATH_METHOD_NAMES = path.join(RESOURCES_DIR, 'method-names.txt');
+const PATH_APP_NAMES = path.join(RESOURCES_DIR, 'app-names.txt');
 
 export class NameGenerator {
   private readonly classNames: Array<string>;

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { constants } from '../../constants';
+import { constants } from '../constants';
 import { TraceService } from '../services/trace.service';
 
 export class TraceController {

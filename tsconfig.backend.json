@@ -10,15 +10,6 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/backend/**/*",
-    "src/shared/**/*",
-    "src/landscape.ts",
-    "src/generation.ts",
-    "src/tracing.ts",
-    "src/naming.ts",
-    "src/utils.ts",
-    "src/constants.ts"
-  ],
+  "include": ["src/backend/**/*"],
   "exclude": ["src/frontend", "node_modules", "dist"]
 }

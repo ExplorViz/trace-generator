@@ -20,6 +20,12 @@ RUN pnpm run build:backend && pnpm run build:frontend
 ARG BACKEND_PORT=8079
 ENV BACKEND_PORT=${BACKEND_PORT}
 
+# OpenTelemetry Collector configuration (configurable via environment variables)
+ARG OTEL_COLLECTOR_HOSTNAME=otel-collector
+ARG OTEL_COLLECTOR_PORT=55678
+ENV OTEL_COLLECTOR_HOSTNAME=${OTEL_COLLECTOR_HOSTNAME}
+ENV OTEL_COLLECTOR_PORT=${OTEL_COLLECTOR_PORT}
+
 # Stage: Build backend image
 FROM node:22-alpine
 
@@ -39,6 +45,9 @@ COPY --from=builder /app/dist/backend ./dist/backend
 
 # Copy built frontend files (backend serves frontend in production)
 COPY --from=builder /app/dist/public ./dist/public
+
+# Copy public resources directory (needed by backend)
+COPY --from=builder /app/public ./public
 
 # Expose backend port (configurable via BACKEND_PORT environment variable)
 EXPOSE 8079
