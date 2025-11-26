@@ -9,7 +9,7 @@
     "dev:backend": "tsx ./src/backend/server.ts",
     "dev:frontend": "vite",
     "build": "pnpm run build:backend && pnpm run build:frontend",
-    "build:backend": "tsc --project tsconfig.backend.json",
+    "build:backend": "tsc --project tsconfig.backend.json && node scripts/fix-imports.mjs",
     "build:frontend": "vite build",
     "start": "node ./dist/backend/server.js",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",

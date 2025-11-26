@@ -36,6 +36,7 @@ RUN pnpm install --prod --frozen-lockfile
 
 # Copy built backend files from builder stage
 COPY --from=builder /app/dist/backend ./dist/backend
+
 # Copy built frontend files (backend serves frontend in production)
 COPY --from=builder /app/dist/public ./dist/public
 
