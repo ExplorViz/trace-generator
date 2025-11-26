@@ -1,22 +1,16 @@
+import { trace, Tracer, Span, SpanOptions, Attributes } from '@opentelemetry/api';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+import { Resource } from '@opentelemetry/resources';
 import {
-  trace,
-  Tracer,
-  Span,
-  SpanOptions,
-  Attributes,
-} from "@opentelemetry/api";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
-import { SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
-import { Resource } from "@opentelemetry/resources";
-import {
-  SEMRESATTRS_SERVICE_NAME,
-  SEMRESATTRS_SERVICE_VERSION,
-  SEMRESATTRS_TELEMETRY_SDK_LANGUAGE,
-} from "@opentelemetry/semantic-conventions";
-import { HrTime } from "@opentelemetry/api";
-import { addHrTimes, hrTime, millisToHrTime } from "@opentelemetry/core";
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+  ATTR_TELEMETRY_SDK_LANGUAGE,
+} from '@opentelemetry/semantic-conventions';
+import { HrTime } from '@opentelemetry/api';
+import { addHrTimes, hrTime, millisToHrTime } from '@opentelemetry/core';
 
 export interface FakeSpan {
   name: string;
@@ -29,7 +23,7 @@ export interface FakeSpan {
 export type FakeTrace = Array<FakeSpan>;
 
 export class FakeTraceExporter {
-  private readonly tracerName: string = "trace-generator";
+  private readonly tracerName: string = 'trace-generator';
   private readonly sdk: NodeSDK;
   private collectorHostname: string;
   private collectorPort: number;
@@ -46,12 +40,12 @@ export class FakeTraceExporter {
       concurrencyLimit: Infinity,
     });
     this.tracerProvider = new NodeTracerProvider({
-      resource: Resource.empty().merge(
+      resource: Resource.default().merge(
         new Resource({
-          [SEMRESATTRS_SERVICE_NAME]: "trace-generator",
-          [SEMRESATTRS_SERVICE_VERSION]: "1.0.0",
-          [SEMRESATTRS_TELEMETRY_SDK_LANGUAGE]: "java",
-        }),
+          [ATTR_SERVICE_NAME]: 'trace-generator',
+          [ATTR_SERVICE_VERSION]: '1.0.0',
+          [ATTR_TELEMETRY_SDK_LANGUAGE]: 'java',
+        })
       ),
     });
     this.spanProcessor = new SimpleSpanProcessor(this.exporter);
@@ -82,10 +76,7 @@ export class FakeTraceExporter {
 
   private writeSpan(fakeSpan: FakeSpan, globalStartTime: HrTime) {
     const opts: SpanOptions = {
-      startTime: addHrTimes(
-        globalStartTime,
-        millisToHrTime(fakeSpan.relativeStartTime),
-      ),
+      startTime: addHrTimes(globalStartTime, millisToHrTime(fakeSpan.relativeStartTime)),
       attributes: fakeSpan.attributes,
     };
 
@@ -93,9 +84,7 @@ export class FakeTraceExporter {
       fakeSpan.children.forEach((childSpan) => {
         this.writeSpan(childSpan, globalStartTime);
       });
-      span.end(
-        addHrTimes(globalStartTime, millisToHrTime(fakeSpan.relativeEndTime)),
-      );
+      span.end(addHrTimes(globalStartTime, millisToHrTime(fakeSpan.relativeEndTime)));
     });
   }
 
@@ -103,7 +92,7 @@ export class FakeTraceExporter {
     fakeTrace.forEach((span) => {
       this.writeSpan(span, hrTime());
     });
-    console.log("Trace written successfully");
+    console.log('Trace written successfully');
   }
 
   async shutdown(): Promise<void> {

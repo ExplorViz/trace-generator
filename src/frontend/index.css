@@ -1,0 +1,495 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Color theme */
+:root {
+  /* hsl (fallback color) */
+  --bg-dark: hsl(228 79% 2%);
+  --bg: hsl(222 55% 5%);
+  --bg-light: hsl(220 35% 10%);
+  --text: hsl(220 100% 98%);
+  --text-muted: hsl(220 35% 73%);
+  --highlight: hsl(220 20% 42%);
+  --border: hsl(220 26% 31%);
+  --border-muted: hsl(220 37% 20%);
+  --primary: hsl(220 78% 76%);
+  --secondary: hsl(40 53% 60%);
+  --danger: hsl(9 26% 64%);
+  --warning: hsl(52 19% 57%);
+  --success: hsl(146 17% 59%);
+  --info: hsl(217 28% 65%);
+  /* oklch */
+  --bg-dark: oklch(0.1 0.025 264);
+  --bg: oklch(0.15 0.025 264);
+  --bg-light: oklch(0.2 0.025 264);
+  --text: oklch(0.96 0.05 264);
+  --text-muted: oklch(0.76 0.05 264);
+  --highlight: oklch(0.5 0.05 264);
+  --border: oklch(0.4 0.05 264);
+  --border-muted: oklch(0.3 0.05 264);
+  --primary: oklch(0.76 0.1 264);
+  --secondary: oklch(0.76 0.1 84);
+  --danger: oklch(0.7 0.05 30);
+  --warning: oklch(0.7 0.05 100);
+  --success: oklch(0.7 0.05 160);
+  --info: oklch(0.7 0.05 260);
+  /* Light backgrounds for hover states */
+  --primary-light: oklch(0.76 0.1 264 / 0.15);
+  --success-light: oklch(0.7 0.05 160 / 0.15);
+  --secondary-light: oklch(0.76 0.1 84 / 0.15);
+  --danger-light: oklch(0.7 0.05 30 / 0.15);
+  --primary-focus: oklch(0.76 0.1 264 / 0.2);
+}
+
+/* Light mode - applies when .dark class is NOT present on root */
+:root:not(.dark) {
+  /* hsl (fallback color) */
+  --bg-dark: hsl(220 59% 91%);
+  --bg: hsl(220 100% 97%);
+  --bg-light: hsl(220 100% 100%);
+  --text: hsl(226 85% 7%);
+  --text-muted: hsl(220 26% 31%);
+  --highlight: hsl(220 100% 100%);
+  --border: hsl(220 19% 53%);
+  --border-muted: hsl(220 27% 65%);
+  --primary: hsl(221 49% 33%);
+  --secondary: hsl(44 100% 14%);
+  --danger: hsl(9 21% 41%);
+  --warning: hsl(52 23% 34%);
+  --success: hsl(147 19% 36%);
+  --info: hsl(217 22% 41%);
+  /* oklch */
+  --bg-dark: oklch(0.92 0.025 264);
+  --bg: oklch(0.96 0.025 264);
+  --bg-light: oklch(1 0.025 264);
+  --text: oklch(0.15 0.05 264);
+  --text-muted: oklch(0.4 0.05 264);
+  --highlight: oklch(1 0.05 264);
+  --border: oklch(0.6 0.05 264);
+  --border-muted: oklch(0.7 0.05 264);
+  --primary: oklch(0.4 0.1 264);
+  --secondary: oklch(0.4 0.1 84);
+  --danger: oklch(0.5 0.05 30);
+  --warning: oklch(0.5 0.05 100);
+  --success: oklch(0.5 0.05 160);
+  --info: oklch(0.5 0.05 260);
+  /* Light backgrounds for hover states */
+  --primary-light: oklch(0.4 0.1 264 / 0.15);
+  --success-light: oklch(0.5 0.05 160 / 0.15);
+  --secondary-light: oklch(0.4 0.1 84 / 0.15);
+  --danger-light: oklch(0.5 0.05 30 / 0.15);
+  --primary-focus: oklch(0.4 0.1 264 / 0.2);
+}
+
+/* Base styles */
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Reusable utility classes */
+.bg-primary {
+  background-color: var(--bg);
+}
+
+.bg-light {
+  background-color: var(--bg-light);
+}
+
+.bg-dark {
+  background-color: var(--bg-dark);
+}
+
+.text-primary {
+  color: var(--text);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-primary-color {
+  color: var(--primary);
+}
+
+.text-secondary-color {
+  color: var(--secondary);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-info {
+  color: var(--info);
+}
+
+.border-primary {
+  border-color: var(--border);
+}
+
+.border-muted {
+  border-color: var(--border-muted);
+}
+
+.bg-highlight {
+  background-color: var(--highlight);
+}
+
+.bg-success-light {
+  background-color: var(--success-light);
+}
+
+.bg-danger-light {
+  background-color: var(--danger-light);
+}
+
+.material-card {
+  background: var(--bg-light);
+  border-radius: 8px;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+  border: 1px solid var(--border-muted);
+}
+
+.material-card:hover {
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.12),
+    0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.material-button {
+  background: var(--primary);
+  color: var(--bg-dark);
+  border: none;
+  border-radius: 4px;
+  padding: 10px 24px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.material-button:hover {
+  background: var(--primary);
+  opacity: 0.9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.material-button:active {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.material-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.material-button-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: none;
+  border-radius: 4px;
+  padding: 10px 24px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.material-button-secondary:hover {
+  background: var(--primary-light);
+}
+
+.material-input {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  color: var(--text);
+  width: 100%;
+}
+
+.material-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-focus);
+}
+
+.material-input::placeholder {
+  color: var(--text-muted);
+}
+
+.tree-toggle.collapsed::before {
+  content: '▶';
+}
+
+.tree-toggle.expanded::before {
+  content: '▼';
+}
+
+.tree-toggle.leaf::before {
+  content: '•';
+}
+
+.tree-children.collapsed {
+  display: none;
+}
+
+* {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dark-toggle {
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.dark-toggle:hover {
+  transform: scale(1.05);
+}
+
+.range-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.range-slider-container input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.range-slider-container input[type='number'] {
+  width: 4rem;
+  min-width: 4rem;
+  flex-shrink: 0;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  height: 6px;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  background: var(--border);
+  height: 6px;
+  border-radius: 3px;
+  border: none;
+}
+
+input[type='range']::-webkit-slider-track {
+  background: var(--border);
+  height: 6px;
+  border-radius: 3px;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--primary);
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  margin-top: -7px;
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-thumb:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: scale(1.15);
+  opacity: 0.9;
+}
+
+input[type='range']::-moz-range-track {
+  background: var(--border);
+  height: 6px;
+  border-radius: 3px;
+  border: none;
+}
+
+input[type='range']::-moz-range-thumb {
+  background: var(--primary);
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input[type='range']::-moz-range-thumb:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: scale(1.15);
+  opacity: 0.9;
+}
+
+.info-icon {
+  cursor: help;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.info-icon svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.tooltip {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-light);
+  color: var(--text);
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: opacity 0.2s ease;
+  white-space: normal;
+  word-wrap: break-word;
+  border: 1px solid var(--border-muted);
+}
+
+.group:hover .tooltip {
+  opacity: 1;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.action-btn-add {
+  color: var(--primary);
+}
+
+.action-btn-add:hover {
+  background-color: var(--primary-light);
+}
+
+.action-btn-add-green {
+  color: var(--success);
+}
+
+.action-btn-add-green:hover {
+  background-color: var(--success-light);
+}
+
+.action-btn-add-orange {
+  color: var(--secondary);
+}
+
+.action-btn-add-orange:hover {
+  background-color: var(--secondary-light);
+}
+
+.action-btn-edit {
+  color: var(--text-muted);
+}
+
+.action-btn-edit:hover {
+  background-color: var(--highlight);
+}
+
+.action-btn-delete {
+  color: var(--danger);
+}
+
+.action-btn-delete:hover {
+  background-color: var(--danger-light);
+}
+
+.entity-name {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tree-node {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.tree-node:hover {
+  background-color: var(--highlight);
+}
+
+/* Methods don't need toggle functionality */
+.tree-node.method {
+  cursor: default;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tree-node:hover .action-buttons {
+  opacity: 1;
+}

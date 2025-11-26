@@ -1,6 +1,6 @@
-import { FakeApp, FakePackage } from "./generation";
-import { FakeSpan, FakeTrace } from "./tracing";
-import { hostname, networkInterfaces } from "os";
+import { FakeApp, FakePackage } from './shared/types';
+import { FakeSpan, FakeTrace } from './tracing';
+import { hostname, networkInterfaces } from 'os';
 
 /**
  * Takes any string and converts the first character to uppercase
@@ -38,66 +38,65 @@ export function isValidInteger(numStr: string): boolean {
  */
 export function sanitizeJavaIdentifier(identifier: string) {
   const JAVA_RESERVED_TOKENS = [
-    "abstract",
-    "continue",
-    "for",
-    "new",
-    "switch",
-    "assert",
-    "default",
-    "if",
-    "package",
-    "synchronized",
-    "boolean",
-    "do",
-    "goto",
-    "private",
-    "this",
-    "break",
-    "double",
-    "implements",
-    "protected",
-    "throw",
-    "byte",
-    "else",
-    "import",
-    "public",
-    "throws",
-    "case",
-    "enum",
-    "instanceof",
-    "return",
-    "transient",
-    "catch",
-    "extends",
-    "int",
-    "short",
-    "try",
-    "char",
-    "final",
-    "interface",
-    "static",
-    "void",
-    "class",
-    "finally",
-    "long",
-    "strictfp",
-    "volatile",
-    "const",
-    "float",
-    "native",
-    "super",
-    "while",
-    "true",
-    "false",
-    "null",
+    'abstract',
+    'continue',
+    'for',
+    'new',
+    'switch',
+    'assert',
+    'default',
+    'if',
+    'package',
+    'synchronized',
+    'boolean',
+    'do',
+    'goto',
+    'private',
+    'this',
+    'break',
+    'double',
+    'implements',
+    'protected',
+    'throw',
+    'byte',
+    'else',
+    'import',
+    'public',
+    'throws',
+    'case',
+    'enum',
+    'instanceof',
+    'return',
+    'transient',
+    'catch',
+    'extends',
+    'int',
+    'short',
+    'try',
+    'char',
+    'final',
+    'interface',
+    'static',
+    'void',
+    'class',
+    'finally',
+    'long',
+    'strictfp',
+    'volatile',
+    'const',
+    'float',
+    'native',
+    'super',
+    'while',
+    'true',
+    'false',
+    'null',
   ];
-  const IDENTIFIER_FALLBACK = "fallbackIdentifier";
-  identifier = identifier.replace(/[^0-9a-z_$]/gi, ""); // Remove non-alphanumeric characters
-  identifier = identifier.replace(/^[0-9]+/, ""); // Trim any numbers at beginning of identifier
-  const isValidIdentifier: boolean =
-    !JAVA_RESERVED_TOKENS.includes(identifier) && identifier != "";
-  return isValidIdentifier ? identifier : IDENTIFIER_FALLBACK;
+  const IDENTIFIER_FALLBACK = 'fallbackIdentifier';
+  let cleanedIdentifier = identifier.replace(/[^0-9a-z_$]/gi, ''); // Remove non-alphanumeric characters
+  cleanedIdentifier = cleanedIdentifier.replace(/^[0-9]+/, ''); // Trim any numbers at beginning of identifier
+  const isValidIdentifier: boolean = !JAVA_RESERVED_TOKENS.includes(cleanedIdentifier) && cleanedIdentifier != '';
+  return isValidIdentifier ? cleanedIdentifier : IDENTIFIER_FALLBACK;
 }
 
 /**
@@ -113,13 +112,13 @@ export function getHostname(): string {
  * @returns String representation of the found IP address
  */
 export function getHostIP(): string {
-  const fallbackIP = "0.0.0.0";
+  const fallbackIP = '0.0.0.0';
   const nets = networkInterfaces();
   for (const key of Object.keys(nets)) {
     const netInfo = nets[key];
     if (netInfo) {
       for (const net of netInfo) {
-        if (net.family === "IPv4" && !net.internal) {
+        if (net.family === 'IPv4' && !net.internal) {
           return net.address.toString();
         }
       }
@@ -149,48 +148,39 @@ export function getHostIP(): string {
  */
 export function appTreeToString(app: FakeApp): string {
   function packageTreeToString(pkg: FakePackage): string {
-    let result: string = pkg.name + "\n";
+    let result: string = pkg.name + '\n';
 
-    // Recursively turn subpackages to string
+    // Recursively turn subpackages into strings
 
-    let subpackageStrs: Array<string> =
-      pkg.subpackages.map(packageTreeToString);
+    let subpackageStrs: Array<string> = pkg.subpackages.map(packageTreeToString);
     subpackageStrs = subpackageStrs.map((str, idx) => {
       // Include '|' if there are more subpackages to come after this one
-      const strWithPipe = "├─" + str.replace(/\n/g, "\n| ");
-      const strWithoutPipe = "├─" + str.replace(/\n/g, "\n  ");
-      return idx !== subpackageStrs.length - 1 || pkg.classes.length > 0
-        ? strWithPipe
-        : strWithoutPipe;
+      const strWithPipe = '├─' + str.replace(/\n/g, '\n| ');
+      const strWithoutPipe = '├─' + str.replace(/\n/g, '\n  ');
+      return idx !== subpackageStrs.length - 1 || pkg.classes.length > 0 ? strWithPipe : strWithoutPipe;
     });
 
     // Turn classes to string
 
-    let classStrs: Array<string> = pkg.classes.map((clazz) => clazz.identifier);
-    classStrs = classStrs.map((str) => "├─\x1b[33m" + str + "\x1b[0m");
+    let classStrs: Array<string> = pkg.classes.map((classModel) => classModel.identifier);
+    classStrs = classStrs.map((str) => '├─\x1b[33m' + str + '\x1b[0m');
 
     // Replace '├─' with '└─' for last package/class
 
     if (classStrs.length === 0) {
       if (subpackageStrs.length > 0) {
         const lastIdx = subpackageStrs.length - 1;
-        const updatedSubpackageStr = subpackageStrs[lastIdx].replace(
-          /├─/,
-          "└─",
-        );
+        const updatedSubpackageStr = subpackageStrs[lastIdx].replace(/├─/, '└─');
         subpackageStrs[lastIdx] = updatedSubpackageStr;
       }
     } else {
-      classStrs[classStrs.length - 1] = classStrs[classStrs.length - 1].replace(
-        /├─/g,
-        "└─",
-      );
+      classStrs[classStrs.length - 1] = classStrs[classStrs.length - 1].replace(/├─/g, '└─');
     }
 
     // Reduce to final string
 
-    result += subpackageStrs.reduce((acc, str) => (acc += str + "\n"), "");
-    result += classStrs.reduce((acc, str) => (acc += str + "\n"), "");
+    result += subpackageStrs.reduce((acc, str) => acc + str + '\n', '');
+    result += classStrs.reduce((acc, str) => acc + str + '\n', '');
     return result.slice(0, -1); // Remove newline
   }
 
@@ -217,18 +207,18 @@ export function traceToString(trace: FakeTrace): string {
   function spanToString(span: FakeSpan): string {
     let result: string =
       span.name
-        .split(".")
+        .split('.')
         .slice(-2)
-        .reduce((acc, str) => (acc += str + "."), "")
-        .slice(0, -1) + "\n";
+        .reduce((acc, str) => acc + str + '.', '')
+        .slice(0, -1) + '\n';
 
     // Recursively turn child spans to string
 
     let childStrs: Array<string> = span.children.map(spanToString);
     childStrs = childStrs.map((str, idx) => {
       // Include '|' if there are more child spans to come after this one
-      const strWithPipe = "├─" + str.replace(/\n/g, "\n| ");
-      const strWithoutPipe = "├─" + str.replace(/\n/g, "\n  ");
+      const strWithPipe = '├─' + str.replace(/\n/g, '\n| ');
+      const strWithoutPipe = '├─' + str.replace(/\n/g, '\n  ');
       return idx !== childStrs.length - 1 ? strWithPipe : strWithoutPipe;
     });
 
@@ -236,19 +226,17 @@ export function traceToString(trace: FakeTrace): string {
 
     if (childStrs.length > 0) {
       const lastIdx = childStrs.length - 1;
-      const updatedSubpackageStr = childStrs[lastIdx].replace(/├─/, "└─");
+      const updatedSubpackageStr = childStrs[lastIdx].replace(/├─/, '└─');
       childStrs[lastIdx] = updatedSubpackageStr;
     }
 
     // Reduce to final string
 
-    result += childStrs.reduce((acc, str) => (acc += str + "\n"), "");
+    result += childStrs.reduce((acc, str) => acc + str + '\n', '');
     return result.slice(0, -1); // Remove newline
   }
 
-  const result: string = trace
-    .map(spanToString)
-    .reduce((acc, str) => (acc += str + "\n"), "");
+  const result: string = trace.map(spanToString).reduce((acc, str) => acc + str + '\n', '');
 
   return result;
 }
