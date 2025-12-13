@@ -1,6 +1,6 @@
 import { TraceGenerationRequest } from '../../backend/shared/types';
-import { Info, Plus, Send, Trash2 } from 'lucide-react';
-import React, { useState } from 'react';
+import { Info, Plus, Play, Send, Square, Trash2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { apiClient } from '../api/client';
 import { ResetButton } from './ResetButton';
 
@@ -38,6 +38,9 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
   );
   const [nextAttrId, setNextAttrId] = useState(DEFAULT_CUSTOM_ATTRIBUTES.length + 1);
   const [loading, setLoading] = useState(false);
+  const [isRepeating, setIsRepeating] = useState(false);
+  const [intervalMs, setIntervalMs] = useState(1000);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateValue = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -78,27 +81,66 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
     }
   };
 
+  const stopRepeating = () => {
+    setIsRepeating(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  const sendTrace = async () => {
+    const customAttrs: Record<string, string> = {};
+    customAttributes.forEach((attr) => {
+      if (attr.key.trim() && attr.value.trim()) {
+        customAttrs[attr.key.trim()] = attr.value.trim();
+      }
+    });
+
+    const request: TraceGenerationRequest = {
+      ...formData,
+      customAttributes: customAttrs,
+    };
+
+    try {
+      await apiClient.generateTrace(request);
+      onSuccess?.('Trace generated and sent successfully!');
+    } catch (err: any) {
+      onError(err.message || 'Failed to generate trace');
+      // Stop repeating on error
+      stopRepeating();
+    }
+  };
+
+  const startRepeating = () => {
+    if (intervalMs < 100) {
+      onError('Interval must be at least 100ms');
+      return;
+    }
+    setIsRepeating(true);
+    // Send immediately
+    sendTrace();
+    // Then set up interval
+    intervalRef.current = setInterval(() => {
+      sendTrace();
+    }, intervalMs);
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const customAttrs: Record<string, string> = {};
-      customAttributes.forEach((attr) => {
-        if (attr.key.trim() && attr.value.trim()) {
-          customAttrs[attr.key.trim()] = attr.value.trim();
-        }
-      });
-
-      const request: TraceGenerationRequest = {
-        ...formData,
-        customAttributes: customAttrs,
-      };
-
-      await apiClient.generateTrace(request);
-      onSuccess?.('Trace generated and sent successfully!');
-    } catch (err: any) {
-      onError(err.message || 'Failed to generate trace');
+      await sendTrace();
     } finally {
       setLoading(false);
     }
@@ -362,10 +404,84 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
         </div>
       </div>
 
-      <button type="submit" disabled={loading} className="material-button w-full md:w-auto flex items-center gap-2">
+      <button
+        type="submit"
+        disabled={loading || isRepeating}
+        className="material-button w-full md:w-auto flex items-center gap-2"
+      >
         <Send className="w-5 h-5" />
-        Generate and Send Trace
+        {isRepeating ? 'Stop Repeating First' : 'Generate and Send Trace'}
       </button>
+
+      {/* Repeated Sending Settings */}
+      <div>
+        <h3 className="text-xl font-bold text-primary mb-4">Repeated Sending</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
+              Interval (ms)
+              <div className="group relative">
+                <span className="info-icon">
+                  <Info className="w-4 h-4" />
+                </span>
+                <span className="tooltip w-64">Time interval between trace sends in milliseconds (minimum 100ms)</span>
+              </div>
+            </label>
+            <div className="range-slider-container">
+              <input
+                type="range"
+                min="100"
+                max="60000"
+                step="100"
+                value={Math.min(Math.max(intervalMs, 100), 60000)}
+                onChange={(e) => setIntervalMs(parseInt(e.target.value))}
+                disabled={isRepeating}
+              />
+              <input
+                type="number"
+                value={intervalMs}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value, 10);
+                  if (!isNaN(value) && value >= 100) {
+                    setIntervalMs(value);
+                  }
+                }}
+                className="material-input text-center"
+                min="100"
+                disabled={isRepeating}
+              />
+            </div>
+          </div>
+          <div className="flex items-end gap-3">
+            {!isRepeating ? (
+              <button
+                type="button"
+                onClick={startRepeating}
+                disabled={loading || intervalMs < 100}
+                className="material-button flex items-center gap-2"
+              >
+                <Play className="w-5 h-5" />
+                Start Repeating
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={stopRepeating}
+                className="material-button bg-danger hover:bg-danger-dark flex items-center gap-2"
+              >
+                <Square className="w-5 h-5" />
+                Stop Repeating
+              </button>
+            )}
+            {isRepeating && (
+              <div className="flex items-center gap-2 text-sm text-primary">
+                <div className="w-2 h-2 bg-danger rounded-full animate-pulse"></div>
+                <span>Sending every {intervalMs}ms</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </form>
   );
 }
