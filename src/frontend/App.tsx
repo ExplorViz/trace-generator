@@ -38,8 +38,9 @@ function App() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
-  const handleLandscapeUpdated = (updatedLandscape: CleanedLandscape[]) => {
+  const handleLandscapeUpdated = async (updatedLandscape: CleanedLandscape[]) => {
     setLandscape(updatedLandscape);
+    await apiClient.updateLandscape(updatedLandscape);
     setError(null);
   };
 
