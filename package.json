@@ -16,7 +16,10 @@
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "prepare": "node .husky/install.mjs || true"
   },
   "author": "",
@@ -26,6 +29,8 @@
     "@types/node": "^22.9.1",
     "@typescript-eslint/eslint-plugin": "^8.47.0",
     "@typescript-eslint/parser": "^8.47.0",
+    "@vitest/coverage-v8": "4.0.16",
+    "@vitest/ui": "^4.0.16",
     "autoprefixer": "^10.4.22",
     "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
@@ -43,7 +48,8 @@
     "tailwindcss": "^4.1.17",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.47.0"
+    "typescript-eslint": "^8.47.0",
+    "vitest": "^4.0.16"
   },
   "dependencies": {
     "@faker-js/faker": "^9.2.0",

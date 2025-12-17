@@ -85,7 +85,7 @@ export interface LandscapeGenerationRequest {
   minMethodCount: number;
   maxMethodCount: number;
   balance: number;
-  appSeed?: number;
+  landscapeSeed?: number;
 }
 
 /**

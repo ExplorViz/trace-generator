@@ -1,6 +1,6 @@
-import { TraceGenerationRequest } from '../../backend/shared/types';
-import { Info, Plus, Play, Send, Square, Trash2 } from 'lucide-react';
+import { Info, Play, Plus, Send, Square, Trash2 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { TraceGenerationRequest } from '../../backend/shared/types';
 import { apiClient } from '../api/client';
 import { ResetButton } from './ResetButton';
 
@@ -32,6 +32,7 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
     communicationStyle: 'true_random',
     allowCyclicCalls: false,
     visitAllMethods: false,
+    traceSeed: undefined,
   });
   const [customAttributes, setCustomAttributes] = useState<CustomAttribute[]>(() =>
     DEFAULT_CUSTOM_ATTRIBUTES.map((attr, idx) => ({ ...attr, id: idx + 1 }))
@@ -346,6 +347,38 @@ export function TraceGenerationForm({ onError, onSuccess }: TraceGenerationFormP
               </span>
             </div>
           </label>
+
+          {/* Seed Field */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-primary">
+              Numerical Seed (optional)
+              <div className="group relative">
+                <span className="info-icon">
+                  <Info className="w-4 h-4" />
+                </span>
+                <span className="tooltip w-64">
+                  Random seed for reproducible traces. Leave empty for random generation.
+                </span>
+              </div>
+            </label>
+            <input
+              type="number"
+              value={formData.traceSeed ?? ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') {
+                  updateValue('traceSeed', undefined);
+                } else {
+                  const numValue = parseInt(value, 10);
+                  if (!isNaN(numValue)) {
+                    updateValue('traceSeed', numValue);
+                  }
+                }
+              }}
+              placeholder="Random"
+              className="material-input w-full"
+            />
+          </div>
         </div>
       </div>
 

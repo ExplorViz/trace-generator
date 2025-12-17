@@ -1,7 +1,6 @@
-import { AppGenerationParameters } from '../shared/types';
-import { constants } from '../constants';
 import { generateFakeApps } from '../generation';
 import { LandscapeStore } from '../landscape';
+import { AppGenerationParameters } from '../shared/types';
 import { isValidInteger } from '../utils';
 import {
   CleanedLandscape,
@@ -94,7 +93,10 @@ export class LandscapeService {
       minMethodCount: parseInt(body.minMethodCount),
       maxMethodCount: parseInt(body.maxMethodCount),
       balance: parseFloat(body.balance),
-      seed: body.appSeed !== undefined && isValidInteger(String(body.appSeed)) ? parseInt(body.appSeed) : undefined,
+      seed:
+        body.landscapeSeed !== undefined && isValidInteger(String(body.landscapeSeed))
+          ? parseInt(body.landscapeSeed)
+          : undefined,
     };
   }
 }

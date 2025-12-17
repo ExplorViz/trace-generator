@@ -1,8 +1,8 @@
-import { FakeApp, FakePackage, FakeClass, CleanedLandscape, CleanedPackage, CleanedClass } from '../shared/types';
 import { getClassFqn } from '../generation';
+import { CleanedClass, CleanedLandscape, CleanedPackage, FakeApp, FakeClass, FakePackage } from '../shared/types';
 
 // Re-export types for convenience
-export type { CleanedLandscape, CleanedPackage, CleanedClass };
+export type { CleanedClass, CleanedLandscape, CleanedPackage };
 
 /**
  * Clean landscape for JSON serialization (remove circular references)
@@ -67,8 +67,8 @@ export function reconstructParentReferences(landscapeData: Array<any>): Array<Fa
       name: appData.name,
       rootPackage: appData.rootPackage,
       entryPoint: null as any, // Will be set below
-      classes: appData.classes,
-      packages: appData.packages,
+      classes: [],
+      packages: [],
       methods: appData.methods,
     };
 
@@ -82,8 +82,29 @@ export function reconstructParentReferences(landscapeData: Array<any>): Array<Fa
       });
     }
 
+    // Helper to collect all classes from package tree
+    function collectClasses(pkg: FakePackage): FakeClass[] {
+      const classes = [...pkg.classes];
+      pkg.subpackages.forEach((subPkg) => {
+        classes.push(...collectClasses(subPkg));
+      });
+      return classes;
+    }
+
+    // Helper to collect all packages from package tree
+    function collectPackages(pkg: FakePackage): FakePackage[] {
+      const packages = [pkg];
+      pkg.subpackages.forEach((subPkg) => {
+        packages.push(...collectPackages(subPkg));
+      });
+      return packages;
+    }
+
     if (app.rootPackage) {
       setParentForPackage(app.rootPackage);
+      // Rebuild flat arrays from tree to ensure same object references
+      app.classes = collectClasses(app.rootPackage);
+      app.packages = collectPackages(app.rootPackage);
     }
 
     // Reconstruct entryPoint reference from FQN
