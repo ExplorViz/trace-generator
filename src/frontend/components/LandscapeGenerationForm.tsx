@@ -1,6 +1,6 @@
-import { CleanedLandscape, LandscapeGenerationRequest } from '../../backend/shared/types';
 import { Info } from 'lucide-react';
 import React, { useState } from 'react';
+import { CleanedLandscape, LandscapeGenerationRequest } from '../../backend/shared/types';
 import { apiClient } from '../api/client';
 
 export interface LandscapeFormResetHandle {
@@ -21,6 +21,7 @@ const DEFAULT_FORM_DATA: LandscapeGenerationRequest = {
   minMethodCount: 1,
   maxMethodCount: 5,
   balance: 0.5,
+  landscapeSeed: undefined,
 };
 
 export function LandscapeGenerationForm({
@@ -69,6 +70,19 @@ export function LandscapeGenerationForm({
   };
 
   const handleInputChange = (field: keyof LandscapeGenerationRequest, value: string, isFloat: boolean = false) => {
+    // Handle optional seed field (empty string = undefined)
+    if (field === 'landscapeSeed') {
+      if (value === '') {
+        setFormData((prev) => ({ ...prev, landscapeSeed: undefined }));
+        return;
+      }
+      const numValue = parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        updateValue(field, numValue);
+      }
+      return;
+    }
+
     const numValue = isFloat ? parseFloat(value) : parseInt(value, 10);
     if (!isNaN(numValue)) {
       // Auto-adjust paired min/max values
@@ -302,6 +316,28 @@ export function LandscapeGenerationForm({
               className="material-input text-center"
             />
           </div>
+        </div>
+
+        {/* Seed */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-primary">
+            Numerical Seed (optional)
+            <div className="group relative">
+              <span className="info-icon">
+                <Info className="w-4 h-4" />
+              </span>
+              <span className="tooltip w-64">
+                Random seed for reproducible results. Leave empty for random generation.
+              </span>
+            </div>
+          </label>
+          <input
+            type="number"
+            value={formData.landscapeSeed ?? ''}
+            onChange={(e) => handleInputChange('landscapeSeed', e.target.value)}
+            placeholder="Random"
+            className="material-input w-full"
+          />
         </div>
       </div>
 

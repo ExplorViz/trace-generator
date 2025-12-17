@@ -95,3 +95,23 @@ docker run -p 8079:8079 \
 Note: The OpenTelemetry collector URL can also be configured per-request via the frontend form,
 which will override the default environment variable values for that specific trace generation
 request.
+
+## Testing
+
+The backend includes unit tests using Vitest.
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with UI
+pnpm test:ui
+
+# Run tests with coverage
+pnpm test:coverage
+```

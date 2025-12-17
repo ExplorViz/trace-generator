@@ -40,7 +40,7 @@ export function getClassFqn(fakeClass: FakeClass): string {
 function getAllChildClasses(fakePackage: FakePackage): Array<FakeClass> {
   const result = [...fakePackage.classes];
   fakePackage.subpackages.forEach((subpackage) => {
-    result.concat(getAllChildClasses(subpackage));
+    result.push(...getAllChildClasses(subpackage));
   });
   return result;
 }
@@ -647,10 +647,11 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
     visitedClasses.add(nextClass);
     previousClass = nextClass;
 
-    // Randomly remove calls from the stack for more dynamic behaviour
+    // Randomly remove calls from the stack for more dynamic behavior
+    // Ensure we maintain at least 1 item and respect maxConnectionDepth after the push
     while (
-      classStack.length > params.maxConnectionDepth ||
-      (classStack.length > 1 && faker.number.int({ min: 0, max: 1 }) === 1)
+      classStack.length > 1 &&
+      (classStack.length >= params.maxConnectionDepth || faker.number.int({ min: 0, max: 1 }) === 1)
     ) {
       const head = classStack.pop() as [FakeClass, FakeSpan];
       head[1].relativeEndTime = timePassed;
