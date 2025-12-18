@@ -3,7 +3,6 @@ import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import importPlugin from 'eslint-plugin-import';
-import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 
@@ -31,7 +30,6 @@ export default tseslint.config(
       react,
       'react-hooks': reactHooks,
       import: importPlugin,
-      prettier,
     },
     settings: {
       react: {
@@ -48,7 +46,6 @@ export default tseslint.config(
       ...react.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       ...prettierConfig.rules,
-      'prettier/prettier': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
@@ -103,16 +100,18 @@ export default tseslint.config(
       },
     },
   },
-  // Config files (exclude from TypeScript project parsing)
+  // Config files and scripts (exclude from TypeScript project parsing)
   {
     files: [
       '*.js',
+      '*.mjs',
       '*.config.{js,ts}',
       'vite.config.ts',
       '.eslintrc.js',
       '.prettierrc.js',
       'eslint.config.js',
       'tailwind.config.js',
+      'scripts/**/*.{js,mjs}',
       '.husky/**/*',
     ],
     languageOptions: {
@@ -130,6 +129,28 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       'no-undef': 'off', // Config files may use Node globals
+    },
+  },
+  // Test files (exclude from TypeScript project parsing)
+  {
+    files: ['tests/**/*.{ts,tsx,js,jsx}'],
+    languageOptions: {
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 'latest',
+        project: null, // Don't use TypeScript project for test files
+      },
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
     },
   },
   // Ignore patterns

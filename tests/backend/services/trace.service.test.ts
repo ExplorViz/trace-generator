@@ -12,7 +12,7 @@ vi.mock('../../../src/backend/tracing', () => {
     writeTrace = vi.fn();
     shutdown = vi.fn();
 
-    constructor(hostname: string, port: number) {
+    constructor(_hostname: string, _port: number) {
       // Mock constructor - do nothing
     }
   }
@@ -30,7 +30,7 @@ vi.mock('../../../src/backend/generation', () => ({
     RANDOM_EXIT: 'RANDOM_EXIT',
   },
   generateFakeTrace: vi.fn(
-    (landscape: FakeApp[], params: any): FakeTrace => [
+    (_landscape: FakeApp[], _params: any): FakeTrace => [
       {
         name: 'mockSpan',
         relativeStartTime: 0,

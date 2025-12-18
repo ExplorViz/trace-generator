@@ -86,7 +86,7 @@ describe('Trace Generation Integration', () => {
 
       const trace = generateFakeTrace(petclinicLandscape, params);
 
-      function validateTiming(spans: any[], parentStartTime = 0, parentEndTime = 1000): void {
+      function validateTiming(spans: any[], _parentStartTime = 0, parentEndTime = 1000): void {
         spans.forEach((span) => {
           expect(span.relativeStartTime).toBe(span.relativeStartTime);
           expect(span.relativeEndTime).toBe(span.relativeEndTime);

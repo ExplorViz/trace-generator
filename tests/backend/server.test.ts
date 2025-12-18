@@ -13,8 +13,8 @@ describe('Server', () => {
       const app = createServer();
 
       // Mock request/response for health check
-      const mockReq = {};
-      const mockRes = {
+      const _mockReq = {};
+      const _mockRes = {
         json: vi.fn(),
       };
 

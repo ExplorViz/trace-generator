@@ -11,7 +11,7 @@ import {
 
 // Mock the generation module
 vi.mock('../../../src/backend/generation', () => ({
-  generateFakeApps: vi.fn((params: AppGenerationParameters): FakeApp[] => {
+  generateFakeApps: vi.fn((_params: AppGenerationParameters): FakeApp[] => {
     const method: FakeMethod = { identifier: 'mockMethod' };
     const rootPackage: FakePackage = {
       name: 'com.example',
