@@ -36,13 +36,14 @@ describe('cleanLandscapeForSerialization', () => {
 
     expect(cleaned).toHaveLength(1);
     expect(cleaned[0].name).toBe('TestApp');
-    expect(cleaned[0].rootPackage.name).toBe('com.example');
+    expect(cleaned[0].rootPackages).toHaveLength(1);
+    expect(cleaned[0].rootPackages[0].name).toBe('com.example');
     expect(cleaned[0].classes).toHaveLength(1);
     expect(cleaned[0].classes[0].identifier).toBe('TestClass');
     expect(cleaned[0].entryPointFqn).toContain('TestClass');
 
     // Verify circular references are removed
-    expect(cleaned[0].rootPackage.classes[0]).not.toHaveProperty('parent');
+    expect(cleaned[0].rootPackages[0].classes[0]).not.toHaveProperty('parent');
   });
 
   it('should handle nested packages', () => {
@@ -83,10 +84,11 @@ describe('cleanLandscapeForSerialization', () => {
     const cleaned = cleanLandscapeForSerialization([app]);
 
     expect(cleaned).toHaveLength(1);
-    expect(cleaned[0].rootPackage.subpackages).toHaveLength(1);
-    expect(cleaned[0].rootPackage.subpackages[0].name).toBe('subpackage');
-    expect(cleaned[0].rootPackage.subpackages[0].classes).toHaveLength(1);
-    expect(cleaned[0].rootPackage.subpackages[0].classes[0].identifier).toBe('NestedClass');
+    expect(cleaned[0].rootPackages).toHaveLength(1);
+    expect(cleaned[0].rootPackages[0].subpackages).toHaveLength(1);
+    expect(cleaned[0].rootPackages[0].subpackages[0].name).toBe('subpackage');
+    expect(cleaned[0].rootPackages[0].subpackages[0].classes).toHaveLength(1);
+    expect(cleaned[0].rootPackages[0].subpackages[0].classes[0].identifier).toBe('NestedClass');
   });
 
   it('should handle multiple apps', () => {
@@ -177,17 +179,19 @@ describe('reconstructParentReferences', () => {
     const cleanedData = [
       {
         name: 'TestApp',
-        rootPackage: {
-          name: 'com.example',
-          classes: [
-            {
-              identifier: 'TestClass',
-              methods: [{ identifier: 'testMethod' }],
-              parentAppName: 'TestApp',
-            },
-          ],
-          subpackages: [],
-        },
+        rootPackages: [
+          {
+            name: 'com.example',
+            classes: [
+              {
+                identifier: 'TestClass',
+                methods: [{ identifier: 'testMethod' }],
+                parentAppName: 'TestApp',
+              },
+            ],
+            subpackages: [],
+          },
+        ],
         entryPointFqn: 'com.example.TestClass',
         classes: [
           {
@@ -226,23 +230,25 @@ describe('reconstructParentReferences', () => {
     const cleanedData = [
       {
         name: 'TestApp',
-        rootPackage: {
-          name: 'com.example',
-          classes: [],
-          subpackages: [
-            {
-              name: 'subpackage',
-              classes: [
-                {
-                  identifier: 'NestedClass',
-                  methods: [{ identifier: 'nestedMethod' }],
-                  parentAppName: 'TestApp',
-                },
-              ],
-              subpackages: [],
-            },
-          ],
-        },
+        rootPackages: [
+          {
+            name: 'com.example',
+            classes: [],
+            subpackages: [
+              {
+                name: 'subpackage',
+                classes: [
+                  {
+                    identifier: 'NestedClass',
+                    methods: [{ identifier: 'nestedMethod' }],
+                    parentAppName: 'TestApp',
+                  },
+                ],
+                subpackages: [],
+              },
+            ],
+          },
+        ],
         entryPointFqn: 'com.example.subpackage.NestedClass',
         classes: [
           {
@@ -271,22 +277,24 @@ describe('reconstructParentReferences', () => {
     const cleanedData = [
       {
         name: 'TestApp',
-        rootPackage: {
-          name: 'com.example',
-          classes: [
-            {
-              identifier: 'FirstClass',
-              methods: [],
-              parentAppName: 'TestApp',
-            },
-            {
-              identifier: 'SecondClass',
-              methods: [],
-              parentAppName: 'TestApp',
-            },
-          ],
-          subpackages: [],
-        },
+        rootPackages: [
+          {
+            name: 'com.example',
+            classes: [
+              {
+                identifier: 'FirstClass',
+                methods: [],
+                parentAppName: 'TestApp',
+              },
+              {
+                identifier: 'SecondClass',
+                methods: [],
+                parentAppName: 'TestApp',
+              },
+            ],
+            subpackages: [],
+          },
+        ],
         entryPointFqn: 'com.example.SecondClass',
         classes: [
           {
@@ -314,17 +322,19 @@ describe('reconstructParentReferences', () => {
     const cleanedData = [
       {
         name: 'TestApp',
-        rootPackage: {
-          name: 'com.example',
-          classes: [
-            {
-              identifier: 'FirstClass',
-              methods: [],
-              parentAppName: 'TestApp',
-            },
-          ],
-          subpackages: [],
-        },
+        rootPackages: [
+          {
+            name: 'com.example',
+            classes: [
+              {
+                identifier: 'FirstClass',
+                methods: [],
+                parentAppName: 'TestApp',
+              },
+            ],
+            subpackages: [],
+          },
+        ],
         entryPointFqn: 'com.example.NonExistentClass',
         classes: [
           {
@@ -347,11 +357,13 @@ describe('reconstructParentReferences', () => {
     const cleanedData = [
       {
         name: 'App1',
-        rootPackage: {
-          name: 'pkg1',
-          classes: [{ identifier: 'Class1', methods: [], parentAppName: 'App1' }],
-          subpackages: [],
-        },
+        rootPackages: [
+          {
+            name: 'pkg1',
+            classes: [{ identifier: 'Class1', methods: [], parentAppName: 'App1' }],
+            subpackages: [],
+          },
+        ],
         entryPointFqn: 'pkg1.Class1',
         classes: [{ identifier: 'Class1', methods: [], parentAppName: 'App1' }],
         packages: [],
@@ -359,11 +371,13 @@ describe('reconstructParentReferences', () => {
       },
       {
         name: 'App2',
-        rootPackage: {
-          name: 'pkg2',
-          classes: [{ identifier: 'Class2', methods: [], parentAppName: 'App2' }],
-          subpackages: [],
-        },
+        rootPackages: [
+          {
+            name: 'pkg2',
+            classes: [{ identifier: 'Class2', methods: [], parentAppName: 'App2' }],
+            subpackages: [],
+          },
+        ],
         entryPointFqn: 'pkg2.Class2',
         classes: [{ identifier: 'Class2', methods: [], parentAppName: 'App2' }],
         packages: [],

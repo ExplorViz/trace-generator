@@ -48,9 +48,9 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           allNodes.add(generateNodeId('cls', appIdx, cls.identifier.replace(/\./g, '_')));
         });
       };
-      if (app.rootPackage) {
-        collectNodes(app.rootPackage);
-      }
+      app.rootPackages.forEach((rootPkg) => {
+        collectNodes(rootPkg);
+      });
     });
     setExpandedNodes(allNodes);
   };
@@ -116,7 +116,11 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       }
       return null;
     };
-    return search(app.rootPackage);
+    for (const rootPkg of app.rootPackages) {
+      const found = search(rootPkg);
+      if (found) return found;
+    }
+    return null;
   };
 
   const findClass = (app: CleanedLandscape, className: string): CleanedClass | null => {
@@ -129,7 +133,11 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       }
       return null;
     };
-    return search(app.rootPackage);
+    for (const rootPkg of app.rootPackages) {
+      const found = search(rootPkg);
+      if (found) return found;
+    }
+    return null;
   };
 
   const updateLocalLandscape = (updated: CleanedLandscape[]) => {
@@ -166,7 +174,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         };
         updated[appIdx] = {
           ...app,
-          rootPackage: updatePkg(app.rootPackage),
+          rootPackages: app.rootPackages.map(updatePkg),
         };
         updateLocalLandscape(updated);
       }
@@ -187,7 +195,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         });
         updated[appIdx] = {
           ...app,
-          rootPackage: updateClass(app.rootPackage),
+          rootPackages: app.rootPackages.map(updateClass),
           classes: app.classes.map((c) => (c.identifier === className ? { ...c, identifier: newName.trim() } : c)),
         };
         updateLocalLandscape(updated);
@@ -218,7 +226,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           });
           updated[appIdx] = {
             ...app,
-            rootPackage: updateMethod(app.rootPackage),
+            rootPackages: app.rootPackages.map(updateMethod),
             classes: app.classes.map((c) =>
               c.identifier === className
                 ? {
@@ -234,12 +242,37 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     }
   };
 
+  const addRootPackage = (appIdx: number) => {
+    const packageName = prompt('Enter root package name:', 'newpackage');
+    if (packageName && packageName.trim() !== '') {
+      const updated = [...localLandscape];
+      const app = updated[appIdx];
+      const newPkg: CleanedPackage = {
+        name: packageName.trim(),
+        classes: [],
+        subpackages: [],
+      };
+      updated[appIdx] = {
+        ...app,
+        rootPackages: [...app.rootPackages, newPkg],
+        packages: [...app.packages, newPkg],
+      };
+      updateLocalLandscape(updated);
+    }
+  };
+
   const addPackage = (appIdx: number) => {
     const packageName = prompt('Enter package name:', 'newpackage');
     if (packageName && packageName.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
-      let targetPkg = app.rootPackage;
+      // Find the first root package to add subpackage to
+      if (app.rootPackages.length === 0) {
+        // If no root packages, create one first
+        addRootPackage(appIdx);
+        return;
+      }
+      let targetPkg = app.rootPackages[0];
       if (targetPkg.subpackages.length > 0) {
         targetPkg = targetPkg.subpackages[0];
         if (targetPkg.subpackages.length > 0) {
@@ -259,7 +292,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       };
       updated[appIdx] = {
         ...app,
-        rootPackage: updatePkg(app.rootPackage),
+        rootPackages: app.rootPackages.map(updatePkg),
         packages: [...app.packages, newPkg],
       };
       updateLocalLandscape(updated);
@@ -284,7 +317,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       };
       updated[appIdx] = {
         ...app,
-        rootPackage: updatePkg(app.rootPackage),
+        rootPackages: app.rootPackages.map(updatePkg),
         packages: [...app.packages, newPkg],
       };
       updateLocalLandscape(updated);
@@ -309,7 +342,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       };
       updated[appIdx] = {
         ...app,
-        rootPackage: updatePkg(app.rootPackage),
+        rootPackages: app.rootPackages.map(updatePkg),
         classes: [...app.classes, newClass],
       };
       updateLocalLandscape(updated);
@@ -329,7 +362,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       });
       updated[appIdx] = {
         ...app,
-        rootPackage: updateMethod(app.rootPackage),
+        rootPackages: app.rootPackages.map(updateMethod),
         classes: app.classes.map((c) =>
           c.identifier === className ? { ...c, methods: [...c.methods, newMethod] } : c
         ),
@@ -357,11 +390,9 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           subpackages: p.subpackages.map(removePkg).filter((p): p is CleanedPackage => p !== null),
         };
       };
-      const cleaned = removePkg(app.rootPackage);
-      if (cleaned) {
-        updated[appIdx] = { ...app, rootPackage: cleaned };
-        updateLocalLandscape(updated);
-      }
+      const cleanedRootPackages = app.rootPackages.map(removePkg).filter((p): p is CleanedPackage => p !== null);
+      updated[appIdx] = { ...app, rootPackages: cleanedRootPackages };
+      updateLocalLandscape(updated);
     }
   };
 
@@ -376,7 +407,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       });
       updated[appIdx] = {
         ...app,
-        rootPackage: removeClass(app.rootPackage),
+        rootPackages: app.rootPackages.map(removeClass),
         classes: app.classes.filter((c) => c.identifier !== className),
       };
       updateLocalLandscape(updated);
@@ -401,7 +432,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       });
       updated[appIdx] = {
         ...app,
-        rootPackage: removeMethod(app.rootPackage),
+        rootPackages: app.rootPackages.map(removeMethod),
         classes: app.classes.map((c) =>
           c.identifier === className
             ? {
@@ -442,7 +473,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       rootPkg3.classes.push(defaultClass);
       const newApp: CleanedLandscape = {
         name: appName.trim(),
-        rootPackage: rootPkg1,
+        rootPackages: [rootPkg1],
         entryPointFqn: `org.tracegenerator.${appName.trim()}.Main`,
         classes: [defaultClass],
         packages: [rootPkg2, rootPkg3],
@@ -461,6 +492,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     renamePackage,
     renameClass,
     renameMethod,
+    addRootPackage,
     addPackage,
     addSubPackage,
     addClass,
@@ -487,7 +519,8 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           localLandscape.map((app, appIdx) => {
             const appNodeId = generateNodeId('app', appIdx);
             const hasChildren =
-              app.rootPackage && (app.rootPackage.subpackages.length > 0 || app.rootPackage.classes.length > 0);
+              app.rootPackages.length > 0 &&
+              app.rootPackages.some((rootPkg) => rootPkg.subpackages.length > 0 || rootPkg.classes.length > 0);
             const isExpanded = expandedNodes.has(appNodeId);
 
             return (

@@ -5,6 +5,7 @@ import { PackageNode } from './PackageNode';
 import { TreeNode } from './TreeNode';
 import { TreeToggle } from './TreeToggle';
 import { AppNodeProps, NodeId } from './types';
+import { generateNodeId } from './utils';
 
 export function AppNode({
   app,
@@ -21,9 +22,9 @@ export function AppNode({
       icon: Plus,
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
-        handlers.addPackage(appIdx);
+        handlers.addRootPackage(appIdx);
       },
-      title: 'Add Package',
+      title: 'Add Root Package',
       variant: 'add' as const,
     },
     {
@@ -56,15 +57,18 @@ export function AppNode({
         </span>
         <ActionButtons buttons={actionButtons} />
       </TreeNode>
-      {hasChildren && isExpanded && app.rootPackage && (
+      {hasChildren && isExpanded && (
         <div className="ml-5">
-          <PackageNode
-            pkg={app.rootPackage}
-            appIdx={appIdx}
-            depth={0}
-            expandedNodes={expandedNodes}
-            handlers={handlers}
-          />
+          {app.rootPackages.map((rootPkg) => (
+            <PackageNode
+              key={generateNodeId('pkg', appIdx, rootPkg.name.replace(/\./g, '_'))}
+              pkg={rootPkg}
+              appIdx={appIdx}
+              depth={0}
+              expandedNodes={expandedNodes}
+              handlers={handlers}
+            />
+          ))}
         </div>
       )}
     </>

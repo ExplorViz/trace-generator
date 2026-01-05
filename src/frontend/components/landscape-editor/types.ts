@@ -10,6 +10,7 @@ export interface LandscapeEditorHandlers {
   renamePackage: (appIdx: number, packageName: string) => void;
   renameClass: (appIdx: number, className: string) => void;
   renameMethod: (appIdx: number, className: string, methodName: string) => void;
+  addRootPackage: (appIdx: number) => void;
   addPackage: (appIdx: number) => void;
   addSubPackage: (appIdx: number, parentPackageName: string) => void;
   addClass: (appIdx: number, packageName: string) => void;

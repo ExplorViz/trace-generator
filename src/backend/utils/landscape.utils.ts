@@ -12,7 +12,7 @@ export function cleanLandscapeForSerialization(landscape: Array<FakeApp>): Clean
     const entryPointFqn = getClassFqn(app.entryPoint);
     return {
       name: app.name,
-      rootPackage: cleanPackage(app.rootPackage),
+      rootPackages: [cleanPackage(app.rootPackage)],
       entryPointFqn,
       classes: app.classes.map(cleanClass),
       packages: app.packages.map(cleanPackage),
@@ -63,9 +63,33 @@ function findClassByFqn(app: FakeApp, fqn: string): FakeClass | null {
  */
 export function reconstructParentReferences(landscapeData: Array<any>): Array<FakeApp> {
   return landscapeData.map((appData: any) => {
+    const rootPackages: FakePackage[] = appData.rootPackages || [];
+
+    // For FakeApp, we still use a single rootPackage
+    // If there are multiple root packages, create a synthetic root that contains them all
+    // If there's only one, use it directly
+    // If there are none, create an empty synthetic root
+    let primaryRootPackage: FakePackage;
+    if (rootPackages.length === 0) {
+      primaryRootPackage = {
+        name: appData.name,
+        subpackages: [],
+        classes: [],
+      };
+    } else if (rootPackages.length === 1) {
+      primaryRootPackage = rootPackages[0];
+    } else {
+      // Multiple root packages: create a synthetic root containing them all
+      primaryRootPackage = {
+        name: appData.name,
+        subpackages: rootPackages,
+        classes: [],
+      };
+    }
+
     const app: FakeApp = {
       name: appData.name,
-      rootPackage: appData.rootPackage,
+      rootPackage: primaryRootPackage,
       entryPoint: null as any, // Will be set below
       classes: [],
       packages: [],
@@ -100,12 +124,13 @@ export function reconstructParentReferences(landscapeData: Array<any>): Array<Fa
       return packages;
     }
 
-    if (app.rootPackage) {
-      setParentForPackage(app.rootPackage);
+    // Process all root packages
+    rootPackages.forEach((rootPkg) => {
+      setParentForPackage(rootPkg);
       // Rebuild flat arrays from tree to ensure same object references
-      app.classes = collectClasses(app.rootPackage);
-      app.packages = collectPackages(app.rootPackage);
-    }
+      app.classes.push(...collectClasses(rootPkg));
+      app.packages.push(...collectPackages(rootPkg));
+    });
 
     // Reconstruct entryPoint reference from FQN
     if (appData.entryPointFqn) {

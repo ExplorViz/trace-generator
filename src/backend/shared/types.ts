@@ -109,7 +109,7 @@ export interface TraceGenerationRequest {
  */
 export interface CleanedLandscape {
   name: string;
-  rootPackage: CleanedPackage;
+  rootPackages: CleanedPackage[];
   entryPointFqn: string;
   classes: CleanedClass[];
   packages: CleanedPackage[];
