@@ -71,4 +71,7 @@ export interface LandscapeToolbarProps {
   onCollapseAll: () => void;
   onSaveLandscape: () => void;
   onLoadLandscape: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onLoadPreset?: (presetName: string) => void;
+  availablePresets?: Array<{ name: string; filename: string }>;
+  isLoadingPresets?: boolean;
 }

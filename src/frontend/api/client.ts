@@ -94,6 +94,29 @@ export class ApiClient {
       throw new Error(error.error || 'Failed to generate trace');
     }
   }
+
+  /**
+   * List available preset landscapes
+   */
+  async listPresetLandscapes(): Promise<Array<{ name: string; filename: string }>> {
+    const response = await fetch(`${API_BASE_URL}/landscape/presets`);
+    if (!response.ok) {
+      throw new Error(`Failed to list preset landscapes: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  /**
+   * Load a preset landscape
+   */
+  async loadPresetLandscape(presetName: string): Promise<CleanedLandscape[]> {
+    const response = await fetch(`${API_BASE_URL}/landscape/presets/${presetName}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || `Failed to load preset landscape: ${response.statusText}`);
+    }
+    return response.json();
+  }
 }
 
 export const apiClient = new ApiClient();

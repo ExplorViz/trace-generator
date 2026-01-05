@@ -10,5 +10,7 @@ const landscapeController = new LandscapeController(landscapeService);
 router.get('/', landscapeController.getLandscape);
 router.post('/', landscapeController.generateLandscape);
 router.put('/', landscapeController.updateLandscape);
+router.get('/presets', landscapeController.listPresets);
+router.get('/presets/:name', landscapeController.loadPreset);
 
 export { router as landscapeRoutes };

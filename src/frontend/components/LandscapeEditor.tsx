@@ -1,5 +1,6 @@
 import { CleanedClass, CleanedLandscape, CleanedPackage } from '../../backend/shared/types';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { apiClient } from '../api/client';
 import { AppNode } from './landscape-editor/AppNode';
 import { LandscapeToolbar } from './landscape-editor/LandscapeToolbar';
 import { LandscapeEditorHandlers, NodeId } from './landscape-editor/types';
@@ -15,6 +16,41 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
   const [expandedNodes, setExpandedNodes] = useState<Set<NodeId>>(new Set());
   const [localLandscape, setLocalLandscape] = useState<CleanedLandscape[]>(landscape);
   const isInternalUpdateRef = useRef(false);
+  const [availablePresets, setAvailablePresets] = useState<Array<{ name: string; filename: string }>>([]);
+  const [isLoadingPresets, setIsLoadingPresets] = useState(false);
+
+  useEffect(() => {
+    loadPresets();
+  }, []);
+
+  const loadPresets = async () => {
+    try {
+      setIsLoadingPresets(true);
+      const presets = await apiClient.listPresetLandscapes();
+      setAvailablePresets(presets);
+      if (presets.length === 0) {
+        console.log('No preset landscapes found');
+      } else {
+        console.log(`Loaded ${presets.length} preset landscape(s):`, presets.map((p) => p.name).join(', '));
+      }
+    } catch (err: any) {
+      console.error('Failed to load preset landscapes:', err.message);
+      setAvailablePresets([]);
+    } finally {
+      setIsLoadingPresets(false);
+    }
+  };
+
+  const loadPreset = async (presetName: string) => {
+    try {
+      const presetLandscape = await apiClient.loadPresetLandscape(presetName);
+      setLocalLandscape(presetLandscape);
+      onLandscapeUpdated(presetLandscape);
+      setExpandedNodes(new Set());
+    } catch (err: any) {
+      onError(err.message || 'Failed to load preset landscape');
+    }
+  };
 
   React.useEffect(() => {
     // Only update local landscape if the change came from outside (prop change)
@@ -922,6 +958,9 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         onCollapseAll={collapseAll}
         onSaveLandscape={saveLandscape}
         onLoadLandscape={loadLandscape}
+        onLoadPreset={loadPreset}
+        availablePresets={availablePresets}
+        isLoadingPresets={isLoadingPresets}
       />
       <div className="material-card p-4 max-h-[600px] overflow-y-auto font-mono text-sm bg-light">
         {localLandscape.length === 0 ? (
