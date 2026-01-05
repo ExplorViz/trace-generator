@@ -184,7 +184,20 @@ export function appTreeToString(app: FakeApp): string {
     return result.slice(0, -1); // Remove newline
   }
 
-  return packageTreeToString(app.rootPackage);
+  // Handle multiple root packages
+  if (app.rootPackages.length === 0) {
+    return '';
+  }
+  
+  let result = '';
+  app.rootPackages.forEach((rootPkg, idx) => {
+    if (idx > 0) {
+      result += '\n';
+    }
+    result += packageTreeToString(rootPkg);
+  });
+  
+  return result;
 }
 
 /**

@@ -25,7 +25,7 @@ describe('cleanLandscapeForSerialization', () => {
 
     const app: FakeApp = {
       name: 'TestApp',
-      rootPackage,
+      rootPackages: [rootPackage],
       entryPoint: testClass,
       classes: [testClass],
       packages: [rootPackage],
@@ -74,7 +74,7 @@ describe('cleanLandscapeForSerialization', () => {
 
     const app: FakeApp = {
       name: 'TestApp',
-      rootPackage,
+      rootPackages: [rootPackage],
       entryPoint: testClass,
       classes: [testClass],
       packages: [rootPackage, subPackage],
@@ -117,7 +117,7 @@ describe('cleanLandscapeForSerialization', () => {
 
     const app1: FakeApp = {
       name: 'App1',
-      rootPackage: pkg1,
+      rootPackages: [pkg1],
       entryPoint: class1,
       classes: [class1],
       packages: [pkg1],
@@ -126,7 +126,7 @@ describe('cleanLandscapeForSerialization', () => {
 
     const app2: FakeApp = {
       name: 'App2',
-      rootPackage: pkg2,
+      rootPackages: [pkg2],
       entryPoint: class2,
       classes: [class2],
       packages: [pkg2],
@@ -160,7 +160,7 @@ describe('cleanLandscapeForSerialization', () => {
 
     const app: FakeApp = {
       name: 'TestApp',
-      rootPackage,
+      rootPackages: [rootPackage],
       entryPoint: testClass,
       classes: [testClass],
       packages: [rootPackage],
@@ -221,7 +221,7 @@ describe('reconstructParentReferences', () => {
 
     expect(reconstructed).toHaveLength(1);
     expect(reconstructed[0].name).toBe('TestApp');
-    expect(reconstructed[0].rootPackage.classes[0].parent).toBe(reconstructed[0].rootPackage);
+    expect(reconstructed[0].rootPackages[0].classes[0].parent).toBe(reconstructed[0].rootPackages[0]);
     expect(reconstructed[0].entryPoint).toBeDefined();
     expect(reconstructed[0].entryPoint.identifier).toBe('TestClass');
   });
@@ -265,7 +265,7 @@ describe('reconstructParentReferences', () => {
     const reconstructed = reconstructParentReferences(cleanedData);
 
     expect(reconstructed).toHaveLength(1);
-    const rootPkg = reconstructed[0].rootPackage;
+    const rootPkg = reconstructed[0].rootPackages[0];
     const subPkg = rootPkg.subpackages[0];
 
     expect(subPkg.parent).toBe(rootPkg);

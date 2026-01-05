@@ -32,21 +32,25 @@ describe('Landscape Loading Integration', () => {
       expect(app.name).toBe('petclinic-demo');
     });
 
-    it('should have root package', () => {
+    it('should have root packages', () => {
       const app = petClinicLandscape[0];
-      expect(app.rootPackage).toBeDefined();
-      expect(app.rootPackage.name).toBe('org');
+      expect(app.rootPackages).toBeDefined();
+      expect(app.rootPackages.length).toBe(2);
+      expect(app.rootPackages.map((p: any) => p.name).sort()).toEqual(['com', 'org']);
     });
 
     it('should have nested subpackages', () => {
       const app = petClinicLandscape[0];
-      expect(app.rootPackage.subpackages.length).toBe(1);
-      expect(app.rootPackage.subpackages[0].name).toBe('springframework');
+      // Find the 'org' root package
+      const orgPackage = app.rootPackages.find((p: any) => p.name === 'org');
+      expect(orgPackage).toBeDefined();
+      expect(orgPackage!.subpackages.length).toBe(1);
+      expect(orgPackage!.subpackages[0].name).toBe('springframework');
     });
 
     it('should have correct number of classes', () => {
       const app = petClinicLandscape[0];
-      expect(app.classes.length).toBe(18);
+      expect(app.classes.length).toBe(19);
     });
 
     it('should have entry point', () => {
@@ -87,7 +91,10 @@ describe('Landscape Loading Integration', () => {
         });
       }
 
-      checkPackageParents(app.rootPackage);
+      // Check parent references for all root packages
+      app.rootPackages.forEach((rootPkg) => {
+        checkPackageParents(rootPkg);
+      });
     });
 
     it('should generate correct FQN for WelcomeController', () => {
@@ -121,7 +128,7 @@ describe('Landscape Loading Integration', () => {
       const app = petClinicLandscape[0];
       const fqn = 'org.springframework.samples.petclinic.system.WelcomeController';
 
-      // Find class by checking FQN for each class
+      // Find class by checking FQN for each class (synthetic root should be excluded)
       const found = app.classes.find((cls) => getClassFqn(cls) === fqn);
       expect(found).toBeDefined();
       expect(found!.identifier).toBe('WelcomeController');
@@ -129,9 +136,9 @@ describe('Landscape Loading Integration', () => {
   });
 
   describe('Data Structure Validation', () => {
-    it('should have exactly 18 classes', () => {
+    it('should have exactly 19 classes', () => {
       const app = petClinicLandscape[0];
-      expect(app.classes.length).toBe(18);
+      expect(app.classes.length).toBe(19);
     });
 
     it('should have correct class identifiers', () => {
@@ -155,6 +162,7 @@ describe('Landscape Loading Integration', () => {
         'BaseEntity',
         'Person',
         'OncePerRequestFilter',
+        'HikariProxyPreparedStatement',
       ];
 
       const actualIdentifiers = app.classes.map((cls) => cls.identifier).sort();
@@ -163,7 +171,7 @@ describe('Landscape Loading Integration', () => {
 
     it('should have correct total method count', () => {
       const app = petClinicLandscape[0];
-      expect(app.methods.length).toBe(74);
+      expect(app.methods.length).toBe(76);
     });
 
     it('should have all classes with non-empty identifiers', () => {
@@ -219,17 +227,17 @@ describe('Landscape Loading Integration', () => {
   describe('Statistics Calculation', () => {
     it('should calculate correct class count', () => {
       const app = petClinicLandscape[0];
-      expect(app.classes.length).toBe(18);
+      expect(app.classes.length).toBe(19);
     });
 
     it('should calculate correct method count', () => {
       const app = petClinicLandscape[0];
-      expect(app.methods.length).toBe(74);
+      expect(app.methods.length).toBe(76);
     });
 
     it('should calculate correct package count', () => {
       const app = petClinicLandscape[0];
-      expect(app.packages.length).toBe(10);
+      expect(app.packages.length).toBe(14);
     });
 
     it('should calculate correct max package depth', () => {
@@ -240,7 +248,10 @@ describe('Landscape Loading Integration', () => {
         return Math.max(...pkg.subpackages.map((subPkg: any) => getMaxDepth(subPkg, currentDepth + 1)));
       }
 
-      const maxDepth = getMaxDepth(app.rootPackage);
+      // Calculate max depth across all root packages
+      const maxDepths = app.rootPackages.map((rootPkg) => getMaxDepth(rootPkg));
+      const maxDepth = Math.max(...maxDepths);
+      // The max depth from the original packages is 5
       expect(maxDepth).toBe(5);
     });
   });

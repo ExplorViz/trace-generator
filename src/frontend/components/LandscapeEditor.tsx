@@ -140,6 +140,50 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     return null;
   };
 
+  /**
+   * Helper function to create or find a package hierarchy from a dot-separated package name.
+   * Returns the deepest package and all newly created packages.
+   */
+  const createPackageHierarchy = (
+    parentPackages: CleanedPackage[],
+    packageNameParts: string[]
+  ): { deepestPackage: CleanedPackage; allCreatedPackages: CleanedPackage[] } => {
+    const allCreatedPackages: CleanedPackage[] = [];
+    let currentPackages = parentPackages;
+    let deepestPackage: CleanedPackage | null = null;
+
+    for (let i = 0; i < packageNameParts.length; i++) {
+      const partName = packageNameParts[i];
+      let foundPackage = currentPackages.find((pkg) => pkg.name === partName);
+
+      if (!foundPackage) {
+        // Create new package
+        foundPackage = {
+          name: partName,
+          classes: [],
+          subpackages: [],
+        };
+        allCreatedPackages.push(foundPackage);
+        // Add to current packages array (either parentPackages for root, or deepestPackage.subpackages for nested)
+        if (deepestPackage) {
+          deepestPackage.subpackages.push(foundPackage);
+        } else {
+          // This is the first level - add to parentPackages array
+          parentPackages.push(foundPackage);
+        }
+      }
+
+      deepestPackage = foundPackage;
+      currentPackages = foundPackage.subpackages;
+    }
+
+    if (!deepestPackage) {
+      throw new Error('Failed to create package hierarchy');
+    }
+
+    return { deepestPackage, allCreatedPackages };
+  };
+
   const updateLocalLandscape = (updated: CleanedLandscape[]) => {
     isInternalUpdateRef.current = true;
     setLocalLandscape(updated);
@@ -247,15 +291,18 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     if (packageName && packageName.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
-      const newPkg: CleanedPackage = {
-        name: packageName.trim(),
-        classes: [],
-        subpackages: [],
-      };
+      const packageNameParts = packageName.trim().split('.');
+
+      // Create a copy of rootPackages to avoid mutating the original
+      const rootPackagesCopy = [...app.rootPackages];
+
+      // Create or find the package hierarchy
+      const { allCreatedPackages } = createPackageHierarchy(rootPackagesCopy, packageNameParts);
+
       updated[appIdx] = {
         ...app,
-        rootPackages: [...app.rootPackages, newPkg],
-        packages: [...app.packages, newPkg],
+        rootPackages: rootPackagesCopy,
+        packages: [...app.packages, ...allCreatedPackages],
       };
       updateLocalLandscape(updated);
     }
@@ -264,6 +311,30 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
   const addPackage = (appIdx: number) => {
     const packageName = prompt('Enter package name:', 'newpackage');
     if (packageName && packageName.trim() !== '') {
+      const trimmedName = packageName.trim();
+
+      // If the package name contains dots, treat it as a hierarchy and add as root package
+      if (trimmedName.includes('.')) {
+        const updated = [...localLandscape];
+        const app = updated[appIdx];
+        const packageNameParts = trimmedName.split('.');
+
+        // Create a copy of rootPackages to avoid mutating the original
+        const rootPackagesCopy = [...app.rootPackages];
+
+        // Create or find the package hierarchy
+        const { allCreatedPackages } = createPackageHierarchy(rootPackagesCopy, packageNameParts);
+
+        updated[appIdx] = {
+          ...app,
+          rootPackages: rootPackagesCopy,
+          packages: [...app.packages, ...allCreatedPackages],
+        };
+        updateLocalLandscape(updated);
+        return;
+      }
+
+      // For non-hierarchical names, use the existing behavior
       const updated = [...localLandscape];
       const app = updated[appIdx];
       // Find the first root package to add subpackage to
@@ -280,7 +351,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         }
       }
       const newPkg: CleanedPackage = {
-        name: packageName.trim(),
+        name: trimmedName,
         classes: [],
         subpackages: [],
       };
@@ -304,21 +375,44 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     if (packageName && packageName.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
-      const newPkg: CleanedPackage = {
-        name: packageName.trim(),
-        classes: [],
-        subpackages: [],
+      const packageNameParts = packageName.trim().split('.');
+
+      // Find the parent package in the updated landscape
+      const findPkgInUpdated = (p: CleanedPackage): CleanedPackage | null => {
+        if (p.name === parentPackageName) return p;
+        for (const subPkg of p.subpackages) {
+          const found = findPkgInUpdated(subPkg);
+          if (found) return found;
+        }
+        return null;
       };
+
+      let parentPkg: CleanedPackage | null = null;
+      for (const rootPkg of app.rootPackages) {
+        parentPkg = findPkgInUpdated(rootPkg);
+        if (parentPkg) break;
+      }
+
+      if (!parentPkg) {
+        onError(`Parent package "${parentPackageName}" not found`);
+        return;
+      }
+
+      // Create or find the package hierarchy under the parent
+      const { allCreatedPackages } = createPackageHierarchy(parentPkg.subpackages, packageNameParts);
+
+      // Update the parent package in the tree to ensure React detects the change
       const updatePkg = (p: CleanedPackage): CleanedPackage => {
         if (p.name === parentPackageName) {
-          return { ...p, subpackages: [...p.subpackages, newPkg] };
+          return { ...p, subpackages: [...parentPkg!.subpackages] };
         }
         return { ...p, subpackages: p.subpackages.map(updatePkg) };
       };
+
       updated[appIdx] = {
         ...app,
         rootPackages: app.rootPackages.map(updatePkg),
-        packages: [...app.packages, newPkg],
+        packages: [...app.packages, ...allCreatedPackages],
       };
       updateLocalLandscape(updated);
     }

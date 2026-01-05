@@ -30,7 +30,7 @@ vi.mock('../../../src/backend/generation', () => ({
 
     const mockApp: FakeApp = {
       name: 'MockApp',
-      rootPackage,
+      rootPackages: [rootPackage],
       entryPoint: mockClass,
       classes: [mockClass],
       packages: [rootPackage],
@@ -305,17 +305,19 @@ describe('LandscapeService', () => {
       const landscapeData = [
         {
           name: 'TestApp',
-          rootPackage: {
-            name: 'com.test',
-            classes: [
-              {
-                identifier: 'TestClass',
-                methods: [{ identifier: 'testMethod' }],
-                parentAppName: 'TestApp',
-              },
-            ],
-            subpackages: [],
-          },
+          rootPackages: [
+            {
+              name: 'com.test',
+              classes: [
+                {
+                  identifier: 'TestClass',
+                  methods: [{ identifier: 'testMethod' }],
+                  parentAppName: 'TestApp',
+                },
+              ],
+              subpackages: [],
+            },
+          ],
           entryPointFqn: 'com.test.TestClass',
           classes: [
             {
@@ -352,11 +354,13 @@ describe('LandscapeService', () => {
       const landscapeData = [
         {
           name: 'UpdatedApp',
-          rootPackage: {
-            name: 'com.updated',
-            classes: [],
-            subpackages: [],
-          },
+          rootPackages: [
+            {
+              name: 'com.updated',
+              classes: [],
+              subpackages: [],
+            },
+          ],
           entryPointFqn: 'com.updated.UpdatedClass',
           classes: [],
           packages: [],

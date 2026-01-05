@@ -388,6 +388,42 @@
             ]
           }
         ]
+      },
+      {
+        "name": "com",
+        "classes": [],
+        "subpackages": [
+          {
+            "name": "zaxxer",
+            "classes": [],
+            "subpackages": [
+              {
+                "name": "hikari",
+                "classes": [],
+                "subpackages": [
+                  {
+                    "name": "pool",
+                    "classes": [
+                      {
+                        "identifier": "HikariProxyPreparedStatement",
+                        "methods": [
+                          {
+                            "identifier": "executeUpdate"
+                          },
+                          {
+                            "identifier": "executeQuery"
+                          }
+                        ],
+                        "parentAppName": "petclinic-demo"
+                      }
+                    ],
+                    "subpackages": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ],
     "entryPointFqn": "org.tracegenerator.petclinic-demo.Main",
@@ -718,6 +754,18 @@
           }
         ],
         "parentAppName": "petclinic-demo"
+      },
+      {
+        "identifier": "HikariProxyPreparedStatement",
+        "methods": [
+          {
+            "identifier": "executeUpdate"
+          },
+          {
+            "identifier": "executeQuery"
+          }
+        ],
+        "parentAppName": "petclinic-demo"
       }
     ],
     "packages": [
@@ -799,6 +847,62 @@
       },
       {
         "name": "com",
+        "classes": [],
+        "subpackages": []
+      },
+      {
+        "name": "com",
+        "classes": [],
+        "subpackages": [
+          {
+            "name": "zaxxer",
+            "classes": [],
+            "subpackages": [
+              {
+                "name": "hikari",
+                "classes": [],
+                "subpackages": [
+                  {
+                    "name": "pool",
+                    "classes": [],
+                    "subpackages": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "zaxxer",
+        "classes": [],
+        "subpackages": [
+          {
+            "name": "hikari",
+            "classes": [],
+            "subpackages": [
+              {
+                "name": "pool",
+                "classes": [],
+                "subpackages": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "hikari",
+        "classes": [],
+        "subpackages": [
+          {
+            "name": "pool",
+            "classes": [],
+            "subpackages": []
+          }
+        ]
+      },
+      {
+        "name": "pool",
         "classes": [],
         "subpackages": []
       }
@@ -1025,6 +1129,12 @@
       },
       {
         "identifier": "doFilter"
+      },
+      {
+        "identifier": "executeUpdate"
+      },
+      {
+        "identifier": "executeQuery"
       }
     ]
   }

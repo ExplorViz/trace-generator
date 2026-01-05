@@ -23,7 +23,7 @@ export interface FakePackage {
 
 export interface FakeApp {
   name: string;
-  rootPackage: FakePackage;
+  rootPackages: Array<FakePackage>;
   entryPoint: FakeClass;
   classes: Array<FakeClass>;
   packages: Array<FakePackage>;

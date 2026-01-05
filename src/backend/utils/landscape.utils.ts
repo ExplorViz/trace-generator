@@ -12,7 +12,7 @@ export function cleanLandscapeForSerialization(landscape: Array<FakeApp>): Clean
     const entryPointFqn = getClassFqn(app.entryPoint);
     return {
       name: app.name,
-      rootPackages: [cleanPackage(app.rootPackage)],
+      rootPackages: app.rootPackages.map(cleanPackage),
       entryPointFqn,
       classes: app.classes.map(cleanClass),
       packages: app.packages.map(cleanPackage),
@@ -38,58 +38,15 @@ function cleanClass(cls: FakeClass): CleanedClass {
 }
 
 /**
- * Find class by FQN in an app
- */
-function findClassByFqn(app: FakeApp, fqn: string): FakeClass | null {
-  function searchInPackage(pkg: FakePackage): FakeClass | null {
-    for (const cls of pkg.classes) {
-      const clsFqn = getClassFqn(cls);
-      if (clsFqn === fqn) {
-        return cls;
-      }
-    }
-    for (const subPkg of pkg.subpackages) {
-      const found = searchInPackage(subPkg);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  return searchInPackage(app.rootPackage);
-}
-
-/**
  * Reconstruct parent references after deserialization
  */
 export function reconstructParentReferences(landscapeData: Array<any>): Array<FakeApp> {
   return landscapeData.map((appData: any) => {
     const rootPackages: FakePackage[] = appData.rootPackages || [];
 
-    // For FakeApp, we still use a single rootPackage
-    // If there are multiple root packages, create a synthetic root that contains them all
-    // If there's only one, use it directly
-    // If there are none, create an empty synthetic root
-    let primaryRootPackage: FakePackage;
-    if (rootPackages.length === 0) {
-      primaryRootPackage = {
-        name: appData.name,
-        subpackages: [],
-        classes: [],
-      };
-    } else if (rootPackages.length === 1) {
-      primaryRootPackage = rootPackages[0];
-    } else {
-      // Multiple root packages: create a synthetic root containing them all
-      primaryRootPackage = {
-        name: appData.name,
-        subpackages: rootPackages,
-        classes: [],
-      };
-    }
-
     const app: FakeApp = {
       name: appData.name,
-      rootPackage: primaryRootPackage,
+      rootPackages: rootPackages,
       entryPoint: null as any, // Will be set below
       classes: [],
       packages: [],
@@ -134,6 +91,29 @@ export function reconstructParentReferences(landscapeData: Array<any>): Array<Fa
 
     // Reconstruct entryPoint reference from FQN
     if (appData.entryPointFqn) {
+      function findClassByFqn(app: FakeApp, fqn: string): FakeClass | null {
+        function searchInPackage(pkg: FakePackage): FakeClass | null {
+          for (const cls of pkg.classes) {
+            const clsFqn = getClassFqn(cls);
+            if (clsFqn === fqn) {
+              return cls;
+            }
+          }
+          for (const subPkg of pkg.subpackages) {
+            const found = searchInPackage(subPkg);
+            if (found) return found;
+          }
+          return null;
+        }
+
+        // Search through all root packages
+        for (const rootPkg of app.rootPackages) {
+          const found = searchInPackage(rootPkg);
+          if (found) return found;
+        }
+        return null;
+      }
+
       const entryPoint = findClassByFqn(app, appData.entryPointFqn);
       if (entryPoint) {
         app.entryPoint = entryPoint;

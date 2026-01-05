@@ -29,10 +29,11 @@ function isClass(codeUnit: FakeClass | FakePackage): codeUnit is FakeClass {
 
 export function getClassFqn(fakeClass: FakeClass): string {
   let fqn: string = fakeClass.identifier;
-  let obj: FakeClass | FakePackage = fakeClass;
-  while (obj.parent !== undefined) {
-    fqn = obj.parent.name + '.' + fqn;
-    obj = obj.parent;
+  let obj: FakeClass | FakePackage | undefined = fakeClass;
+  while (obj && obj.parent !== undefined) {
+    const parent: FakePackage = obj.parent;
+    fqn = parent.name + '.' + fqn;
+    obj = parent;
   }
   return fqn;
 }
@@ -262,7 +263,7 @@ function generateFakeApp(params: AppGenerationParameters, nameGenerator: NameGen
 
   const fakeApp: FakeApp = {
     name: appName,
-    rootPackage: rootPackage1,
+    rootPackages: [rootPackage1],
     entryPoint: entryPoint,
     classes: classes,
     packages: packages,
