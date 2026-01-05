@@ -4,6 +4,15 @@ import { ActionButtons } from './ActionButtons';
 import { MethodNodeProps } from './types';
 
 export function MethodNode({ method, appIdx, className, handlers }: MethodNodeProps) {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData(
+      'text/plain',
+      JSON.stringify({ type: 'method', appIdx, className, methodName: method.identifier })
+    );
+    e.stopPropagation();
+  };
+
   const actionButtons = [
     {
       icon: Pencil,
@@ -26,7 +35,11 @@ export function MethodNode({ method, appIdx, className, handlers }: MethodNodePr
   ];
 
   return (
-    <div className="tree-node method group">
+    <div
+      className="tree-node method group cursor-move"
+      draggable={true}
+      onDragStart={handleDragStart}
+    >
       <span className="text-muted text-sm flex items-center gap-2 ml-8">
         <SquareFunction className="w-4 h-4" />
         {method.identifier}

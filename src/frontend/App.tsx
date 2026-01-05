@@ -44,6 +44,13 @@ function App() {
     setError(null);
   };
 
+  const handleError = (error: string) => {
+    setError(error);
+    setSuccess(null);
+    // Auto-dismiss error after 5 seconds
+    setTimeout(() => setError(null), 5000);
+  };
+
   return (
     <div className="min-h-screen text-primary">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -56,8 +63,12 @@ function App() {
           </div>
         )}
 
-        {/* Error message - inline at top of content */}
-        {error && <div className="mb-6 p-4 bg-danger-light text-danger rounded-lg border border-danger">{error}</div>}
+        {/* Error toast notification in bottom right corner */}
+        {error && (
+          <div className="fixed bottom-8 right-4 z-40 p-4 bg-danger-light text-danger rounded-lg border border-danger shadow-lg max-w-sm transition-all duration-300 ease-in-out">
+            {error}
+          </div>
+        )}
 
         <header className="mb-8 text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-primary mb-4">Trace Generator</h1>
@@ -78,7 +89,7 @@ function App() {
             </p>
             <LandscapeGenerationForm
               onLandscapeGenerated={handleLandscapeGenerated}
-              onError={setError}
+              onError={handleError}
               resetButtonRef={landscapeFormResetRef}
             />
           </div>
@@ -90,10 +101,14 @@ function App() {
             <div className="material-card p-6 md:p-8">
               <h2 className="text-3xl font-bold text-primary mb-3">Landscape Editor</h2>
               <p className="text-muted mb-6">
-                Edit the landscape structure. You can add, rename, or delete entities (applications, packages, classes,
-                and methods).
+                Edit the landscape structure. You can add, rename, or delete entities. Drag and drop packages, classes,
+                and functions.
               </p>
-              <LandscapeEditor landscape={landscape} onLandscapeUpdated={handleLandscapeUpdated} onError={setError} />
+              <LandscapeEditor
+                landscape={landscape}
+                onLandscapeUpdated={handleLandscapeUpdated}
+                onError={handleError}
+              />
             </div>
           </section>
         )}
@@ -108,10 +123,7 @@ function App() {
               <h2 className="text-3xl font-bold text-primary mb-3">Step 2: Generate Traces</h2>
               <p className="text-muted mb-6">Generate random traces based on the current landscape.</p>
               <TraceGenerationForm
-                onError={(err) => {
-                  setError(err);
-                  setSuccess(null);
-                }}
+                onError={handleError}
                 onSuccess={(msg) => {
                   setSuccess(msg);
                   setError(null);

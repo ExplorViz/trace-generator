@@ -1,5 +1,5 @@
 import { AppWindow, Pencil, Plus, Trash2 } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 import { ActionButtons } from './ActionButtons';
 import { PackageNode } from './PackageNode';
 import { TreeNode } from './TreeNode';
@@ -16,6 +16,41 @@ export function AppNode({
   expandedNodes,
 }: AppNodeProps & { expandedNodes: Set<NodeId> }) {
   const appNodeId = `app_${appIdx}`;
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    // Check if the drag contains text/plain data (our drag data format)
+    // We'll validate the appIdx in the drop handler
+    if (e.dataTransfer.types.includes('text/plain')) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const data = e.dataTransfer.getData('text/plain');
+    if (!data) return;
+
+    try {
+      const dragData = JSON.parse(data);
+      if (dragData.type === 'package') {
+        handlers.movePackage(dragData.appIdx, dragData.packageName, appIdx, null);
+      }
+    } catch {
+      handlers.onError('Failed to process drop operation');
+    }
+  };
 
   const actionButtons = [
     {
@@ -49,9 +84,18 @@ export function AppNode({
 
   return (
     <>
-      <TreeNode nodeId={appNodeId} onToggle={handlers.toggleNode}>
+      <TreeNode
+        nodeId={appNodeId}
+        onToggle={handlers.toggleNode}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        isDropTarget={isDragOver}
+      >
         <TreeToggle hasChildren={hasChildren} isExpanded={isExpanded} />
-        <span className="entity-name font-bold text-primary-color text-base flex items-center gap-2">
+        <span
+          className={`entity-name font-bold text-primary-color text-base flex items-center gap-2 ${isDragOver ? 'opacity-50' : ''}`}
+        >
           <AppWindow className="w-5 h-5" />
           {app.name}
         </span>

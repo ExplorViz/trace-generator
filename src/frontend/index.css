@@ -493,3 +493,19 @@ input[type='range']::-moz-range-thumb:hover {
 .tree-node:hover .action-buttons {
   opacity: 1;
 }
+
+/* Drag and drop styles */
+.tree-node.drag-over,
+.tree-node[class*='drag-over'] {
+  background-color: var(--primary-light);
+  border: 2px dashed var(--primary);
+  border-radius: 0.5rem;
+}
+
+.tree-node.cursor-move {
+  cursor: move;
+}
+
+.tree-node.cursor-move:active {
+  opacity: 0.6;
+}

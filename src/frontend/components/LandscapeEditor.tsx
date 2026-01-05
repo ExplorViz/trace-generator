@@ -541,6 +541,320 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     }
   };
 
+  const movePackage = (
+    sourceAppIdx: number,
+    sourcePackageName: string,
+    targetAppIdx: number,
+    targetPackageName: string | null
+  ) => {
+    const updated = [...localLandscape];
+    const sourceApp = updated[sourceAppIdx];
+    const targetApp = updated[targetAppIdx];
+
+    if (!sourceApp || !targetApp) {
+      onError('Invalid app index');
+      return;
+    }
+
+    let sourcePackage: CleanedPackage | null = null;
+    let sourceParent: CleanedPackage | null = null;
+    let sourceParentArray: CleanedPackage[] | null = null;
+
+    // Find source package and its parent
+    const findSource = (pkg: CleanedPackage, parent: CleanedPackage | null, parentArray: CleanedPackage[]): boolean => {
+      if (pkg.name === sourcePackageName) {
+        sourcePackage = pkg;
+        sourceParent = parent;
+        sourceParentArray = parentArray;
+        return true;
+      }
+      for (let i = 0; i < pkg.subpackages.length; i++) {
+        if (findSource(pkg.subpackages[i], pkg, pkg.subpackages)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    for (let i = 0; i < sourceApp.rootPackages.length; i++) {
+      if (findSource(sourceApp.rootPackages[i], null, sourceApp.rootPackages)) {
+        break;
+      }
+    }
+
+    if (!sourcePackage || !sourceParentArray) {
+      onError(`Source package "${sourcePackageName}" not found`);
+      return;
+    }
+
+    // Store references after null check for proper type narrowing
+    const packageToMove = sourcePackage;
+    const parentArray: CleanedPackage[] = sourceParentArray;
+
+    // Prevent moving package into itself or its descendants (only if same app)
+    if (sourceAppIdx === targetAppIdx && targetPackageName) {
+      const targetPkg = findPackage(targetApp, targetPackageName);
+      if (targetPkg) {
+        // Check if targetPkg is the source package itself
+        if (targetPkg === packageToMove) {
+          onError('Cannot move package into itself');
+          return;
+        }
+        // Check if targetPkg is a descendant (subpackage) of the source package
+        // We need to traverse the source package's subpackages to see if targetPkg is found
+        const isDescendantOfSource = (pkg: CleanedPackage): boolean => {
+          if (pkg === targetPkg) return true;
+          return pkg.subpackages.some(isDescendantOfSource);
+        };
+        if (isDescendantOfSource(packageToMove)) {
+          onError('Cannot move package into its own subpackage');
+          return;
+        }
+      }
+    }
+
+    // Remove from source
+    const sourceIndex = parentArray.findIndex((p: CleanedPackage) => p.name === sourcePackageName);
+    if (sourceIndex === -1) {
+      onError(`Source package "${sourcePackageName}" not found in parent`);
+      return;
+    }
+    parentArray.splice(sourceIndex, 1);
+
+    // Add to target
+    if (targetPackageName === null) {
+      // Move to root of target app
+      targetApp.rootPackages.push(packageToMove);
+    } else {
+      const targetPkg = findPackage(targetApp, targetPackageName);
+      if (!targetPkg) {
+        onError(`Target package "${targetPackageName}" not found`);
+        return;
+      }
+      targetPkg.subpackages.push(packageToMove);
+    }
+
+    // Update the tree structure for source app
+    const updateSourceTree = (p: CleanedPackage): CleanedPackage => {
+      if (sourceParent && p.name === sourceParent.name) {
+        return { ...p, subpackages: [...p.subpackages] };
+      }
+      return { ...p, subpackages: p.subpackages.map(updateSourceTree) };
+    };
+
+    updated[sourceAppIdx] = {
+      ...sourceApp,
+      rootPackages: sourceApp.rootPackages.map(updateSourceTree),
+    };
+
+    // Update the tree structure for target app
+    if (targetPackageName) {
+      const updateTargetTree = (p: CleanedPackage): CleanedPackage => {
+        if (p.name === targetPackageName) {
+          return { ...p, subpackages: [...p.subpackages] };
+        }
+        return { ...p, subpackages: p.subpackages.map(updateTargetTree) };
+      };
+      updated[targetAppIdx] = {
+        ...targetApp,
+        rootPackages: targetApp.rootPackages.map(updateTargetTree),
+      };
+    }
+
+    updateLocalLandscape(updated);
+  };
+
+  const moveClass = (sourceAppIdx: number, className: string, targetAppIdx: number, targetPackageName: string) => {
+    const updated = [...localLandscape];
+    const sourceApp = updated[sourceAppIdx];
+    const targetApp = updated[targetAppIdx];
+
+    if (!sourceApp || !targetApp) {
+      onError('Invalid app index');
+      return;
+    }
+
+    const sourceClass = findClass(sourceApp, className);
+    if (!sourceClass) {
+      onError(`Class "${className}" not found`);
+      return;
+    }
+
+    const targetPkg = findPackage(targetApp, targetPackageName);
+    if (!targetPkg) {
+      onError(`Target package "${targetPackageName}" not found`);
+      return;
+    }
+
+    // Update parentAppName if moving to different app
+    const updatedClass =
+      sourceAppIdx !== targetAppIdx ? { ...sourceClass, parentAppName: targetApp.name } : sourceClass;
+
+    // Remove from source package and add to target package
+    const removeClass = (p: CleanedPackage): CleanedPackage => ({
+      ...p,
+      classes: p.classes.filter((c) => c.identifier !== className),
+      subpackages: p.subpackages.map(removeClass),
+    });
+
+    // Update target app tree structure - add class to target package
+    const updateTargetTree = (p: CleanedPackage): CleanedPackage => {
+      if (p.name === targetPackageName) {
+        return { ...p, classes: [...p.classes, updatedClass] };
+      }
+      return { ...p, subpackages: p.subpackages.map(updateTargetTree) };
+    };
+
+    if (sourceAppIdx === targetAppIdx) {
+      // Same app: combine both operations
+      const combinedUpdate = (p: CleanedPackage): CleanedPackage => {
+        // First remove the class
+        let updated = {
+          ...p,
+          classes: p.classes.filter((c) => c.identifier !== className),
+          subpackages: p.subpackages.map(combinedUpdate),
+        };
+        // Then add to target if this is the target package
+        if (p.name === targetPackageName) {
+          updated = { ...updated, classes: [...updated.classes, updatedClass] };
+        }
+        return updated;
+      };
+
+      updated[sourceAppIdx] = {
+        ...sourceApp,
+        rootPackages: sourceApp.rootPackages.map(combinedUpdate),
+        classes: sourceApp.classes.filter((c) => c.identifier !== className),
+      };
+    } else {
+      // Different apps: update separately
+      updated[sourceAppIdx] = {
+        ...sourceApp,
+        rootPackages: sourceApp.rootPackages.map(removeClass),
+        classes: sourceApp.classes.filter((c) => c.identifier !== className),
+      };
+
+      updated[targetAppIdx] = {
+        ...targetApp,
+        rootPackages: targetApp.rootPackages.map(updateTargetTree),
+        classes: [...targetApp.classes, updatedClass],
+      };
+    }
+
+    updateLocalLandscape(updated);
+  };
+
+  const moveMethod = (
+    sourceAppIdx: number,
+    className: string,
+    methodName: string,
+    targetAppIdx: number,
+    targetClassName: string
+  ) => {
+    const updated = [...localLandscape];
+    const sourceApp = updated[sourceAppIdx];
+    const targetApp = updated[targetAppIdx];
+
+    if (!sourceApp || !targetApp) {
+      onError('Invalid app index');
+      return;
+    }
+
+    const sourceClass = findClass(sourceApp, className);
+    const targetClass = findClass(targetApp, targetClassName);
+
+    if (!sourceClass) {
+      onError(`Source class "${className}" not found`);
+      return;
+    }
+    if (!targetClass) {
+      onError(`Target class "${targetClassName}" not found`);
+      return;
+    }
+
+    const method = sourceClass.methods.find((m) => m.identifier === methodName);
+    if (!method) {
+      onError(`Method "${methodName}" not found in class "${className}"`);
+      return;
+    }
+
+    // Remove from source class
+    const removeMethod = (p: CleanedPackage): CleanedPackage => ({
+      ...p,
+      classes: p.classes.map((c) =>
+        c.identifier === className
+          ? {
+              ...c,
+              methods: c.methods.filter((m) => m.identifier !== methodName),
+            }
+          : c
+      ),
+      subpackages: p.subpackages.map(removeMethod),
+    });
+
+    // Add to target class
+    const addMethod = (p: CleanedPackage): CleanedPackage => ({
+      ...p,
+      classes: p.classes.map((c) =>
+        c.identifier === targetClassName
+          ? {
+              ...c,
+              methods: [...c.methods, method],
+            }
+          : c
+      ),
+      subpackages: p.subpackages.map(addMethod),
+    });
+
+    if (sourceAppIdx === targetAppIdx) {
+      // Same app: combine both operations
+      updated[sourceAppIdx] = {
+        ...sourceApp,
+        rootPackages: sourceApp.rootPackages.map((pkg) => {
+          const afterRemove = removeMethod(pkg);
+          return addMethod(afterRemove);
+        }),
+        classes: sourceApp.classes.map((c) => {
+          if (c.identifier === className) {
+            return { ...c, methods: c.methods.filter((m) => m.identifier !== methodName) };
+          }
+          if (c.identifier === targetClassName) {
+            return { ...c, methods: [...c.methods, method] };
+          }
+          return c;
+        }),
+        methods: sourceApp.methods.map((m) => (m.identifier === methodName ? method : m)),
+      };
+    } else {
+      // Different apps: update separately
+      updated[sourceAppIdx] = {
+        ...sourceApp,
+        rootPackages: sourceApp.rootPackages.map(removeMethod),
+        classes: sourceApp.classes.map((c) => {
+          if (c.identifier === className) {
+            return { ...c, methods: c.methods.filter((m) => m.identifier !== methodName) };
+          }
+          return c;
+        }),
+        methods: sourceApp.methods.filter((m) => m.identifier !== methodName),
+      };
+
+      updated[targetAppIdx] = {
+        ...targetApp,
+        rootPackages: targetApp.rootPackages.map(addMethod),
+        classes: targetApp.classes.map((c) => {
+          if (c.identifier === targetClassName) {
+            return { ...c, methods: [...c.methods, method] };
+          }
+          return c;
+        }),
+        methods: [...targetApp.methods, method],
+      };
+    }
+
+    updateLocalLandscape(updated);
+  };
+
   const addApp = () => {
     const appName = prompt('Enter app name:', 'newapp');
     if (appName && appName.trim() !== '') {
@@ -595,6 +909,9 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     deletePackage,
     deleteClass,
     deleteMethod,
+    movePackage,
+    moveClass,
+    moveMethod,
   };
 
   return (

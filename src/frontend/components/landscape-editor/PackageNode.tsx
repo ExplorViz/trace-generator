@@ -1,5 +1,5 @@
 import { FileCode, Package, Pencil, Plus, Trash2 } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 import { ActionButtons } from './ActionButtons';
 import { ClassNode } from './ClassNode';
 import { TreeNode } from './TreeNode';
@@ -11,6 +11,49 @@ export function PackageNode({ pkg, appIdx, depth, expandedNodes, handlers }: Pac
   const pkgNodeId = generateNodeId('pkg', appIdx, pkg.name.replace(/\./g, '_'));
   const hasChildren = pkg.subpackages.length > 0 || pkg.classes.length > 0;
   const isExpanded = expandedNodes.has(pkgNodeId);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'package', appIdx, packageName: pkg.name }));
+    e.stopPropagation();
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    // Check if the drag contains text/plain data (our drag data format)
+    if (e.dataTransfer.types.includes('text/plain')) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const data = e.dataTransfer.getData('text/plain');
+    if (!data) return;
+
+    try {
+      const dragData = JSON.parse(data);
+      if (dragData.type === 'package' && dragData.packageName !== pkg.name) {
+        handlers.movePackage(dragData.appIdx, dragData.packageName, appIdx, pkg.name);
+      } else if (dragData.type === 'class') {
+        handlers.moveClass(dragData.appIdx, dragData.className, appIdx, pkg.name);
+      }
+    } catch (err) {
+      console.error('Error processing drop data:', err);
+      handlers.onError('Failed to process drop operation');
+    }
+  };
 
   const actionButtons = [
     {
@@ -53,9 +96,18 @@ export function PackageNode({ pkg, appIdx, depth, expandedNodes, handlers }: Pac
 
   return (
     <>
-      <TreeNode nodeId={pkgNodeId} onToggle={handlers.toggleNode}>
+      <TreeNode
+        nodeId={pkgNodeId}
+        onToggle={handlers.toggleNode}
+        draggable={true}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        isDropTarget={isDragOver}
+      >
         <TreeToggle hasChildren={hasChildren} isExpanded={isExpanded} />
-        <span className="entity-name text-success flex items-center gap-2">
+        <span className={`entity-name text-success flex items-center gap-2 ${isDragOver ? 'opacity-50' : ''}`}>
           <Package className="w-5 h-5" />
           {pkg.name}
         </span>

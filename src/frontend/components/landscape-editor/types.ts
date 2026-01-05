@@ -19,6 +19,20 @@ export interface LandscapeEditorHandlers {
   deletePackage: (appIdx: number, packageName: string) => void;
   deleteClass: (appIdx: number, className: string) => void;
   deleteMethod: (appIdx: number, className: string, methodName: string) => void;
+  movePackage: (
+    sourceAppIdx: number,
+    sourcePackageName: string,
+    targetAppIdx: number,
+    targetPackageName: string | null
+  ) => void;
+  moveClass: (sourceAppIdx: number, className: string, targetAppIdx: number, targetPackageName: string) => void;
+  moveMethod: (
+    sourceAppIdx: number,
+    className: string,
+    methodName: string,
+    targetAppIdx: number,
+    targetClassName: string
+  ) => void;
 }
 
 export interface AppNodeProps {
