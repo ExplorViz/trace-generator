@@ -38,7 +38,7 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
 
   const createMockClass = (
     identifier: string,
-    methods: { identifier: string }[] = [],
+    methods: string[] = [],
     parentAppName: string = 'TestApp'
   ): CleanedClass => {
     return { identifier, methods, parentAppName };
@@ -401,7 +401,7 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
     }
 
     const sourceClassWithMethods: CleanedClass = sourceClass;
-    const method = sourceClassWithMethods.methods.find((m) => m.identifier === methodName);
+    const method = sourceClassWithMethods.methods.find((m) => m === methodName);
     if (!method) {
       throw new Error(`Method "${methodName}" not found in class "${className}"`);
     }
@@ -413,7 +413,7 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
         c.identifier === className
           ? {
               ...c,
-              methods: c.methods.filter((m) => m.identifier !== methodName),
+              methods: c.methods.filter((m) => m !== methodName),
             }
           : c
       ),
@@ -444,7 +444,7 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
         }),
         classes: sourceApp.classes.map((c) => {
           if (c.identifier === className) {
-            return { ...c, methods: c.methods.filter((m) => m.identifier !== methodName) };
+            return { ...c, methods: c.methods.filter((m) => m !== methodName) };
           }
           if (c.identifier === targetClassName) {
             return { ...c, methods: [...c.methods, method] };
@@ -459,11 +459,11 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
         rootPackages: sourceApp.rootPackages.map(removeMethod),
         classes: sourceApp.classes.map((c) => {
           if (c.identifier === className) {
-            return { ...c, methods: c.methods.filter((m) => m.identifier !== methodName) };
+            return { ...c, methods: c.methods.filter((m) => m !== methodName) };
           }
           return c;
         }),
-        methods: sourceApp.methods.filter((m) => m.identifier !== methodName),
+        methods: sourceApp.methods.filter((m) => m !== methodName),
       };
 
       updated[targetAppIdx] = {
@@ -699,8 +699,8 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
 
   describe('Method Movement', () => {
     it('should move a function from one class to another', () => {
-      const method1 = { identifier: 'method1' };
-      const method2 = { identifier: 'method2' };
+      const method1 = 'method1';
+      const method2 = 'method2';
       const class1: CleanedClass = createMockClass('Class1', [method1]);
       const class2: CleanedClass = createMockClass('Class2', [method2]);
       const package1: CleanedPackage = createMockPackage('com.example', [class1, class2]);
@@ -715,15 +715,15 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
       const updatedClass2 = getClassFromApp(updatedLandscape, 0, 'Class2');
 
       // method1 should no longer be in Class1
-      expect(updatedClass1?.methods.some((m) => m.identifier === 'method1')).toBe(false);
+      expect(updatedClass1?.methods.some((m) => m === 'method1')).toBe(false);
 
       // method1 should be in Class2
-      expect(updatedClass2?.methods.some((m) => m.identifier === 'method1')).toBe(true);
+      expect(updatedClass2?.methods.some((m) => m === 'method1')).toBe(true);
     });
 
     it('should move a function from one class to another in different applications', () => {
-      const method1 = { identifier: 'method1' };
-      const method2 = { identifier: 'method2' };
+      const method1 = 'method1';
+      const method2 = 'method2';
       const class1: CleanedClass = createMockClass('Class1', [method1], 'App1');
       const class2: CleanedClass = createMockClass('Class2', [method2], 'App2');
       const package1: CleanedPackage = createMockPackage('com.example', [class1]);
@@ -737,13 +737,13 @@ describe('LandscapeEditor - Drag and Drop Move Functions', () => {
 
       // method1 should no longer be in App1/Class1
       const updatedClass1 = getClassFromApp(updatedLandscape, 0, 'Class1');
-      expect(updatedClass1?.methods.some((m) => m.identifier === 'method1')).toBe(false);
-      expect(updatedLandscape[0].methods.some((m) => m.identifier === 'method1')).toBe(false);
+      expect(updatedClass1?.methods.some((m) => m === 'method1')).toBe(false);
+      expect(updatedLandscape[0].methods.some((m) => m === 'method1')).toBe(false);
 
       // method1 should be in App2/Class2
       const updatedClass2 = getClassFromApp(updatedLandscape, 1, 'Class2');
-      expect(updatedClass2?.methods.some((m) => m.identifier === 'method1')).toBe(true);
-      expect(updatedLandscape[1].methods.some((m) => m.identifier === 'method1')).toBe(true);
+      expect(updatedClass2?.methods.some((m) => m === 'method1')).toBe(true);
+      expect(updatedLandscape[1].methods.some((m) => m === 'method1')).toBe(true);
     });
   });
 });

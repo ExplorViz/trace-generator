@@ -59,7 +59,7 @@ export interface ClassNodeProps {
 }
 
 export interface MethodNodeProps {
-  method: { identifier: string };
+  method: string;
   appIdx: number;
   className: string;
   handlers: LandscapeEditorHandlers;

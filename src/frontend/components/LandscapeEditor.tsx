@@ -1,6 +1,7 @@
-import { CleanedClass, CleanedLandscape, CleanedPackage } from '../../backend/shared/types';
 import React, { useEffect, useRef, useState } from 'react';
+import { CleanedClass, CleanedLandscape, CleanedPackage } from '../../backend/shared/types';
 import { apiClient } from '../api/client';
+import { convertStructureLandscapeToRegular, isStructureLandscape } from '../utils/structure-landscape';
 import { AppNode } from './landscape-editor/AppNode';
 import { LandscapeToolbar } from './landscape-editor/LandscapeToolbar';
 import { LandscapeEditorHandlers, NodeId } from './landscape-editor/types';
@@ -122,13 +123,22 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         const content = e.target?.result as string;
         const parsed = JSON.parse(content);
 
-        if (!Array.isArray(parsed)) {
-          onError('Invalid landscape file: must be an array');
+        let landscapeData: CleanedLandscape[];
+
+        // Check if this is a structure landscape format
+        if (isStructureLandscape(parsed)) {
+          // Convert structure format to regular format
+          landscapeData = convertStructureLandscapeToRegular(parsed);
+        } else if (Array.isArray(parsed)) {
+          // Regular landscape format (array of CleanedLandscape)
+          landscapeData = parsed;
+        } else {
+          onError('Invalid landscape file: must be an array or structure landscape format');
           return;
         }
 
-        setLocalLandscape(parsed);
-        onLandscapeUpdated(parsed);
+        setLocalLandscape(landscapeData);
+        onLandscapeUpdated(landscapeData);
         setExpandedNodes(new Set());
       } catch (err: any) {
         onError(err.message || 'Failed to load landscape file');
@@ -287,9 +297,9 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     const app = localLandscape[appIdx];
     const cls = findClass(app, className);
     if (cls) {
-      const method = cls.methods.find((m) => m.identifier === methodName);
+      const method = cls.methods.find((m) => m === methodName);
       if (method) {
-        const newName = prompt('Enter new method name:', method.identifier);
+        const newName = prompt('Enter new method name:', method);
         if (newName && newName.trim() !== '') {
           const updated = [...localLandscape];
           const updateMethod = (p: CleanedPackage): CleanedPackage => ({
@@ -298,7 +308,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
               c.identifier === className
                 ? {
                     ...c,
-                    methods: c.methods.map((m) => (m.identifier === methodName ? { identifier: newName.trim() } : m)),
+                    methods: c.methods.map((m) => (m === methodName ? newName.trim() : m)),
                   }
                 : c
             ),
@@ -311,7 +321,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
               c.identifier === className
                 ? {
                     ...c,
-                    methods: c.methods.map((m) => (m.identifier === methodName ? { identifier: newName.trim() } : m)),
+                    methods: c.methods.map((m) => (m === methodName ? newName.trim() : m)),
                   }
                 : c
             ),
@@ -484,7 +494,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
     if (methodName && methodName.trim() !== '') {
       const updated = [...localLandscape];
       const app = updated[appIdx];
-      const newMethod = { identifier: methodName.trim() };
+      const newMethod = methodName.trim();
       const updateMethod = (p: CleanedPackage): CleanedPackage => ({
         ...p,
         classes: p.classes.map((c) => (c.identifier === className ? { ...c, methods: [...c.methods, newMethod] } : c)),
@@ -554,7 +564,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           c.identifier === className
             ? {
                 ...c,
-                methods: c.methods.filter((m) => m.identifier !== methodName),
+                methods: c.methods.filter((m) => m !== methodName),
               }
             : c
         ),
@@ -567,11 +577,11 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
           c.identifier === className
             ? {
                 ...c,
-                methods: c.methods.filter((m) => m.identifier !== methodName),
+                methods: c.methods.filter((m) => m !== methodName),
               }
             : c
         ),
-        methods: app.methods.filter((m) => m.identifier !== methodName),
+        methods: app.methods.filter((m) => m !== methodName),
       };
       updateLocalLandscape(updated);
     }
@@ -808,7 +818,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       return;
     }
 
-    const method = sourceClass.methods.find((m) => m.identifier === methodName);
+    const method = sourceClass.methods.find((m) => m === methodName);
     if (!method) {
       onError(`Method "${methodName}" not found in class "${className}"`);
       return;
@@ -821,7 +831,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         c.identifier === className
           ? {
               ...c,
-              methods: c.methods.filter((m) => m.identifier !== methodName),
+              methods: c.methods.filter((m) => m !== methodName),
             }
           : c
       ),
@@ -852,14 +862,14 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         }),
         classes: sourceApp.classes.map((c) => {
           if (c.identifier === className) {
-            return { ...c, methods: c.methods.filter((m) => m.identifier !== methodName) };
+            return { ...c, methods: c.methods.filter((m) => m !== methodName) };
           }
           if (c.identifier === targetClassName) {
             return { ...c, methods: [...c.methods, method] };
           }
           return c;
         }),
-        methods: sourceApp.methods.map((m) => (m.identifier === methodName ? method : m)),
+        methods: sourceApp.methods.map((m) => (m === methodName ? method : m)),
       };
     } else {
       // Different apps: update separately
@@ -868,11 +878,11 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
         rootPackages: sourceApp.rootPackages.map(removeMethod),
         classes: sourceApp.classes.map((c) => {
           if (c.identifier === className) {
-            return { ...c, methods: c.methods.filter((m) => m.identifier !== methodName) };
+            return { ...c, methods: c.methods.filter((m) => m !== methodName) };
           }
           return c;
         }),
-        methods: sourceApp.methods.filter((m) => m.identifier !== methodName),
+        methods: sourceApp.methods.filter((m) => m !== methodName),
       };
 
       updated[targetAppIdx] = {
@@ -911,7 +921,7 @@ export function LandscapeEditor({ landscape, onLandscapeUpdated, onError }: Land
       };
       const defaultClass: CleanedClass = {
         identifier: 'Main',
-        methods: [{ identifier: 'main' }],
+        methods: ['main'],
         parentAppName: appName.trim(),
       };
       rootPkg3.classes.push(defaultClass);

@@ -8,7 +8,7 @@ export interface FakeMethod {
 
 export interface FakeClass {
   identifier: string;
-  methods: Array<FakeMethod>;
+  methods: Array<string>;
   parent?: FakePackage;
   parentAppName: string;
   linkedClass?: FakeClass;
@@ -27,7 +27,7 @@ export interface FakeApp {
   entryPoint: FakeClass;
   classes: Array<FakeClass>;
   packages: Array<FakePackage>;
-  methods: Array<FakeMethod>;
+  methods: Array<string>;
 }
 
 /**
@@ -113,7 +113,7 @@ export interface CleanedLandscape {
   entryPointFqn: string;
   classes: CleanedClass[];
   packages: CleanedPackage[];
-  methods: FakeMethod[];
+  methods: string[];
 }
 
 export interface CleanedPackage {
@@ -124,6 +124,6 @@ export interface CleanedPackage {
 
 export interface CleanedClass {
   identifier: string;
-  methods: FakeMethod[];
+  methods: string[];
   parentAppName: string;
 }

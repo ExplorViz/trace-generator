@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FakeApp, FakeClass, FakeMethod, FakePackage } from '../../../src/backend/shared/types';
+import { FakeApp, FakeClass, FakePackage } from '../../../src/backend/shared/types';
 import {
   cleanLandscapeForSerialization,
   reconstructParentReferences,
@@ -7,7 +7,7 @@ import {
 
 describe('cleanLandscapeForSerialization', () => {
   it('should clean a simple landscape', () => {
-    const method: FakeMethod = { identifier: 'testMethod' };
+    const method = 'testMethod';
     const rootPackage: FakePackage = {
       name: 'com.example',
       subpackages: [],
@@ -47,7 +47,7 @@ describe('cleanLandscapeForSerialization', () => {
   });
 
   it('should handle nested packages', () => {
-    const method: FakeMethod = { identifier: 'nestedMethod' };
+    const method = 'nestedMethod';
 
     const subPackage: FakePackage = {
       name: 'subpackage',
@@ -92,8 +92,8 @@ describe('cleanLandscapeForSerialization', () => {
   });
 
   it('should handle multiple apps', () => {
-    const method1: FakeMethod = { identifier: 'method1' };
-    const method2: FakeMethod = { identifier: 'method2' };
+    const method1 = 'method1';
+    const method2 = 'method2';
 
     const pkg1: FakePackage = { name: 'pkg1', subpackages: [], classes: [] };
     const pkg2: FakePackage = { name: 'pkg2', subpackages: [], classes: [] };
@@ -143,9 +143,9 @@ describe('cleanLandscapeForSerialization', () => {
   });
 
   it('should handle classes with multiple methods', () => {
-    const method1: FakeMethod = { identifier: 'method1' };
-    const method2: FakeMethod = { identifier: 'method2' };
-    const method3: FakeMethod = { identifier: 'method3' };
+    const method1 = 'method1';
+    const method2 = 'method2';
+    const method3 = 'method3';
 
     const rootPackage: FakePackage = { name: 'com.test', subpackages: [], classes: [] };
 
@@ -185,7 +185,7 @@ describe('reconstructParentReferences', () => {
             classes: [
               {
                 identifier: 'TestClass',
-                methods: [{ identifier: 'testMethod' }],
+                methods: ['testMethod'],
                 parentAppName: 'TestApp',
               },
             ],
@@ -196,7 +196,7 @@ describe('reconstructParentReferences', () => {
         classes: [
           {
             identifier: 'TestClass',
-            methods: [{ identifier: 'testMethod' }],
+            methods: ['testMethod'],
             parentAppName: 'TestApp',
           },
         ],
@@ -206,14 +206,14 @@ describe('reconstructParentReferences', () => {
             classes: [
               {
                 identifier: 'TestClass',
-                methods: [{ identifier: 'testMethod' }],
+                methods: ['testMethod'],
                 parentAppName: 'TestApp',
               },
             ],
             subpackages: [],
           },
         ],
-        methods: [{ identifier: 'testMethod' }],
+        methods: ['testMethod'],
       },
     ];
 
@@ -240,7 +240,7 @@ describe('reconstructParentReferences', () => {
                 classes: [
                   {
                     identifier: 'NestedClass',
-                    methods: [{ identifier: 'nestedMethod' }],
+                    methods: ['nestedMethod'],
                     parentAppName: 'TestApp',
                   },
                 ],
@@ -253,12 +253,12 @@ describe('reconstructParentReferences', () => {
         classes: [
           {
             identifier: 'NestedClass',
-            methods: [{ identifier: 'nestedMethod' }],
+            methods: ['nestedMethod'],
             parentAppName: 'TestApp',
           },
         ],
         packages: [],
-        methods: [{ identifier: 'nestedMethod' }],
+        methods: ['nestedMethod'],
       },
     ];
 

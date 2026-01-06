@@ -66,7 +66,7 @@ describe('Trace Generation Integration', () => {
       const spanNames = getAllSpanNames(trace);
 
       // With seed 12345, these exact spans should be generated
-      expect(spanNames[0]).toBe('org.springframework.samples.petclinic.system.WelcomeController.welcome');
+      expect(spanNames[0]).toBe('org.springframework.samples.petclinic.model.NamedEntity.<init>');
       // Verify all span names include package paths
       spanNames.forEach((name) => {
         expect(name).toContain('org.springframework.samples.petclinic');

@@ -8,7 +8,7 @@ export function MethodNode({ method, appIdx, className, handlers }: MethodNodePr
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData(
       'text/plain',
-      JSON.stringify({ type: 'method', appIdx, className, methodName: method.identifier })
+      JSON.stringify({ type: 'method', appIdx, className, methodName: method })
     );
     e.stopPropagation();
   };
@@ -18,7 +18,7 @@ export function MethodNode({ method, appIdx, className, handlers }: MethodNodePr
       icon: Pencil,
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
-        handlers.renameMethod(appIdx, className, method.identifier);
+        handlers.renameMethod(appIdx, className, method);
       },
       title: 'Rename',
       variant: 'edit' as const,
@@ -27,7 +27,7 @@ export function MethodNode({ method, appIdx, className, handlers }: MethodNodePr
       icon: Trash2,
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
-        handlers.deleteMethod(appIdx, className, method.identifier);
+        handlers.deleteMethod(appIdx, className, method);
       },
       title: 'Delete',
       variant: 'delete' as const,
@@ -42,7 +42,7 @@ export function MethodNode({ method, appIdx, className, handlers }: MethodNodePr
     >
       <span className="text-muted text-sm flex items-center gap-2 ml-8">
         <SquareFunction className="w-4 h-4" />
-        {method.identifier}
+        {method}
       </span>
       <ActionButtons buttons={actionButtons} />
     </div>

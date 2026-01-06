@@ -9,7 +9,7 @@ import { strict as assert } from 'assert';
 import { NameGenerator } from './naming';
 import { FakeSpan, FakeTrace } from './tracing';
 
-import { AppGenerationParameters, FakeApp, FakeClass, FakeMethod, FakePackage } from './shared/types';
+import { AppGenerationParameters, FakeApp, FakeClass, FakePackage } from './shared/types';
 
 // TraceGenerationParameters uses CommunicationStyle enum, so we keep a local version
 export interface TraceGenerationParameters {
@@ -115,7 +115,7 @@ function generateFakeApp(params: AppGenerationParameters, nameGenerator: NameGen
 
   const classes: Array<FakeClass> = [];
   const packages: Array<FakePackage> = [];
-  const methods: Array<FakeMethod> = [];
+  const methods: Array<string> = [];
 
   const classCount: number = faker.number.int({
     min: params.minClassCount,
@@ -146,11 +146,9 @@ function generateFakeApp(params: AppGenerationParameters, nameGenerator: NameGen
         max: params.maxMethodCount,
       });
       const newMethods = Array.from(Array(numMethods), () => {
-        const newMethod = {
-          identifier: nameGenerator.getRandomMethodName(),
-        };
-        methods.push(newMethod);
-        return newMethod;
+        const methodName = nameGenerator.getRandomMethodName();
+        methods.push(methodName);
+        return methodName;
       });
       const newClass = {
         identifier: nameGenerator.getRandomClassName(),
@@ -241,11 +239,9 @@ function generateFakeApp(params: AppGenerationParameters, nameGenerator: NameGen
       max: params.maxMethodCount,
     });
     const newMethods = Array.from(Array(numMethods), () => {
-      const newMethod = {
-        identifier: nameGenerator.getRandomMethodName(),
-      };
-      methods.push(newMethod);
-      return newMethod;
+      const methodName = nameGenerator.getRandomMethodName();
+      methods.push(methodName);
+      return methodName;
     });
     const newClass = {
       identifier: nameGenerator.getRandomClassName(),
@@ -515,10 +511,10 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
   }
   spanAttrs[ATTR_SERVICE_NAME] = startingApp.name;
   spanAttrs[SEMATTRS_CODE_NAMESPACE] = entryPointFqn;
-  spanAttrs[ATTR_CODE_FUNCTION_NAME] = entryMethod.identifier;
+  spanAttrs[ATTR_CODE_FUNCTION_NAME] = entryMethod;
 
   const entrySpan: FakeSpan = {
-    name: `${entryPointFqn}.${entryMethod.identifier}`,
+    name: `${entryPointFqn}.${entryMethod}`,
     relativeStartTime: 0,
     relativeEndTime: params.duration,
     attributes: { ...spanAttrs },
@@ -540,7 +536,7 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
   // Collect all methods for visitAllMethods feature
   interface MethodReference {
     class: FakeClass;
-    method: FakeMethod;
+    method: string;
   }
   const allMethods: Array<MethodReference> = [];
   classes.forEach((cls) => {
@@ -566,7 +562,7 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
     // Select next class for method call
 
     let nextClass: FakeClass;
-    let nextMethod: FakeMethod;
+    let nextMethod: string;
 
     // If visitAllMethods is enabled and there are unvisited methods, prioritize them
     if (params.visitAllMethods && visitedMethods.size < allMethods.length) {
@@ -636,9 +632,9 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
     const classFqn = getClassFqn(nextClass);
     spanAttrs[ATTR_SERVICE_NAME] = nextClass.parentAppName;
     spanAttrs[SEMATTRS_CODE_NAMESPACE] = classFqn;
-    spanAttrs[ATTR_CODE_FUNCTION_NAME] = nextMethod.identifier;
+    spanAttrs[ATTR_CODE_FUNCTION_NAME] = nextMethod;
     const nextSpan: FakeSpan = {
-      name: `${classFqn}.${nextMethod.identifier}`,
+      name: `${classFqn}.${nextMethod}`,
       relativeStartTime: timePassed,
       relativeEndTime: -1,
       attributes: { ...spanAttrs },

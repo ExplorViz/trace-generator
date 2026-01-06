@@ -56,17 +56,17 @@ describe('Landscape Loading Integration', () => {
     it('should have entry point', () => {
       const app = petClinicLandscape[0];
       expect(app.entryPoint).toBeDefined();
-      expect(app.entryPoint.identifier).toBe('WelcomeController');
+      expect(app.entryPoint.identifier).toBe('NamedEntity');
     });
 
     it('should have entry point', () => {
       const app = petClinicLandscape[0];
       expect(app.entryPoint).toBeDefined();
-      expect(app.entryPoint.identifier).toBe('WelcomeController');
+      expect(app.entryPoint.identifier).toBe('NamedEntity');
 
       // Verify FQN can be generated
       const fqn = getClassFqn(app.entryPoint);
-      expect(fqn).toBe('org.springframework.samples.petclinic.system.WelcomeController');
+      expect(fqn).toBe('org.springframework.samples.petclinic.model.NamedEntity');
     });
   });
 
@@ -126,12 +126,12 @@ describe('Landscape Loading Integration', () => {
 
     it('should find class by FQN for entry point', () => {
       const app = petClinicLandscape[0];
-      const fqn = 'org.springframework.samples.petclinic.system.WelcomeController';
+      const fqn = 'org.springframework.samples.petclinic.model.NamedEntity';
 
       // Find class by checking FQN for each class (synthetic root should be excluded)
       const found = app.classes.find((cls) => getClassFqn(cls) === fqn);
       expect(found).toBeDefined();
-      expect(found!.identifier).toBe('WelcomeController');
+      expect(found!.identifier).toBe('NamedEntity');
     });
   });
 
@@ -171,7 +171,7 @@ describe('Landscape Loading Integration', () => {
 
     it('should have correct total method count', () => {
       const app = petClinicLandscape[0];
-      expect(app.methods.length).toBe(76);
+      expect(app.methods.length).toBe(60);
     });
 
     it('should have all classes with non-empty identifiers', () => {
@@ -189,9 +189,9 @@ describe('Landscape Loading Integration', () => {
 
       app.classes.forEach((cls) => {
         cls.methods.forEach((method) => {
-          expect(method.identifier).toBeDefined();
-          expect(method.identifier.length).toBe(method.identifier.trim().length);
-          expect(method.identifier).not.toBe('');
+          expect(method).toBeDefined();
+          expect(method.length).toBe(method.trim().length);
+          expect(method).not.toBe('');
         });
       });
     });
@@ -219,7 +219,7 @@ describe('Landscape Loading Integration', () => {
       const pet = app.classes.find((cls) => cls.identifier === 'Pet');
 
       expect(pet).toBeDefined();
-      const hasGetVisits = pet!.methods.some((m) => m.identifier === 'getVisits');
+      const hasGetVisits = pet!.methods.includes('getVisits');
       expect(hasGetVisits).toBe(true);
     });
   });
@@ -232,7 +232,7 @@ describe('Landscape Loading Integration', () => {
 
     it('should calculate correct method count', () => {
       const app = petClinicLandscape[0];
-      expect(app.methods.length).toBe(76);
+      expect(app.methods.length).toBe(60);
     });
 
     it('should calculate correct package count', () => {

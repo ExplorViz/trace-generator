@@ -106,7 +106,7 @@ export function ClassNode({ cls, appIdx, expandedNodes, handlers }: ClassNodePro
         <div className="ml-5">
           {cls.methods.map((method) => (
             <MethodNode
-              key={method.identifier}
+              key={method}
               method={method}
               appIdx={appIdx}
               className={cls.identifier}

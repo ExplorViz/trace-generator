@@ -1,4 +1,4 @@
-import { ChevronsDown, ChevronsUp, FileUp, Plus, Save, BookOpen } from 'lucide-react';
+import { ChevronsDown, ChevronsUp, FileUp, Plus, Save } from 'lucide-react';
 import { LandscapeToolbarProps } from './types';
 
 export function LandscapeToolbar({
@@ -44,10 +44,11 @@ export function LandscapeToolbar({
       </button>
       {onLoadPreset && (
         <div className="relative inline-block">
+          {' '}
           <select
             onChange={handlePresetChange}
             disabled={isLoadingPresets || availablePresets.length === 0}
-            className="material-button-secondary px-4 py-2 pr-10 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-transparent"
+            className="w-48 h-12 material-button-secondary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-transparent"
             defaultValue=""
             aria-label="Load preset landscape"
           >
@@ -64,7 +65,6 @@ export function LandscapeToolbar({
               </option>
             ))}
           </select>
-          <BookOpen className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
       )}
       <label className="material-button-secondary px-4 py-2 flex items-center gap-2 cursor-pointer">

@@ -2,6 +2,7 @@ import { generateFakeApps } from '../generation';
 import { LandscapeStore } from '../landscape';
 import { AppGenerationParameters } from '../shared/types';
 import { isValidInteger } from '../utils';
+import { convertStructureLandscapeToRegular, isStructureLandscape } from '../utils/landscape-structure-converter';
 import {
   CleanedLandscape,
   cleanLandscapeForSerialization,
@@ -39,9 +40,19 @@ export class LandscapeService {
   /**
    * Update the landscape
    */
-  updateLandscape(landscapeData: any[]): CleanedLandscape[] {
+  updateLandscape(landscapeData: any): CleanedLandscape[] {
+    // Check if this is a structure landscape format
+    if (isStructureLandscape(landscapeData)) {
+      // Convert structure format to regular format
+      const convertedLandscape = convertStructureLandscapeToRegular(landscapeData);
+      const landscape = reconstructParentReferences(convertedLandscape);
+      this.landscapeStore.setLandscape(landscape);
+      return cleanLandscapeForSerialization(landscape);
+    }
+
+    // Regular landscape format (array of CleanedLandscape)
     if (!Array.isArray(landscapeData)) {
-      throw new Error('Landscape must be an array');
+      throw new Error('Landscape must be an array or structure landscape format');
     }
     const landscape = reconstructParentReferences(landscapeData);
     this.landscapeStore.setLandscape(landscape);

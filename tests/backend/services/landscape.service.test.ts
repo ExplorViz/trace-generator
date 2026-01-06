@@ -1,18 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LandscapeStore } from '../../../src/backend/landscape';
 import { LandscapeService } from '../../../src/backend/services/landscape.service';
-import {
-  AppGenerationParameters,
-  FakeApp,
-  FakeClass,
-  FakeMethod,
-  FakePackage,
-} from '../../../src/backend/shared/types';
+import { AppGenerationParameters, FakeApp, FakeClass, FakePackage } from '../../../src/backend/shared/types';
 
 // Mock the generation module
 vi.mock('../../../src/backend/generation', () => ({
   generateFakeApps: vi.fn((_params: AppGenerationParameters): FakeApp[] => {
-    const method: FakeMethod = { identifier: 'mockMethod' };
+    const method = 'mockMethod';
     const rootPackage: FakePackage = {
       name: 'com.example',
       subpackages: [],

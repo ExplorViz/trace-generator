@@ -1,8 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CleanedLandscape, CleanedPackage } from '../../src/backend/shared/types';
 import { LandscapeEditor } from '../../src/frontend/components/LandscapeEditor';
