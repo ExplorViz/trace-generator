@@ -594,6 +594,9 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
             visitedClasses.delete(head[0]);
             classStack[classStack.length - 1][1].children.push(head[1]);
             previousClass = classStack[classStack.length - 1][0];
+          } else {
+            // Cannot reduce stack further, break out of the loop
+            break;
           }
           continue;
         }
@@ -616,6 +619,9 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
           visitedClasses.delete(head[0]);
           classStack[classStack.length - 1][1].children.push(head[1]);
           previousClass = classStack[classStack.length - 1][0];
+        } else {
+          // Cannot reduce stack further, break out of the loop
+          break;
         }
         continue;
       }

@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CommunicationStyle, generateFakeTrace, TraceGenerationParameters } from '../../../src/backend/generation';
-import { FakeApp } from '../../../src/backend/shared/types';
+import { FakeApp, FakeClass, FakePackage } from '../../../src/backend/shared/types';
 import { reconstructParentReferences } from '../../../src/backend/utils/landscape.utils';
 
 describe('Trace Generation Integration', () => {
@@ -467,6 +467,114 @@ describe('Trace Generation Integration', () => {
       const names2 = getAllSpanNames(trace2);
 
       expect(names1).not.toEqual(names2);
+    });
+  });
+
+  describe('Single Class Landscape', () => {
+    it('should handle single class with multiple methods without hanging', () => {
+      // Create a simple landscape with one class and two methods
+      const rootPackage: FakePackage = {
+        name: 'org',
+        classes: [],
+        subpackages: [],
+      };
+
+      const appPackage: FakePackage = {
+        name: 'testapp',
+        classes: [],
+        subpackages: [],
+        parent: rootPackage,
+      };
+
+      rootPackage.subpackages.push(appPackage);
+
+      const testClass: FakeClass = {
+        identifier: 'TestClass',
+        methods: ['method1', 'method2'],
+        parent: appPackage,
+        parentAppName: 'test-app',
+      };
+
+      appPackage.classes.push(testClass);
+
+      const testApp: FakeApp = {
+        name: 'test-app',
+        rootPackages: [rootPackage],
+        entryPoint: testClass,
+        classes: [testClass],
+        packages: [rootPackage, appPackage],
+        methods: ['method1', 'method2'],
+      };
+
+      const params: TraceGenerationParameters = {
+        duration: 1000,
+        callCount: 5,
+        maxConnectionDepth: 3,
+        communicationStyle: CommunicationStyle.TRUE_RANDOM,
+        allowCyclicCalls: false,
+        seed: 12345,
+      };
+
+      // This should complete without hanging
+      const trace = generateFakeTrace([testApp], params);
+
+      // Verify trace was generated
+      expect(trace).toBeDefined();
+      expect(trace.length).toBe(1);
+      expect(trace[0].name).toContain('TestClass');
+    });
+
+    it('should handle single class with allowCyclicCalls enabled', () => {
+      const rootPackage: FakePackage = {
+        name: 'org',
+        classes: [],
+        subpackages: [],
+      };
+
+      const appPackage: FakePackage = {
+        name: 'testapp',
+        classes: [],
+        subpackages: [],
+        parent: rootPackage,
+      };
+
+      rootPackage.subpackages.push(appPackage);
+
+      const testClass: FakeClass = {
+        identifier: 'TestClass',
+        methods: ['method1', 'method2'],
+        parent: appPackage,
+        parentAppName: 'test-app',
+      };
+
+      appPackage.classes.push(testClass);
+
+      const testApp: FakeApp = {
+        name: 'test-app',
+        rootPackages: [rootPackage],
+        entryPoint: testClass,
+        classes: [testClass],
+        packages: [rootPackage, appPackage],
+        methods: ['method1', 'method2'],
+      };
+
+      const params: TraceGenerationParameters = {
+        duration: 1000,
+        callCount: 5,
+        maxConnectionDepth: 3,
+        communicationStyle: CommunicationStyle.TRUE_RANDOM,
+        allowCyclicCalls: true,
+        seed: 54321,
+      };
+
+      const trace = generateFakeTrace([testApp], params);
+
+      function countSpans(spans: any[]): number {
+        return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
+      }
+
+      // With cyclic calls enabled, should generate the requested number of spans
+      expect(countSpans(trace)).toBe(6); // 1 root + 5 calls
     });
   });
 });

@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { CleanedLandscape, CleanedPackage, CleanedClass } from '../../src/backend/shared/types';
+import { CleanedClass, CleanedLandscape, CleanedPackage } from '../../src/backend/shared/types';
 
 describe('LandscapeEditor - Drag and Drop Move Functions', () => {
   const createMockApp = (name: string, rootPackages?: CleanedPackage[], classes?: CleanedClass[]): CleanedLandscape => {
