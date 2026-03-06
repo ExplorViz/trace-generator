@@ -1,10 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Attributes } from '@opentelemetry/api';
-import {
-  ATTR_CODE_FUNCTION_NAME,
-  ATTR_SERVICE_NAME,
-  SEMATTRS_CODE_NAMESPACE,
-} from '@opentelemetry/semantic-conventions';
+import { ATTR_CODE_FUNCTION_NAME, ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { strict as assert } from 'assert';
 import { NameGenerator } from './naming';
 import { FakeSpan, FakeTrace } from './tracing';
@@ -513,8 +509,7 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
     };
   }
   spanAttrs[ATTR_SERVICE_NAME] = startingApp.name;
-  spanAttrs[SEMATTRS_CODE_NAMESPACE] = entryPointFqn;
-  spanAttrs[ATTR_CODE_FUNCTION_NAME] = entryMethod.identifier;
+  spanAttrs[ATTR_CODE_FUNCTION_NAME] = entryPointFqn + '.' + entryMethod.identifier;
 
   const entrySpan: FakeSpan = {
     name: `${entryPointFqn}.${entryMethod.identifier}`,
@@ -634,8 +629,7 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
     }
     const classFqn = getClassFqn(nextClass);
     spanAttrs[ATTR_SERVICE_NAME] = nextClass.parentAppName;
-    spanAttrs[SEMATTRS_CODE_NAMESPACE] = classFqn;
-    spanAttrs[ATTR_CODE_FUNCTION_NAME] = nextMethod.identifier;
+    spanAttrs[ATTR_CODE_FUNCTION_NAME] = classFqn + '.' + nextMethod.identifier;
     const nextSpan: FakeSpan = {
       name: `${classFqn}.${nextMethod.identifier}`,
       relativeStartTime: timePassed,
