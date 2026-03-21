@@ -38,7 +38,7 @@ describe('Trace Generation Integration', () => {
       }
 
       const totalSpans = countSpans(trace);
-      expect(totalSpans).toBe(11); // 1 root + 10 calls
+      expect(totalSpans).toBe(10);
     });
 
     it('should generate deterministic span names with seed 12345', () => {
@@ -121,7 +121,7 @@ describe('Trace Generation Integration', () => {
         return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
       }
 
-      expect(countSpans(trace)).toBe(9); // 1 root + 8 calls
+      expect(countSpans(trace)).toBe(8);
     });
 
     it('should generate exact trace structure for TRUE_RANDOM with seed 22222', () => {
@@ -141,7 +141,7 @@ describe('Trace Generation Integration', () => {
         return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
       }
 
-      expect(countSpans(trace)).toBe(9); // 1 root + 8 calls
+      expect(countSpans(trace)).toBe(8);
     });
 
     it('should generate exact trace structure for RANDOM_EXIT with seed 33333', () => {
@@ -161,7 +161,7 @@ describe('Trace Generation Integration', () => {
         return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
       }
 
-      expect(countSpans(trace)).toBe(9); // 1 root + 8 calls
+      expect(countSpans(trace)).toBe(8);
     });
   });
 
@@ -238,7 +238,7 @@ describe('Trace Generation Integration', () => {
         return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
       }
 
-      expect(countSpans(trace)).toBe(11);
+      expect(countSpans(trace)).toBe(10);
     });
 
     it('should generate exact structure without cyclic calls, seed 77777', () => {
@@ -258,7 +258,7 @@ describe('Trace Generation Integration', () => {
         return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
       }
 
-      expect(countSpans(trace)).toBe(11);
+      expect(countSpans(trace)).toBe(10);
     });
   });
 
@@ -353,7 +353,7 @@ describe('Trace Generation Integration', () => {
         return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
       }
 
-      expect(countSpans(trace)).toBe(2); // root + 1 call
+      expect(countSpans(trace)).toBe(1);
     });
 
     it('should handle large call count with seed 30001', () => {
@@ -373,7 +373,7 @@ describe('Trace Generation Integration', () => {
         return spans.length + spans.reduce((sum, span) => sum + countSpans(span.children), 0);
       }
 
-      expect(countSpans(trace)).toBe(101); // root + 100 calls
+      expect(countSpans(trace)).toBe(100);
     });
 
     it('should handle max depth=1 with seed 40001', () => {
@@ -574,7 +574,7 @@ describe('Trace Generation Integration', () => {
       }
 
       // With cyclic calls enabled, should generate the requested number of spans
-      expect(countSpans(trace)).toBe(6); // 1 root + 5 calls
+      expect(countSpans(trace)).toBe(5);
     });
   });
 });

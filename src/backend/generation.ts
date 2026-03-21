@@ -526,7 +526,7 @@ export function generateFakeTrace(apps: Array<FakeApp>, params: TraceGenerationP
     }, []);
   const visitedClasses: Set<FakeClass> = new Set([entryPoint]);
   let previousClass: FakeClass = entryPoint;
-  let generatedSpanCount: number = 0;
+  let generatedSpanCount: number = 1; // Count entrySpan as first generated span
 
   // Collect all methods for visitAllMethods feature
   interface MethodReference {
