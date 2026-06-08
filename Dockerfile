@@ -1,8 +1,8 @@
 # Stage: Prepare build environment
 FROM node:22-alpine AS builder
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm (match CI version)
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
 
@@ -29,16 +29,16 @@ ENV OTEL_COLLECTOR_PORT=${OTEL_COLLECTOR_PORT}
 # Stage: Build backend image
 FROM node:22-alpine
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm (match CI version)
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
+# Skip lifecycle scripts (husky prepare hook is dev-only and .husky/ is not copied here)
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # Copy built backend files from builder stage
 COPY --from=builder /app/dist/backend ./dist/backend
