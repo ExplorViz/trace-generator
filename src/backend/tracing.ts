@@ -1,19 +1,16 @@
-import { trace, Tracer, Span, SpanOptions, Attributes } from '@opentelemetry/api';
+import { Span, SpanOptions, Attributes } from '@opentelemetry/api';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { ReadableSpan, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { Resource } from '@opentelemetry/resources';
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-  ATTR_TELEMETRY_SDK_LANGUAGE,
-} from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_TELEMETRY_SDK_LANGUAGE } from '@opentelemetry/semantic-conventions';
 import { HrTime } from '@opentelemetry/api';
-import { addHrTimes, hrTime, millisToHrTime } from '@opentelemetry/core';
+import { addHrTimes, ExportResult, hrTime, millisToHrTime } from '@opentelemetry/core';
 
 export interface FakeSpan {
   name: string;
+  service: string;
   relativeStartTime: number;
   relativeEndTime: number;
   attributes?: Attributes;
@@ -23,55 +20,18 @@ export interface FakeSpan {
 export type FakeTrace = Array<FakeSpan>;
 
 export class FakeTraceExporter {
-  private readonly tracerName: string = 'trace-generator';
-  private readonly sdk: NodeSDK;
-  private collectorHostname: string;
-  private collectorPort: number;
-  private tracerProvider: NodeTracerProvider;
-  private tracer: Tracer;
-  private spanProcessor: SimpleSpanProcessor;
-  private exporter: OTLPTraceExporter;
+  private readonly tracerName = 'trace-generator';
+  private readonly sdk = new NodeSDK();
+  private tracerProviders = new Map<string, NodeTracerProvider>();
+  private exporter: DynamicUrlExporter;
 
   constructor(hostname: string, port: number) {
-    this.collectorHostname = hostname;
-    this.collectorPort = port;
-    this.exporter = new OTLPTraceExporter({
-      url: `http://${this.collectorHostname}:${this.collectorPort}`,
-      concurrencyLimit: Infinity,
-    });
-    this.tracerProvider = new NodeTracerProvider({
-      resource: Resource.default().merge(
-        new Resource({
-          [ATTR_SERVICE_NAME]: 'trace-generator',
-          [ATTR_SERVICE_VERSION]: '1.0.0',
-          [ATTR_TELEMETRY_SDK_LANGUAGE]: 'java',
-        })
-      ),
-    });
-    this.spanProcessor = new SimpleSpanProcessor(this.exporter);
-    this.tracerProvider.addSpanProcessor(this.spanProcessor);
-    this.tracerProvider.register();
-    this.tracer = trace.getTracer(this.tracerName);
-
-    this.sdk = new NodeSDK();
+    this.exporter = new DynamicUrlExporter(hostname, port);
     this.sdk.start();
   }
 
   setUrl(hostname: string, port: number) {
-    if (this.collectorHostname === hostname && this.collectorPort === port) {
-      return;
-    }
-
-    this.collectorHostname = hostname;
-    this.collectorPort = port;
-    this.spanProcessor.shutdown();
-    this.exporter.shutdown();
-    this.exporter = new OTLPTraceExporter({
-      url: `http://${this.collectorHostname}:${this.collectorPort}`,
-      concurrencyLimit: Infinity,
-    });
-    this.spanProcessor = new SimpleSpanProcessor(this.exporter);
-    this.tracerProvider.addSpanProcessor(this.spanProcessor);
+    this.exporter.setUrl(hostname, port);
   }
 
   private writeSpan(fakeSpan: FakeSpan, globalStartTime: HrTime) {
@@ -80,7 +40,20 @@ export class FakeTraceExporter {
       attributes: fakeSpan.attributes,
     };
 
-    this.tracer.startActiveSpan(fakeSpan.name, opts, async (span: Span) => {
+    let tracerProvider = this.tracerProviders.get(fakeSpan.service);
+    if (tracerProvider === undefined) {
+      tracerProvider = new NodeTracerProvider({
+        resource: new Resource({
+          [ATTR_SERVICE_NAME]: fakeSpan.service,
+          [ATTR_TELEMETRY_SDK_LANGUAGE]: 'java',
+        }),
+        spanProcessors: [new SimpleSpanProcessor(this.exporter)],
+      });
+      this.tracerProviders.set(fakeSpan.service, tracerProvider);
+    }
+    const tracer = tracerProvider.getTracer(this.tracerName);
+
+    tracer.startActiveSpan(fakeSpan.name, opts, async (span: Span) => {
       fakeSpan.children.forEach((childSpan) => {
         this.writeSpan(childSpan, globalStartTime);
       });
@@ -96,7 +69,52 @@ export class FakeTraceExporter {
   }
 
   async shutdown(): Promise<void> {
-    await this.tracerProvider.forceFlush();
+    await Promise.all(this.tracerProviders.values().map((t) => t.forceFlush()));
     return this.sdk.shutdown();
+  }
+}
+
+/**
+ * Delegates calls to an instance of {@link OTLPTraceExporter} and allows
+ * dynamically changing the target URL by swapping out the underlying exporter instance.
+ */
+class DynamicUrlExporter {
+  private hostname: string;
+  private port: number;
+  private exporter: OTLPTraceExporter;
+
+  constructor(hostname: string, port: number) {
+    this.hostname = hostname;
+    this.port = port;
+    this.exporter = new OTLPTraceExporter({
+      url: `http://${hostname}:${port}`,
+      concurrencyLimit: Infinity,
+    });
+  }
+
+  setUrl(hostname: string, port: number) {
+    if (this.hostname === hostname && this.port === port) {
+      return;
+    }
+
+    this.hostname = hostname;
+    this.port = port;
+    this.exporter.shutdown();
+    this.exporter = new OTLPTraceExporter({
+      url: `http://${hostname}:${port}`,
+      concurrencyLimit: Infinity,
+    });
+  }
+
+  export(spans: ReadableSpan[], resultCallback: (result: ExportResult) => void) {
+    this.exporter.export(spans, resultCallback);
+  }
+
+  shutdown(): Promise<void> {
+    return this.exporter.shutdown();
+  }
+
+  forceFlush?(): Promise<void> {
+    return this.exporter.forceFlush();
   }
 }
